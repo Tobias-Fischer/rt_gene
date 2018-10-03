@@ -1,0 +1,17 @@
+from GlassesCompletion import GlassesCompletion
+from my_utils import ElapsedTimer
+
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.visible_device_list = "0"
+config.gpu_options.allow_growth = True
+# config.gpu_options.per_process_gpu_memory_fraction = 1.0
+set_session(tf.Session(config=config))
+
+if __name__ == '__main__':
+    dataset_common_folder_path = '/home_nfs/tobiasldap/.gvfs/smb-share:server=10.0.0.253,share=shared/Samsung GRO Year 1/Dataset ECCV2018/'
+    subject = 's000'
+    completion = GlassesCompletion(dataset_common_folder_path, subject)
+    completion.image_completion_random_search(nIter=1000, GPU_ID=config.gpu_options.visible_device_list)
+

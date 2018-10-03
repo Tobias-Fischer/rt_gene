@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rt_gene</name>
+  <version>1.0.0</version>
+  <description>A package implementing head pose estimation and gaze estimation based on the ECCV2018 paper RT-GENE: Real-Time Eye Gaze Estimation in Natural Environments</description>
+
+  <maintainer email="t.fischer@imperial.ac.uk">Tobias Fischer</maintainer>
+
+  <license>CC BY-NC-SA 4.0</license>
+
+  <url type="website">https://www.tobiasfischer.info</url>
+
+  <author email="t.fischer@imperial.ac.uk">Tobias Fischer</author>
+  <author email="H.J.Chang@bham.ac.uk">Hyung Jin Chang</author>
+
+  <!-- The *_depend tags are used to specify dependencies -->
+  <!-- Dependencies can be catkin packages or system dependencies -->
+  <!-- Examples: -->
+  <!-- Use build_depend for packages you need at compile time: -->
+  <!--   <build_depend>message_generation</build_depend> -->
+  <!-- Use buildtool_depend for build tool packages: -->
+  <!--   <buildtool_depend>catkin</buildtool_depend> -->
+  <!-- Use run_depend for packages you need at runtime: -->
+  <!--   <run_depend>message_runtime</run_depend> -->
+  <!-- Use test_depend for packages you need only for testing: -->
+  <!--   <test_depend>gtest</test_depend> -->
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>genmsg</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>image_geometry</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>tf</depend>
+  <depend>tf_conversions</depend>
+  <depend>camera-info-manager-py</depend>
+  <depend>uvc-camera</depend>
+
+  <depend>python-scipy</depend>
+  <depend>python-opencv</depend>
+  <depend>python-numpy</depend>
+  <depend>python-tensorflow-gpu-pip</depend>
+  <depend>python-keras-pip</depend>
+  <depend>python-tqdm</depend>
+
+  <exec_depend>rviz</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>

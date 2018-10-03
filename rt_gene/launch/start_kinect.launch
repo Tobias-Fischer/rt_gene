@@ -1,0 +1,12 @@
+<launch>
+    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">
+        <arg name="publish_tf" value="True" />
+        <arg name="respawn" value="False" />
+        <arg name="depth_method" value="cudakde" />
+        <arg name="worker_threads" value="6" />
+    </include>
+    <!-- publish nonrotated link for Kinect -->
+    <node pkg="tf" type="static_transform_publisher" name="kinect2_link_broadcaster"
+          args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 /kinect2_nonrotated_link /kinect2_link 30" />
+</launch>
+

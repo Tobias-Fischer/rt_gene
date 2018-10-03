@@ -1,0 +1,48 @@
+<launch>
+    <arg name="use_mtcnn" default="True" />
+
+    <arg name="interpupillary_distance" default="0.058"/>
+    <arg name="start_rviz" default="False"/>
+
+    <arg name="video_namespace" default="/kinect2/hd"/>
+    <arg name="video_image_topic" default="image_color_rect"/>
+    <arg name="video_depth_topic" default="image_depth_rect"/>
+    <arg name="video_info_topic" default="camera_info"/>
+
+    <arg name="rgb_frame_id" default="/kinect2_link"/>
+    <arg name="rgb_frame_id_ros" default="/kinect2_nonrotated_link"/>
+    <arg name="is_frame_rotated" default="True"/>
+
+    <arg name="group_name" default="gaze" />
+    <arg name="tf_prefix" default="$(arg group_name)" />
+
+    <group ns="$(arg group_name)">
+      <node pkg="tf" type="static_transform_publisher" name="kinect2_link_broadcaster"
+            args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 $(arg rgb_frame_id_ros) $(arg rgb_frame_id) 100" if="$(arg is_frame_rotated)" />
+
+      <node pkg="tf" type="static_transform_publisher" name="kinect2_link_broadcaster"
+            args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 $(arg rgb_frame_id_ros) $(arg rgb_frame_id) 100" unless="$(arg is_frame_rotated)" />
+
+      <node pkg="rt_gene" type="extract_landmarks_node.py" name="extract_landmarks_new" output="screen">
+          <param name="use_mtcnn" value="$(arg use_mtcnn" />
+          <param name="rgb_frame_id" value="$(arg rgb_frame_id)" />
+          <param name="rgb_frame_id_ros" value="$(arg rgb_frame_id_ros)" />
+          <param name="tf_prefix" value="$(arg tf_prefix)" />
+          <param name="interpupillary_distance" value="$(arg interpupillary_distance)" />
+
+          <remap from="/camera_info" to="$(arg video_namespace)/$(arg video_info_topic)"/>
+          <remap from="/image" to="$(arg video_namespace)/$(arg video_image_topic)"/>
+          <remap from="/depth" to="$(arg video_namespace)/$(arg video_depth_topic)"/>
+      </node>
+
+      <node pkg="rt_gene" type="estimate_gaze.py" name="estimate_gaze_twoeyes" output="screen">
+          <rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>
+          <!--<rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_1_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_2_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_3_02.h5']</rosparam>-->
+          <param name="tf_prefix" value="$(arg tf_prefix)" />/
+          <param name="rgb_frame_id_ros" value="$(arg rgb_frame_id_ros)" />
+      </node>      
+    </group>
+
+    <node pkg="rviz" type="rviz" name="rviz_test" args="-d $(find rt_gene)/rviz_cfg/gaze_following.rviz" if="$(arg start_rviz)" />
+</launch>
+
