@@ -12,6 +12,8 @@ pages = {334--352}
 }
 ```
 
+This work was supported in part by the Samsung Global Research Outreach program, and in part by the EU Horizon 2020 Project PAL (643783-RIA).
+
 # Requirements
 ## Manual installation
 1) Download, install, and configure ROS (full installation; we recommend the Kinectic distribution of ROS): http://wiki.ros.org/kinetic/Installation
@@ -30,8 +32,8 @@ pages = {334--352}
 
 ## Improved head pose estimation
 This is currently disabled by default as the DNN module in the OpenCV shipped by ROS is broken (see https://github.com/ros-gbp/opencv3-release/issues/20). To enable, build OpenCV3 from sources and link the ROS OpenCV to the one compiled from sources. Then download the following files:
-- wget https://github.com/yinguobing/head-pose-estimation/raw/master/assets/res10_300x300_ssd_iter_140000.caffemodel -P $(rospack find rt_gene)/model_nets
-- wget https://raw.githubusercontent.com/yinguobing/head-pose-estimation/master/assets/deploy.prototxt -P $(rospack find rt_gene)/model_nets
+- `wget https://github.com/yinguobing/head-pose-estimation/raw/master/assets/res10_300x300_ssd_iter_140000.caffemodel -P $(rospack find rt_gene)/model_nets`
+- `wget https://raw.githubusercontent.com/yinguobing/head-pose-estimation/master/assets/deploy.prototxt -P $(rospack find rt_gene)/model_nets`
 
 Finally, set `use_mtcnn` to `False` in `$(rospack find rt_gene)/launch/estimate_gaze.launch`
 

@@ -12,11 +12,17 @@ pages = {334--352}
 }
 ```
 
+This work was supported in part by the Samsung Global Research Outreach program, and in part by the EU Horizon 2020 Project PAL (643783-RIA).
+
 # Requirements
 `pip install tensorflow-gpu keras numpy scipy tqdm matplotlib pyamg Pillow`
 
 # Inpainting source code
-This code was used to inpaint the region covered by the eyetracking glasses. There are two parts: training subject-specific GANs using the images where no eyetracking glasses are worn (`GAN_train.py` and `GAN_train_run.ipynb`) and the actual inpainting using the trained GANs (`GlassesCompletion.py` and `GlassesCompletion_run.py`). In `GAN_train_run.ipynb` and `GlassesCompletion_run.py` the `dataset_folder_path` needs to be adjusted to where the dataset was downloaded to.
+This code was used to inpaint the region covered by the eyetracking glasses. There are two parts: 
+1) training subject-specific GANs using the images where no eyetracking glasses are worn (`GAN_train.py` and `GAN_train_run.ipynb`) and 
+2) the actual inpainting using the trained GANs (`GlassesCompletion.py` and `GlassesCompletion_run.py`). 
+
+In `GAN_train_run.ipynb` and `GlassesCompletion_run.py` the `dataset_folder_path` needs to be adjusted to where the dataset was downloaded to.
 
 # List of libraries
 - `rt_gene_inpainting/external/poissonblending.py`: [MIT License](https://opensource.org/licenses/MIT); [Link to GitHub](https://github.com/parosky/poissonblending)

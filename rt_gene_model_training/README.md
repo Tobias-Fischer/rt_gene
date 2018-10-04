@@ -12,6 +12,8 @@ pages = {334--352}
 }
 ```
 
+This work was supported in part by the Samsung Global Research Outreach program, and in part by the EU Horizon 2020 Project PAL (643783-RIA).
+
 # Requirements
 `pip install tensorflow-gpu keras numpy scipy tqdm matplotlib h5py scikit-learn`
 
