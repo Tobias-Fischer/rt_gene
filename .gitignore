@@ -4,6 +4,11 @@ CMakeLists.txt.user
 .idea*
 scripts/.idea*
 
+# Model files
+rt_gene/model_nets/Model_allsubjects1.h5
+rt_gene/model_nets/dnn_deploy.prototxt
+rt_gene/model_nets/res10_300x300_ssd_iter_140000.caffemodel
+
 *~
 # Byte-compiled / optimized / DLL files
 __pycache__/

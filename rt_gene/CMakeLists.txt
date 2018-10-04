@@ -28,6 +28,7 @@ catkin_download(
     MD5 e55ea59d494d66dd075bf1503a32f99c
     REQUIRED
 )
+
 add_custom_target(download ALL DEPENDS download_extra_data)
 
 ################################################
