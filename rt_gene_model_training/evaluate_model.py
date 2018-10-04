@@ -51,9 +51,7 @@ config.gpu_options.visible_device_list = args.gpu_num
 
 evaluate_train = True
 
-
-testfiles_path = '/home/tobias/gaze_nn/mtcnn_twoeyes_inpainted_eccv/'
-model_path = '/home/tobias/gaze_nn/mtcnn_twoeyes_inpainted_eccv/'
+model_path = '/recordings_hdd/mtcnn_twoeyes_inpainted_eccv/'
 
 subjects_test_threefold = [
                            ['s001', 's002', 's008', 's010'],
@@ -105,11 +103,11 @@ for subjects_train, subjects_test in zip(subjects_train_threefold, subjects_test
         models.append(load_model(model_path+"3Fold"+prefix+''.join(subjects_test)+suffix+".h5", custom_objects={'accuracy_angle': accuracy_angle, 'angle_loss': angle_loss}))
 
     # Parse Test Data
-    test_file_names = [testfiles_path+'/RT_GENE_test_'+subject+'.mat' for subject in subjects_test]
+    test_file_names = [model_path+'/RT_GENE_test_'+subject+'.mat' for subject in subjects_test]
     test_files = [h5py.File(test_file_name) for test_file_name in test_file_names]
 
     if evaluate_train:
-        train_file_names = [testfiles_path+'/RT_GENE_train_'+subject+'.mat' for subject in subjects_test]
+        train_file_names = [model_path+'/RT_GENE_train_'+subject+'.mat' for subject in subjects_test]
         train_files = [h5py.File(train_file_name) for train_file_name in train_file_names]
 
     test_images_L_1, test_images_R_1, test_gazes_1, test_headposes_1, test_num_1 = get_train_test_data_twoeyes(test_files, 'test', do_shuffle=False)

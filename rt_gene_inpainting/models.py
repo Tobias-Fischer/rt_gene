@@ -5,7 +5,6 @@ from keras.layers import LeakyReLU, Dropout
 from keras.layers import BatchNormalization
 from keras import initializers
 import keras.backend as K
-
 from keras.optimizers import Adam, RMSprop, Adamax
 
 

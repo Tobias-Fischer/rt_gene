@@ -21,7 +21,7 @@ from keras.optimizers import Adam
 
 from train_tools import *
 
-path = '/home/tobias/gaze_nn/mtcnn_twoeyes_inpainted_eccv/'
+path = '/recordings_hdd/mtcnn_twoeyes_inpainted_eccv/'
 
 
 subjects_test_threefold = [

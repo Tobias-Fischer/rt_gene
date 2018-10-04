@@ -2,15 +2,12 @@
 Some codes from https://github.com/Newmu/dcgan_code
 # Updated: 21 Feb 2017
 """
-from __future__ import division
+from __future__ import print_function, division, absolute_import
 import math
-import json
 import random
-import pprint
 import scipy.misc
 import numpy as np
 from time import gmtime, strftime
-from six.moves import xrange
 
 get_stddev = lambda x, k_h, k_w: 1/math.sqrt(k_w*k_h*x.get_shape()[-1])
 

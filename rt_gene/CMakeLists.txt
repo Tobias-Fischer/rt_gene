@@ -20,6 +20,16 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
+catkin_download(
+    Model_allsubjects1.h5
+    https://imperialcollegelondon.box.com/shared/static/zu424pzptmw1klh70jsc697b37h7mwif.h5
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets
+    FILENAME Model_allsubjects1.h5
+    MD5 e55ea59d494d66dd075bf1503a32f99c
+    REQUIRED
+)
+add_custom_target(download ALL DEPENDS download_extra_data)
+
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
@@ -68,7 +78,6 @@ catkin_package(
 #   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
-
 
 # For launch files.
 install(DIRECTORY launch DESTINATION "${CATKIN_PACKAGE_SHARE_DESTINATION}")

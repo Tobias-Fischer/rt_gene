@@ -8,6 +8,7 @@ clc;
 img_width = 60;
 img_height = 36;
 img_face_size = 224;
+
 augmented = 1;
 with_faces = 0;
 

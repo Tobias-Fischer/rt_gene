@@ -1,8 +1,9 @@
+from __future__ import print_function, division, absolute_import
+
 from my_utils import *
 from models import LSGAN_Model, Completion_Model, set_trainability
 import numpy as np
 import tensorflow as tf
-import h5py
 from utils import *
 import os
 from glob import glob
@@ -10,11 +11,10 @@ from tqdm import tqdm, tnrange
 
 from keras.models import load_model
 from keras.callbacks import TensorBoard
+import keras.backend as K
 
 import matplotlib.pyplot as plt
 from datetime import datetime
-
-import keras.backend as K
 
 import external.poissonblending as blending
 
