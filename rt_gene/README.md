@@ -14,6 +14,8 @@ pages = {334--352}
 
 This work was supported in part by the Samsung Global Research Outreach program, and in part by the EU Horizon 2020 Project PAL (643783-RIA).
 
+More information can be found on the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>.
+
 # Requirements
 ## Manual installation
 1) Download, install, and configure ROS (full installation; we recommend the Kinectic distribution of ROS): http://wiki.ros.org/kinetic/Installation
