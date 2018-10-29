@@ -20,7 +20,7 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 ## Manual installation
 1) Download, install, and configure ROS (full installation; we recommend the Kinectic distribution of ROS): http://wiki.ros.org/kinetic/Installation
 1) `sudo apt-get install python-catkin-tools ros-$ROS_DISTRO-ros-numpy ros-$ROS_DISTRO-camera-info-manager-py ros-$ROS_DISTRO-uvc-camera`
-1) `pip install tensorflow-gpu keras numpy scipy tqdm`
+1) `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision`
 1) `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
 1) `cd $HOME/catkin_ws && catkin build`
 
@@ -30,7 +30,6 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     - `wget https://imperialcollegelondon.box.com/shared/static/1ye5jlh5ce11f93yn1s36uysjta7a3ob.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_1_02`
     - `wget https://imperialcollegelondon.box.com/shared/static/5vl9samndju9zhygtai8z6kkpw2jmjll.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_2_02`
     - `wget https://imperialcollegelondon.box.com/shared/static/hmcoxopu4xetic5bm47xqrl5mqktpg92.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_3_02`
-- Download [HopeNet Model](https://drive.google.com/open?id=1m25PrSE7g9D2q2XJVMR6IA7RaCvWSzCR) and place in rt_gene/model_nets
 - Finally, open `$(rospack find rt_gene)/launch/estimate_gaze.launch` and comment out `<rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>` and uncomment `<!--rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', ..., ..., ...</rosparam-->`
 
 ## Improved head pose estimation
