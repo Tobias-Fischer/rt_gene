@@ -62,7 +62,8 @@ Finally, set `use_mtcnn` to `False` in `$(rospack find rt_gene)/launch/estimate_
 
 # List of libraries
 - `rt_gene/src/rt_gene/detect_face.py`: [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/davidsandberg/facenet)
-- `rt_gene/src/rt_gene/extract_landmarks_new.py` & `rt_gene/src/rt_gene/kalman_stabilizer.py` & `rt_gene/model_nets/frozen_inference_graph.pb`: [MIT License](https://opensource.org/licenses/MIT); [Link to GitHub](https://github.com/yinguobing/head-pose-estimation)
+- Parts of `rt_gene/src/rt_gene/extract_landmarks_method.py` & `rt_gene/src/rt_gene/kalman_stabilizer.py` & `rt_gene/model_nets/frozen_inference_graph.pb`: [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/yinguobing/head-pose-estimation)
+- Parts of `rt_gene/src/rt_gene/extract_landmarks_method.py` & `rt_gene/src/rt_gene/Hopenet.py`: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to GitHub](https://github.com/natanielruiz/deep-head-pose)
 - ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)
 - Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
 - Keras; [MIT License](https://opensource.org/licenses/MIT), [Link to website](https://keras.io)
