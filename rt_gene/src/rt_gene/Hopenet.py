@@ -1,3 +1,6 @@
+# code originally from https://github.com/natanielruiz/deep-head-pose
+# code licensed under Apache License 2.0
+
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
