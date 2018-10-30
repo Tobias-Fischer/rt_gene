@@ -20,7 +20,7 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 ## Manual installation
 1) Download, install, and configure ROS (full installation; we recommend the Kinectic distribution of ROS): http://wiki.ros.org/kinetic/Installation
 1) `sudo apt-get install python-catkin-tools ros-$ROS_DISTRO-ros-numpy ros-$ROS_DISTRO-camera-info-manager-py ros-$ROS_DISTRO-uvc-camera`
-1) `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision`
+1) `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow`
 1) `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
 1) `cd $HOME/catkin_ws && catkin build`
 
