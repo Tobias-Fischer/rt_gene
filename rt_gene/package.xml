@@ -47,6 +47,7 @@
   <depend>python-tensorflow-gpu-pip</depend>
   <depend>python-keras-pip</depend>
   <depend>python-tqdm</depend>
+  <depend>python-imaging</depend>
 
   <exec_depend>rviz</exec_depend>
   <exec_depend>message_runtime</exec_depend>

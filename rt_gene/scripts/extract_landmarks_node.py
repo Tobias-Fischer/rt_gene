@@ -10,13 +10,13 @@ from __future__ import print_function, division, absolute_import
 
 import rospy
 # noinspection PyUnresolvedReferences
-import rt_gene.extract_landmarks_new
+import rt_gene.extract_landmarks_method
 
 if __name__ == '__main__':
     try:
         rospy.init_node('extract_landmarks')
 
-        landmark_extractor = rt_gene.extract_landmarks_new.LandmarkNew()
+        landmark_extractor = rt_gene.extract_landmarks_method.LandmarkMethod()
 
         rospy.spin()
     except rospy.exceptions.ROSInterruptException:

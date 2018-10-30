@@ -20,16 +20,16 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 ## Manual installation
 1) Download, install, and configure ROS (full installation; we recommend the Kinectic distribution of ROS): http://wiki.ros.org/kinetic/Installation
 1) `sudo apt-get install python-catkin-tools ros-$ROS_DISTRO-ros-numpy ros-$ROS_DISTRO-camera-info-manager-py ros-$ROS_DISTRO-uvc-camera`
-1) `pip install tensorflow-gpu keras numpy scipy tqdm`
+1) `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow`
 1) `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
 1) `cd $HOME/catkin_ws && catkin build`
 
 ## Optional ensemble model files
 - To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, download the following files (make sure you comply with the licenses of [MPII](https://www.mpi-inf.mpg.de/departments/computer-vision-and-multimodal-computing/research/gaze-based-human-computer-interaction/appearance-based-gaze-estimation-in-the-wild/) and [UTMV](http://www.hci.iis.u-tokyo.ac.jp/datasets/)! these model files are licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)):
-    - wget https://imperialcollegelondon.box.com/shared/static/5cjnijpo8qxawbkik0gjrmyc802j2h1v.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_0_02
-    - wget https://imperialcollegelondon.box.com/shared/static/1ye5jlh5ce11f93yn1s36uysjta7a3ob.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_1_02
-    - wget https://imperialcollegelondon.box.com/shared/static/5vl9samndju9zhygtai8z6kkpw2jmjll.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_2_02
-    - wget https://imperialcollegelondon.box.com/shared/static/hmcoxopu4xetic5bm47xqrl5mqktpg92.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_3_02
+    - `wget https://imperialcollegelondon.box.com/shared/static/5cjnijpo8qxawbkik0gjrmyc802j2h1v.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_0_02`
+    - `wget https://imperialcollegelondon.box.com/shared/static/1ye5jlh5ce11f93yn1s36uysjta7a3ob.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_1_02`
+    - `wget https://imperialcollegelondon.box.com/shared/static/5vl9samndju9zhygtai8z6kkpw2jmjll.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_2_02`
+    - `wget https://imperialcollegelondon.box.com/shared/static/hmcoxopu4xetic5bm47xqrl5mqktpg92.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_3_02`
 - Finally, open `$(rospack find rt_gene)/launch/estimate_gaze.launch` and comment out `<rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>` and uncomment `<!--rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', ..., ..., ...</rosparam-->`
 
 ## Improved head pose estimation

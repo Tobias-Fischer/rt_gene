@@ -29,6 +29,15 @@ catkin_download(
     REQUIRED
 )
 
+catkin_download(
+    hopenet_robust_alpha1.pkl
+    https://drive.google.com/uc?export=download&id=1m25PrSE7g9D2q2XJVMR6IA7RaCvWSzCR
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets
+    FILENAME hopenet_robust_alpha1.pkl
+    MD5 54371760879af494fb18065be6021673
+    REQUIRED
+)
+
 add_custom_target(download ALL DEPENDS download_extra_data)
 
 ################################################
