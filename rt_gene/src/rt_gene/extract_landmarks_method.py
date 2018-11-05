@@ -436,6 +436,8 @@ class LandmarkMethod(object):
             eye_indices = np.array([36, 39, 42, 45])
 
             transformed_landmarks = marks_orig[eye_indices]
+            transformed_landmarks[:, 0] -= facebox[0]
+            transformed_landmarks[:, 1] -= facebox[1]
 
             return face_img, transformed_landmarks, marks_orig
         except Exception:
