@@ -102,7 +102,7 @@ class GazeEstimator(object):
                                                   'img_input_R': test_input_right,
                                                   'headpose_input': test_headpose})[0])
             mean_prediction = np.mean(np.array(predictions), axis=0)
-            mean_prediction[1] += 0.11
+            # mean_prediction[1] += 0.11 # when using the ensemble model - they're all off then!
             return mean_prediction
 
     def visualize_eye_result(self, eye_image, est_gaze):
