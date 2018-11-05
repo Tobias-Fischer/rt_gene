@@ -113,7 +113,7 @@ class LandmarkMethod(object):
         self.color_sub = rospy.Subscriber("/image", Image, self.callback, buff_size=2 ** 24, queue_size=1)
 
         self.facial_landmark_nn = face_alignment.FaceAlignment(landmarks_type=face_alignment.LandmarksType._2D,
-                                                               device="cuda:0", flip_input=True)
+                                                               device="cuda:0", flip_input=False)
 
     def _get_full_model_points(self):
         """Get all 68 3D model points from file"""
@@ -134,15 +134,15 @@ class LandmarkMethod(object):
         return model_points
 
     def get_face_bb(self, image):
-        threshold = 0.8
-
         faceboxes = []
 
+        start_time = time.time()
         detections = self.face_net.detect_from_image(image)
+        print("Time: {}".format(1/(time.time() - start_time)))
 
         for result in detections:
             x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result
-            if confidence > threshold:
+            if confidence > 0.8:
 
                 box = [x_left_top, y_left_top, x_right_bottom, y_right_bottom]
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
@@ -284,7 +284,7 @@ class LandmarkMethod(object):
                  translation_vector - see rotation_vector
         """
 
-        image_points_headpose = self.get_image_points_headpose(landmarks)
+        image_points_headpose = landmarks
 
         camera_matrix = self.img_proc.intrinsicMatrix()
         dist_coeffs = self.img_proc.distortionCoeffs()
@@ -460,7 +460,6 @@ class LandmarkMethod(object):
 
     def __get_eye_image_one(self, transformed_landmarks, face_aligned_color):
         margin_ratio = 1.0
-        print(transformed_landmarks)
 
         try:
             # Get the width of the eye, and compute how big the margin should be according to the width
@@ -498,8 +497,8 @@ class LandmarkMethod(object):
             #     cv2.circle(face_aligned_color, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
 
             # So far, we have only ensured that the ratio is correct. Now, resize it to the desired size.
-            left_eye_color_resized = scipy.misc.imresize(left_eye_color, self.eye_image_size, interp='bilinear')
-            right_eye_color_resized = scipy.misc.imresize(right_eye_color, self.eye_image_size, interp='bilinear')
+            left_eye_color_resized = scipy.misc.imresize(left_eye_color, self.eye_image_size, interp='lanczos')
+            right_eye_color_resized = scipy.misc.imresize(right_eye_color, self.eye_image_size, interp='lanczos')
         except (ValueError, TypeError) as e:
             print(e)
             return None, None, None, None
@@ -520,10 +519,6 @@ class LandmarkMethod(object):
             subject.right_eye_bb = res[3]
 
         tqdm.write('New get_eye_image time: ' + str(time.time() - start_time))
-
-    @staticmethod
-    def get_image_points_headpose(landmarks):
-        return landmarks
 
     @staticmethod
     def get_image_points_eyes_nose(landmarks):
