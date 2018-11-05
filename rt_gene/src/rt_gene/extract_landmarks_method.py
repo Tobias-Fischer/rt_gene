@@ -9,8 +9,6 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 
 from __future__ import print_function, division, absolute_import
 
-import rospy
-import numpy as np
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, CameraInfo
@@ -19,25 +17,11 @@ from image_geometry import PinholeCameraModel
 import tf.transformations as tf_transformations
 from geometry_msgs.msg import PointStamped, Point
 from tf import TransformBroadcaster, TransformListener, ExtrapolationException
-import time
-import os
-import tensorflow
-import rospkg
 import scipy
 
 import time
 import rospkg
 import rospy
-import os
-import torch
-from torch.autograd import Variable
-from torchvision import transforms
-import torch.backends.cudnn as cudnn
-import torchvision
-import torch.nn.functional as F
-from PIL import Image as pilImage
-
-from rt_gene.Hopenet import Hopenet
 
 import numpy as np
 
@@ -137,12 +121,15 @@ class LandmarkMethod(object):
         faceboxes = []
 
         start_time = time.time()
+        fraction = 4
+        image = scipy.misc.imresize(image, 1.0/fraction)
         detections = self.face_net.detect_from_image(image)
-        print("Time: {}".format(1/(time.time() - start_time)))
+        tqdm.write("Face Detector Frequency: {:.2f}Hz".format(1/(time.time() - start_time)))
 
         for result in detections:
-            x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result
-            if confidence > 0.8:
+            x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result*fraction
+
+            if confidence > 0.8*fraction:
 
                 box = [x_left_top, y_left_top, x_right_bottom, y_right_bottom]
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
@@ -210,7 +197,7 @@ class LandmarkMethod(object):
 
         start_time = time.time()
 
-        color_img = gaze_tools.convert_image(color_msg, "rgb8")
+        color_img = gaze_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 
         self.detect_landmarks(color_img, timestamp)  # update self.subjects
@@ -238,7 +225,7 @@ class LandmarkMethod(object):
                     cov_process=0.1,
                     cov_measure=0.1) for _ in range(6)]
 
-            success, rotation_vector, translation_vector = self.get_head_pose(color_img, subject.marks, subject_id)
+            success, rotation_vector, translation_vector = self.get_head_pose(subject.marks, subject_id)
 
             # Publish all the data
             translation_headpose_tf = self.get_head_translation(timestamp, subject_id)
@@ -269,14 +256,13 @@ class LandmarkMethod(object):
 
         tqdm.write('Elapsed total: ' + str(time.time() - start_time) + '\n\n')
 
-    def get_head_pose(self, color_img, landmarks, subject_id):
+    def get_head_pose(self, landmarks, subject_id):
         """
         We are given a set of 2D points in the form of landmarks. The basic idea is that we assume a generic 3D head
         model, and try to fit the 2D points to the 3D model based on the Levenberg-Marquardt optimization. We can use
         OpenCV's implementation of SolvePnP for this.
         This method is inspired by http://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
         We are planning to replace this with our own head pose estimator.
-        :param color_img: RGB Image
         :param landmarks: Landmark positions to be used to determine head pose
         :return: success - Whether the pose was successfully extracted
                  rotation_vector - rotation vector that along with translation vector brings points from the model
@@ -288,8 +274,6 @@ class LandmarkMethod(object):
 
         camera_matrix = self.img_proc.intrinsicMatrix()
         dist_coeffs = self.img_proc.distortionCoeffs()
-
-        # tqdm.write("Camera Matrix :\n {0}".format(camera_matrix))
 
         try:
             if self.last_rvec[subject_id] is not None and self.last_tvec[
