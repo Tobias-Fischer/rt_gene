@@ -5,6 +5,8 @@
 @Kevin Cortacero <cortacero.k31130@gmail.com>
 @Ahmed Al-Hindawi <a.al-hindawi@imperial.ac.uk>
 Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
+
+Uses face-alignment package (https://github.com/1adrianb/face-alignment)
 """
 
 from __future__ import print_function, division, absolute_import
