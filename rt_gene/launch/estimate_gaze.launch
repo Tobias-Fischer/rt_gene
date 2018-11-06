@@ -1,6 +1,4 @@
 <launch>
-    <arg name="use_mtcnn" default="False" />
-
     <arg name="interpupillary_distance" default="0.058"/>
     <arg name="start_rviz" default="False"/>
 
@@ -24,7 +22,6 @@
             args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 $(arg rgb_frame_id_ros) $(arg rgb_frame_id) 100" unless="$(arg is_frame_rotated)" />
 
       <node pkg="rt_gene" type="extract_landmarks_node.py" name="extract_landmarks_new" output="screen">
-          <param name="use_mtcnn" value="$(arg use_mtcnn)" />
           <param name="rgb_frame_id" value="$(arg rgb_frame_id)" />
           <param name="rgb_frame_id_ros" value="$(arg rgb_frame_id_ros)" />
           <param name="tf_prefix" value="$(arg tf_prefix)" />
