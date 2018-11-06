@@ -55,9 +55,7 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 1) `roslaunch rt_gene estimate_gaze.launch`
 
 # List of libraries
-- `rt_gene/src/rt_gene/detect_face.py`: [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/davidsandberg/facenet)
-- Parts of `rt_gene/src/rt_gene/extract_landmarks_method.py` & `rt_gene/src/rt_gene/kalman_stabilizer.py` & `rt_gene/model_nets/frozen_inference_graph.pb`: [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/yinguobing/head-pose-estimation)
-- Parts of `rt_gene/src/rt_gene/extract_landmarks_method.py` & `rt_gene/src/rt_gene/Hopenet.py`: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to GitHub](https://github.com/natanielruiz/deep-head-pose)
+- Parts of `rt_gene/src/rt_gene/kalman_stabilizer.py`: [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/yinguobing/head-pose-estimation)
 - ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)
 - Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
 - Keras; [MIT License](https://opensource.org/licenses/MIT), [Link to website](https://keras.io)
