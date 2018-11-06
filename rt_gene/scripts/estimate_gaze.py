@@ -101,7 +101,9 @@ class GazeEstimator(object):
                 predictions.append(model.predict({'img_input_L': test_input_left,
                                                   'img_input_R': test_input_right,
                                                   'headpose_input': test_headpose})[0])
-            return np.mean(np.array(predictions), axis=0)
+            mean_prediction = np.mean(np.array(predictions), axis=0)
+            # mean_prediction[1] += 0.11 # when using the ensemble model - they're all off then!
+            return mean_prediction
 
     def visualize_eye_result(self, eye_image, est_gaze):
         """Here, we take the original eye eye_image and overlay the estimated gaze."""

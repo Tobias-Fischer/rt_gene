@@ -5,12 +5,12 @@
 @Kevin Cortacero <cortacero.k31130@gmail.com>
 @Ahmed Al-Hindawi <a.al-hindawi@imperial.ac.uk>
 Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
+
+Uses face-alignment package (https://github.com/1adrianb/face-alignment)
 """
 
 from __future__ import print_function, division, absolute_import
 
-import rospy
-import numpy as np
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, CameraInfo
@@ -19,25 +19,11 @@ from image_geometry import PinholeCameraModel
 import tf.transformations as tf_transformations
 from geometry_msgs.msg import PointStamped, Point
 from tf import TransformBroadcaster, TransformListener, ExtrapolationException
-import time
-import os
-import tensorflow
-import rospkg
 import scipy
 
 import time
 import rospkg
 import rospy
-import os
-import torch
-from torch.autograd import Variable
-from torchvision import transforms
-import torch.backends.cudnn as cudnn
-import torchvision
-import torch.nn.functional as F
-from PIL import Image as pilImage
-
-from rt_gene.Hopenet import Hopenet
 
 import numpy as np
 
@@ -47,6 +33,9 @@ from rt_gene.kalman_stabilizer import Stabilizer
 
 from rt_gene.msg import MSG_SubjectImagesList
 from rt_gene.subject_ros_bridge import SubjectListBridge
+
+import face_alignment
+from face_alignment.detection.sfd import FaceDetector
 
 
 class SubjectDetected(object):
@@ -102,71 +91,15 @@ class LandmarkMethod(object):
         # multiple person faces publication for visualisation
         self.subject_faces_pub = rospy.Publisher("/subjects/faces", Image, queue_size=1)
 
-        self.CNN_INPUT_SIZE = 128
-
         self.model_points = self._get_full_model_points()
 
         self.sess_bb = None
-        self.use_mtcnn = rospy.get_param("~use_mtcnn", True)
-        if self.use_mtcnn:
-            self.minsize = 40  # minimum size of face
-            self.threshold = [0.6, 0.7, 0.7]  # three steps's threshold
-            self.factor = 0.709  # scale factor
-            self.pnet, self.rnet, self.onet = self.load_mtcnn_network()
-        else:
-            rospy.logwarn(
-                "This doesn't work with the currently shipped version of ROS_OpenCV (3.3.1-dev) but requires OpenCV-3.3.1")
-            dnn_proto_txt = os.path.join(rospkg.RosPack().get_path('rt_gene'), 'model_nets/dnn_deploy.prototxt')
-            dnn_model = os.path.join(rospkg.RosPack().get_path('rt_gene'),
-                                     'model_nets/res10_300x300_ssd_iter_140000.caffemodel')
-            self.face_net = cv2.dnn.readNetFromCaffe(dnn_proto_txt, dnn_model)
+        self.face_net = FaceDetector(device="cuda:0")
 
-        mark_model = os.path.join(rospkg.RosPack().get_path('rt_gene'), 'model_nets/frozen_inference_graph.pb')
-
-        detection_graph = tensorflow.Graph()
-        with detection_graph.as_default():
-            od_graph_def = tensorflow.GraphDef()
-            with tensorflow.gfile.GFile(mark_model, 'rb') as fid:
-                serialized_graph = fid.read()
-                od_graph_def.ParseFromString(serialized_graph)
-                tensorflow.import_graph_def(od_graph_def, name='')
-        self.graph = detection_graph
-
-        gpu_options = tensorflow.GPUOptions(allow_growth=True, visible_device_list="0",
-                                            per_process_gpu_memory_fraction=0.3)
-        self.sess = tensorflow.Session(graph=detection_graph, config=tensorflow.ConfigProto(gpu_options=gpu_options,
-                                                                                            log_device_placement=False,
-                                                                                            inter_op_parallelism_threads=1,
-                                                                                            intra_op_parallelism_threads=1
-                                                                                            ))
         self.color_sub = rospy.Subscriber("/image", Image, self.callback, buff_size=2 ** 24, queue_size=1)
 
-        hopenet_snapshot_path = os.path.join(rospkg.RosPack().get_path('rt_gene'),
-                                     'model_nets/hopenet_robust_alpha1.pkl')
-
-        # ResNet50 structure
-        self.hopenet = Hopenet(torchvision.models.resnet.Bottleneck, [3, 4, 6, 3], 66)
-
-        print('Loading Hopenet Snapshot.')
-        # Load snapshot
-        saved_state_dict = torch.load(hopenet_snapshot_path)
-        self.hopenet.load_state_dict(saved_state_dict)
-
-        print('Loading data.')
-        idx_tensor = [idx for idx in range(66)]
-        self.idx_tensor = torch.FloatTensor(idx_tensor).cuda(0)
-
-        self.transformations = transforms.Compose([transforms.Resize(224),
-                                                   transforms.CenterCrop(224), transforms.ToTensor(),
-                                                   transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                                        std=[0.229, 0.224, 0.225])])
-
-        self.hopenet.cuda(0)
-        self.hopenet.eval()
-
-    def __del__(self):
-        if self.sess is not None:
-            self.sess.close()
+        self.facial_landmark_nn = face_alignment.FaceAlignment(landmarks_type=face_alignment.LandmarksType._2D,
+                                                               device="cuda:0", flip_input=False)
 
     def _get_full_model_points(self):
         """Get all 68 3D model points from file"""
@@ -186,48 +119,21 @@ class LandmarkMethod(object):
 
         return model_points
 
-    def get_face_bb_mtcnn(self, image, _):
-        import rt_gene.detect_face as detect_face
-        bounding_boxes, landmark_points = detect_face.detect_face(image, self.minsize, self.pnet, self.rnet, self.onet,
-                                                                  self.threshold, self.factor)
-
-        faceboxes = []
-        for box in bounding_boxes[:, 0:4].astype(np.uint32):
-            # Move box down.
-            diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
-            offset_y = int(abs(diff_height_width / 2))
-            box_moved = self.move_box(box, [0, offset_y])
-
-            # Make box square.
-            facebox = self.get_square_box(box_moved)
-
-            if self.box_in_image(facebox, image):
-                faceboxes.append(facebox)
-        return faceboxes
-
-    # noinspection PyUnusedLocal
-    def get_face_bb(self, image, timestamp):
-        rows, cols, _ = image.shape
-        threshold = 0.5
-
+    def get_face_bb(self, image):
         faceboxes = []
 
-        resized = cv2.resize(image, (300, 300))
-        resized = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+        start_time = time.time()
+        fraction = 4
+        image = scipy.misc.imresize(image, 1.0/fraction)
+        detections = self.face_net.detect_from_image(image)
+        tqdm.write("Face Detector Frequency: {:.2f}Hz".format(1/(time.time() - start_time)))
 
-        self.face_net.setInput(cv2.dnn.blobFromImage(
-            resized, 1.0, (300, 300), (104.0, 177.0, 123.0), False, False))
-        detections = self.face_net.forward()
+        for result in detections:
+            x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result*fraction
 
-        for result in detections[0, 0, :, :]:
-            confidence = result[2]
-            if confidence > threshold:
-                x_left_bottom = int(result[3] * cols)
-                y_left_bottom = int(result[4] * rows)
-                x_right_top = int(result[5] * cols)
-                y_right_top = int(result[6] * rows)
+            if confidence > 0.8*fraction:
 
-                box = [x_left_bottom, y_left_bottom, x_right_top, y_right_top]
+                box = [x_left_top, y_left_top, x_right_bottom, y_right_bottom]
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
                 offset_y = int(abs(diff_height_width / 2))
                 box_moved = self.move_box(box, [0, offset_y])
@@ -284,9 +190,6 @@ class LandmarkMethod(object):
             if diff % 2 == 1:
                 bottom_y += 1
 
-        # Make sure box is always square.
-        assert ((right_x - left_x) == (bottom_y - top_y)), 'Box is not square.'
-
         return [left_x, top_y, right_x, bottom_y]
 
     def process_image(self, color_msg):
@@ -296,7 +199,7 @@ class LandmarkMethod(object):
 
         start_time = time.time()
 
-        color_img = gaze_tools.convert_image(color_msg, "rgb8")
+        color_img = gaze_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 
         self.detect_landmarks(color_img, timestamp)  # update self.subjects
@@ -307,7 +210,7 @@ class LandmarkMethod(object):
             tqdm.write("No face found")
             return
 
-        self.get_eye_image()    # update self.subjects
+        self.get_eye_image()  # update self.subjects
 
         final_head_pose_images = None
         for subject_id, subject in self.subjects.items():
@@ -324,19 +227,21 @@ class LandmarkMethod(object):
                     cov_process=0.1,
                     cov_measure=0.1) for _ in range(6)]
 
-            success, _, translation_vector = self.get_head_pose(color_img, subject.marks, subject_id)
-            rotation_vector = self.get_head_pose_deep_net(color_img, subject)
+            success, rotation_vector, translation_vector = self.get_head_pose(subject.marks, subject_id)
 
             # Publish all the data
             translation_headpose_tf = self.get_head_translation(timestamp, subject_id)
 
             if success:
                 if translation_headpose_tf is not None:
-                    euler_angles_head = self.publish_pose(timestamp, translation_headpose_tf, rotation_vector, subject_id)
+                    euler_angles_head = self.publish_pose(timestamp, translation_headpose_tf, rotation_vector,
+                                                          subject_id)
 
                     if euler_angles_head is not None:
-                        headpose_image = self.visualize_headpose_result(subject.face_color, gaze_tools.get_phi_theta_from_euler(euler_angles_head))
-                        
+                        headpose_image = self.visualize_headpose_result(subject.face_color,
+                                                                        gaze_tools.get_phi_theta_from_euler(
+                                                                            euler_angles_head))
+
                         if final_head_pose_images is None:
                             final_head_pose_images = headpose_image
                         else:
@@ -350,47 +255,16 @@ class LandmarkMethod(object):
             headpose_image_ros = self.bridge.cv2_to_imgmsg(final_head_pose_images, "bgr8")
             headpose_image_ros.header.stamp = timestamp
             self.subject_faces_pub.publish(headpose_image_ros)
-                
+
         tqdm.write('Elapsed total: ' + str(time.time() - start_time) + '\n\n')
 
-    def get_head_pose_deep_net(self, frame, subject):
-
-        img = frame[subject.face_bb[1]: subject.face_bb[3], subject.face_bb[0]: subject.face_bb[2]]
-
-        img = pilImage.fromarray(img)
-
-        # Transform
-        img = self.transformations(img)
-        img_shape = img.size()
-        img = img.view(1, img_shape[0], img_shape[1], img_shape[2])
-        img = Variable(img).cuda(0)
-
-        yaw, pitch, roll = self.hopenet(img)
-
-        yaw_predicted = F.softmax(yaw, dim=1)
-        pitch_predicted = F.softmax(pitch, dim=1)
-        roll_predicted = F.softmax(roll, dim=1)
-        # Get continuous predictions in degrees.
-        yaw_predicted = torch.sum(yaw_predicted.data[0] * self.idx_tensor) * 3 - 99
-        pitch_predicted = torch.sum(pitch_predicted.data[0] * self.idx_tensor) * 3 - 99
-        roll_predicted = torch.sum(roll_predicted.data[0] * self.idx_tensor) * 3 - 99
-
-        p = pitch_predicted * np.pi / 180
-        y = -(yaw_predicted * np.pi / 180)
-        r = roll_predicted * np.pi / 180
-
-        quat = tf_transformations.quaternion_from_euler(r + np.pi, p + np.pi, y)
-
-        return quat
-
-    def get_head_pose(self, color_img, landmarks, subject_id):
+    def get_head_pose(self, landmarks, subject_id):
         """
         We are given a set of 2D points in the form of landmarks. The basic idea is that we assume a generic 3D head
         model, and try to fit the 2D points to the 3D model based on the Levenberg-Marquardt optimization. We can use
         OpenCV's implementation of SolvePnP for this.
         This method is inspired by http://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
         We are planning to replace this with our own head pose estimator.
-        :param color_img: RGB Image
         :param landmarks: Landmark positions to be used to determine head pose
         :return: success - Whether the pose was successfully extracted
                  rotation_vector - rotation vector that along with translation vector brings points from the model
@@ -398,15 +272,14 @@ class LandmarkMethod(object):
                  translation_vector - see rotation_vector
         """
 
-        image_points_headpose = self.get_image_points_headpose(landmarks)
+        image_points_headpose = landmarks
 
         camera_matrix = self.img_proc.intrinsicMatrix()
         dist_coeffs = self.img_proc.distortionCoeffs()
 
-        # tqdm.write("Camera Matrix :\n {0}".format(camera_matrix))
-
         try:
-            if self.last_rvec[subject_id] is not None and self.last_tvec[subject_id] is not None and self.use_previous_headpose_estimate:
+            if self.last_rvec[subject_id] is not None and self.last_tvec[
+                subject_id] is not None and self.use_previous_headpose_estimate:
                 (success, rotation_vector_unstable, translation_vector_unstable) = \
                     cv2.solvePnP(self.model_points, image_points_headpose, camera_matrix, dist_coeffs,
                                  flags=cv2.SOLVEPNP_ITERATIVE, useExtrinsicGuess=True,
@@ -443,10 +316,10 @@ class LandmarkMethod(object):
         return success, rot_head, translation_vector
 
     def publish_subject_list(self, timestamp, subjects):
-        assert(subjects is not None)
-        
+        assert (subjects is not None)
+
         subject_list_message = self.__subject_bridge.images_to_msg(subjects, timestamp)
-            
+
         self.subject_pub.publish(subject_list_message)
 
     @staticmethod
@@ -510,20 +383,6 @@ class LandmarkMethod(object):
             else:
                 raise e
 
-    def detect_marks(self, image_np):
-        """Detect marks from image"""
-        # Get result tensor by its name.
-        logits_tensor = self.graph.get_tensor_by_name('logits/BiasAdd:0')
-
-        # Actual detection.
-        predictions = self.sess.run(logits_tensor, feed_dict={'input_image_tensor:0': image_np})
-
-        # Convert predictions to landmarks.
-        marks = np.array(predictions).flatten()
-        marks = np.reshape(marks, (-1, 2))
-
-        return marks
-
     def __update_subjects(self, new_faceboxes):
         """
         Assign the new faces to the existing subjects (id tracking)
@@ -556,33 +415,26 @@ class LandmarkMethod(object):
 
     def __detect_landmarks_one_box(self, facebox, color_img):
         try:
-            face_img = color_img[facebox[1]: facebox[3], facebox[0]: facebox[2]]
-            face_img = cv2.resize(face_img, (self.CNN_INPUT_SIZE, self.CNN_INPUT_SIZE))
-            face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
-
-            marks = self.detect_marks(face_img)
-
-            marks_orig = np.array(marks, copy=True)
-            marks_orig *= self.CNN_INPUT_SIZE
-
-            # Convert the marks locations from local CNN to global image.
-            marks *= (facebox[2] - facebox[0])
-            marks[:, 0] += facebox[0]
-            marks[:, 1] += facebox[1]
+            _bb = map(int, facebox)
+            face_img = color_img[_bb[1]: _bb[3], _bb[0]: _bb[2]]
+            marks_orig = np.array(self.__detect_facial_landmarks(color_img, facebox)[0])
 
             eye_indices = np.array([36, 39, 42, 45])
 
             transformed_landmarks = marks_orig[eye_indices]
+            transformed_landmarks[:, 0] -= facebox[0]
+            transformed_landmarks[:, 1] -= facebox[1]
 
-            return face_img, transformed_landmarks, marks
+            return face_img, transformed_landmarks, marks_orig
         except Exception:
             return None, None, None
 
+    def __detect_facial_landmarks(self, color_img, facebox):
+        marks = self.facial_landmark_nn.get_landmarks(color_img, detected_faces=[facebox])
+        return marks
+
     def detect_landmarks(self, color_img, timestamp):
-        if self.use_mtcnn:
-            faceboxes = self.get_face_bb_mtcnn(color_img, timestamp)
-        else:
-            faceboxes = self.get_face_bb(color_img, timestamp)
+        faceboxes = self.get_face_bb(color_img)
 
         self.__update_subjects(faceboxes)
 
@@ -631,9 +483,10 @@ class LandmarkMethod(object):
             #     cv2.circle(face_aligned_color, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
 
             # So far, we have only ensured that the ratio is correct. Now, resize it to the desired size.
-            left_eye_color_resized = scipy.misc.imresize(left_eye_color, self.eye_image_size, interp='bilinear')
-            right_eye_color_resized = scipy.misc.imresize(right_eye_color, self.eye_image_size, interp='bilinear')
-        except (ValueError, TypeError):
+            left_eye_color_resized = scipy.misc.imresize(left_eye_color, self.eye_image_size, interp='lanczos')
+            right_eye_color_resized = scipy.misc.imresize(right_eye_color, self.eye_image_size, interp='lanczos')
+        except (ValueError, TypeError) as e:
+            print(e)
             return None, None, None, None
         return left_eye_color_resized, right_eye_color_resized, left_bb, right_bb
 
@@ -654,10 +507,6 @@ class LandmarkMethod(object):
         tqdm.write('New get_eye_image time: ' + str(time.time() - start_time))
 
     @staticmethod
-    def get_image_points_headpose(landmarks):
-        return landmarks
-
-    @staticmethod
     def get_image_points_eyes_nose(landmarks):
         landmarks_x, landmarks_y = landmarks.T[0], landmarks.T[1]
 
@@ -670,22 +519,3 @@ class LandmarkMethod(object):
 
         return (nose_center_x, nose_center_y), \
                (left_eye_center_x, left_eye_center_y), (right_eye_center_x, right_eye_center_y)
-
-    def load_mtcnn_network(self):
-        import rt_gene.detect_face as detect_face
-        import tensorflow
-
-        """Load the MTCNN network."""
-        tqdm.write('Creating networks and loading parameters')
-
-        with tensorflow.Graph().as_default():
-            gpu_memory_fraction = rospy.get_param("~gpu_memory_fraction", 0.05)
-            gpu_options = tensorflow.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
-            # gpu_options = tensorflow.GPUOptions(allow_growth=True, visible_device_list="0")
-            self.sess_bb = tensorflow.Session(config=tensorflow.ConfigProto(gpu_options=gpu_options,
-                                                                            log_device_placement=False))
-            with self.sess_bb.as_default():
-                model_path = rospkg.RosPack().get_path('rt_gene') + '/model_nets'
-                pnet, rnet, onet = detect_face.create_mtcnn(self.sess_bb, model_path)
-        return pnet, rnet, onet
-

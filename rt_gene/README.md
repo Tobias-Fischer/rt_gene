@@ -20,7 +20,7 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 ## Manual installation
 1) Download, install, and configure ROS (full installation; we recommend the Kinectic distribution of ROS): http://wiki.ros.org/kinetic/Installation
 1) `sudo apt-get install python-catkin-tools ros-$ROS_DISTRO-ros-numpy ros-$ROS_DISTRO-camera-info-manager-py ros-$ROS_DISTRO-uvc-camera`
-1) `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow`
+1) `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow face-alignment`
 1) `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
 1) `cd $HOME/catkin_ws && catkin build`
 
@@ -32,12 +32,6 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     - `wget https://imperialcollegelondon.box.com/shared/static/hmcoxopu4xetic5bm47xqrl5mqktpg92.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_3_02`
 - Finally, open `$(rospack find rt_gene)/launch/estimate_gaze.launch` and comment out `<rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>` and uncomment `<!--rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', ..., ..., ...</rosparam-->`
 
-## Improved head pose estimation
-This is currently disabled by default as the DNN module in the OpenCV shipped by ROS is broken (see https://github.com/ros-gbp/opencv3-release/issues/20). To enable, build OpenCV3 from sources and link the ROS OpenCV to the one compiled from sources. Then download the following files:
-- `wget https://github.com/yinguobing/head-pose-estimation/raw/master/assets/res10_300x300_ssd_iter_140000.caffemodel -P $(rospack find rt_gene)/model_nets`
-- `wget https://raw.githubusercontent.com/yinguobing/head-pose-estimation/master/assets/deploy.prototxt -P $(rospack find rt_gene)/model_nets`
-
-Finally, set `use_mtcnn` to `False` in `$(rospack find rt_gene)/launch/estimate_gaze.launch`
 
 ## Requirements for live gaze estimation (Kinect One)
 - Follow instructions for https://github.com/code-iai/iai_kinect2
