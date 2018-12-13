@@ -48,6 +48,8 @@
   <depend>python-keras-pip</depend>
   <depend>python-tqdm</depend>
   <depend>python-imaging</depend>
+  <depend>python-face-alignment-pip</depend>
+  <depend>python-pytorch-pip</depend>
 
   <exec_depend>rviz</exec_depend>
   <exec_depend>message_runtime</exec_depend>
