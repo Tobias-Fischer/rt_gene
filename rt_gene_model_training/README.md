@@ -8,7 +8,7 @@ title = {{RT-GENE: Real-Time Eye Gaze Estimation in Natural Environments}},
 booktitle = {European Conference on Computer Vision},
 year = {2018},
 month = {September},
-pages = {334--352}
+pages = {339--357}
 }
 ```
 
