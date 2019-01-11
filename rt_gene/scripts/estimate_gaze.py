@@ -60,14 +60,15 @@ class GazeEstimator(object):
         self.rgb_frame_id_ros = rospy.get_param("~rgb_frame_id_ros", "/kinect2_nonrotated_link")
 
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
-
-        config = tensorflow.ConfigProto(inter_op_parallelism_threads=1,
-                                        intra_op_parallelism_threads=1)
-        config.gpu_options.allow_growth = True
-        config.gpu_options.per_process_gpu_memory_fraction = 0.3
-        config.log_device_placement = False
-        self.sess = tensorflow.Session(config=config)
-        set_session(self.sess)
+        self.gpu_id = rospy.get_param("~gpu_id", default="0")
+        with tensorflow.device("/gpu:{}".format(self.gpu_id)):
+            config = tensorflow.ConfigProto(inter_op_parallelism_threads=1,
+                                            intra_op_parallelism_threads=1)
+            config.gpu_options.allow_growth = True
+            config.gpu_options.per_process_gpu_memory_fraction = 0.3
+            config.log_device_placement = False
+            self.sess = tensorflow.Session(config=config)
+            set_session(self.sess)
 
         model_files = rospy.get_param("~model_files")
 

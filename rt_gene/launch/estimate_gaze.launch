@@ -13,15 +13,17 @@
 
     <arg name="group_name" default="gaze" />
     <arg name="tf_prefix" default="$(arg group_name)" />
+    <arg name="gpu_id"  default="0" />
 
     <group ns="$(arg group_name)">
-      <node pkg="tf" type="static_transform_publisher" name="kinect2_link_broadcaster"
-            args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 $(arg rgb_frame_id_ros) $(arg rgb_frame_id) 100" if="$(arg is_frame_rotated)" />
+      <node pkg="tf2_ros" type="static_transform_publisher" name="kinect2_link_broadcaster"
+            args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 $(arg rgb_frame_id_ros) $(arg rgb_frame_id)" if="$(arg is_frame_rotated)" />
 
-      <node pkg="tf" type="static_transform_publisher" name="kinect2_link_broadcaster"
-            args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 $(arg rgb_frame_id_ros) $(arg rgb_frame_id) 100" unless="$(arg is_frame_rotated)" />
+      <node pkg="tf2_ros" type="static_transform_publisher" name="kinect2_link_broadcaster"
+            args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 $(arg rgb_frame_id_ros) $(arg rgb_frame_id)" unless="$(arg is_frame_rotated)" />
 
       <node pkg="rt_gene" type="extract_landmarks_node.py" name="extract_landmarks_new" output="screen">
+          <param name="gpu_id"  value="$(arg gpu_id)" />
           <param name="rgb_frame_id" value="$(arg rgb_frame_id)" />
           <param name="rgb_frame_id_ros" value="$(arg rgb_frame_id_ros)" />
           <param name="tf_prefix" value="$(arg tf_prefix)" />
@@ -37,6 +39,7 @@
           <!--<rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_1_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_2_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_3_02.h5']</rosparam>-->
           <param name="tf_prefix" value="$(arg tf_prefix)" />/
           <param name="rgb_frame_id_ros" value="$(arg rgb_frame_id_ros)" />
+          <param name="gpu_id"  value="$(arg gpu_id)" />
       </node>      
     </group>
 

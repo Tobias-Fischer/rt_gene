@@ -6,7 +6,7 @@
         <arg name="worker_threads" value="6" />
     </include>
     <!-- publish nonrotated link for Kinect -->
-    <node pkg="tf" type="static_transform_publisher" name="kinect2_link_broadcaster"
-          args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 /kinect2_nonrotated_link /kinect2_link 30" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect2_link_broadcaster"
+          args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 /kinect2_nonrotated_link /kinect2_link" />
 </launch>
 

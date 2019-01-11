@@ -37,6 +37,8 @@ from rt_gene.subject_ros_bridge import SubjectListBridge
 import face_alignment
 from face_alignment.detection.sfd import FaceDetector
 
+import torch
+
 
 class SubjectDetected(object):
     def __init__(self, face_bb):
@@ -57,6 +59,9 @@ class LandmarkMethod(object):
         self.margin_eyes_width = rospy.get_param("~margin_eyes_width", 60)
         self.interpupillary_distance = rospy.get_param("~interpupillary_distance", default=0.058)
         self.cropped_face_size = (rospy.get_param("~face_size_height", 224), rospy.get_param("~face_size_width", 224))
+        self.gpu_id = rospy.get_param("~gpu_id", default="0")
+        torch.cuda.set_device(self.gpu_id)
+        rospy.loginfo("Using GPU for landmark: {}".format(self.gpu_id))
 
         self.rgb_frame_id = rospy.get_param("~rgb_frame_id", "/kinect2_link")
         self.rgb_frame_id_ros = rospy.get_param("~rgb_frame_id_ros", "/kinect2_nonrotated_link")
@@ -94,12 +99,12 @@ class LandmarkMethod(object):
         self.model_points = self._get_full_model_points()
 
         self.sess_bb = None
-        self.face_net = FaceDetector(device="cuda:0")
+        self.face_net = FaceDetector(device="cuda:{}".format(self.gpu_id))
 
         self.color_sub = rospy.Subscriber("/image", Image, self.callback, buff_size=2 ** 24, queue_size=1)
 
         self.facial_landmark_nn = face_alignment.FaceAlignment(landmarks_type=face_alignment.LandmarksType._2D,
-                                                               device="cuda:0", flip_input=False)
+                                                               device="cuda:{}".format(self.gpu_id), flip_input=False)
 
     def _get_full_model_points(self):
         """Get all 68 3D model points from file"""
@@ -115,7 +120,7 @@ class LandmarkMethod(object):
 
         # index the expansion of the model based.
         # empirically, model_points * 1.1 works well with an IP of 0.058.
-        model_points = model_points * (self.interpupillary_distance * 18.9)
+        model_points = model_points * (self.interpupillary_distance * 30)
 
         return model_points
 
@@ -124,15 +129,14 @@ class LandmarkMethod(object):
 
         start_time = time.time()
         fraction = 4
-        image = scipy.misc.imresize(image, 1.0/fraction)
+        image = scipy.misc.imresize(image, 1.0 / fraction)
         detections = self.face_net.detect_from_image(image)
-        tqdm.write("Face Detector Frequency: {:.2f}Hz".format(1/(time.time() - start_time)))
+        tqdm.write("Face Detector Frequency: {:.2f}Hz".format(1 / (time.time() - start_time)))
 
         for result in detections:
-            x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result*fraction
+            x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result * fraction
 
-            if confidence > 0.8*fraction:
-
+            if confidence > 0.8 * fraction:
                 box = [x_left_top, y_left_top, x_right_bottom, y_right_bottom]
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
                 offset_y = int(abs(diff_height_width / 2))
