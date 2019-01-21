@@ -242,14 +242,15 @@ class LandmarkMethod(object):
                                                           subject_id)
 
                     if euler_angles_head is not None:
-                        headpose_image = self.visualize_headpose_result(subject.face_color,
+                        head_pose_image = self.visualize_headpose_result(subject.face_color,
                                                                         gaze_tools.get_phi_theta_from_euler(
                                                                             euler_angles_head))
+                        head_pose_image_resized = cv2.resize(head_pose_image, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
                         if final_head_pose_images is None:
-                            final_head_pose_images = headpose_image
+                            final_head_pose_images = head_pose_image_resized
                         else:
-                            final_head_pose_images = np.concatenate((final_head_pose_images, headpose_image), axis=1)
+                            final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image_resized), axis=1)
             else:
                 if not success:
                     tqdm.write("Could not get head pose properly")
