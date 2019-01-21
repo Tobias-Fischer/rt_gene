@@ -24,6 +24,9 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 1) `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
 1) `cd $HOME/catkin_ws && catkin build`
 
+## Additional steps if you use Anaconda
+- `pip install empy rospkg`
+
 ## Optional ensemble model files
 - To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, download the following files (make sure you comply with the licenses of [MPII](https://www.mpi-inf.mpg.de/departments/computer-vision-and-multimodal-computing/research/gaze-based-human-computer-interaction/appearance-based-gaze-estimation-in-the-wild/) and [UTMV](http://www.hci.iis.u-tokyo.ac.jp/datasets/)! these model files are licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)):
     - `wget https://imperialcollegelondon.box.com/shared/static/5cjnijpo8qxawbkik0gjrmyc802j2h1v.h5 -O $(rospack find rt_gene)/model_nets/all_subjects_mpii_prl_utmv_0_02`
