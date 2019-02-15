@@ -55,6 +55,7 @@ class LandmarkMethod(object):
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
         self.model_size_rescale = 30.0
+        self.head_pitch = 0.0
         self.margin = rospy.get_param("~margin", 42)
         self.margin_eyes_height = rospy.get_param("~margin_eyes_height", 36)
         self.margin_eyes_width = rospy.get_param("~margin_eyes_width", 60)
@@ -113,6 +114,7 @@ class LandmarkMethod(object):
         self.model_points /= self.model_size_rescale
         self.model_size_rescale = config["model_size"]
         self.model_points *= self.model_size_rescale
+        self.head_pitch = config["head_pitch"]
         return config
 
     def _get_full_model_points(self):
@@ -325,7 +327,7 @@ class LandmarkMethod(object):
         self.last_rvec[subject_id] = rotation_vector
         self.last_tvec[subject_id] = translation_vector
 
-        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[1] + np.pi, rotation_vector[0]]
+        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[1] + np.pi + self.head_pitch, rotation_vector[0]]
         rot_head = tf_transformations.quaternion_from_euler(*rotation_vector_swapped)
 
         return success, rot_head, translation_vector
