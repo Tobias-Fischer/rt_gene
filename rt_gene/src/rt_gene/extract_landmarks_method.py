@@ -20,7 +20,7 @@ import tf.transformations as tf_transformations
 from geometry_msgs.msg import PointStamped, Point
 from tf import TransformBroadcaster, TransformListener, ExtrapolationException
 import scipy
-
+from dynamic_reconfigure.server import Server
 import time
 import rospkg
 import rospy
@@ -32,6 +32,7 @@ import rt_gene.gaze_tools as gaze_tools
 from rt_gene.kalman_stabilizer import Stabilizer
 
 from rt_gene.msg import MSG_SubjectImagesList
+from rt_gene.cfg import ModelSizeConfig
 from rt_gene.subject_ros_bridge import SubjectListBridge
 
 import face_alignment
@@ -53,7 +54,8 @@ class LandmarkMethod(object):
         self.subjects = dict()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
-
+        self.model_size_rescale = 30.0
+        self.head_pitch = 0.0
         self.margin = rospy.get_param("~margin", 42)
         self.margin_eyes_height = rospy.get_param("~margin_eyes_height", 36)
         self.margin_eyes_width = rospy.get_param("~margin_eyes_width", 60)
@@ -106,6 +108,15 @@ class LandmarkMethod(object):
         self.facial_landmark_nn = face_alignment.FaceAlignment(landmarks_type=face_alignment.LandmarksType._2D,
                                                                device="cuda:{}".format(self.gpu_id), flip_input=False)
 
+        Server(ModelSizeConfig, self._dyn_reconfig_callback)
+
+    def _dyn_reconfig_callback(self, config, level):
+        self.model_points /= self.model_size_rescale
+        self.model_size_rescale = config["model_size"]
+        self.model_points *= self.model_size_rescale
+        self.head_pitch = config["head_pitch"]
+        return config
+
     def _get_full_model_points(self):
         """Get all 68 3D model points from file"""
         raw_value = []
@@ -120,7 +131,8 @@ class LandmarkMethod(object):
 
         # index the expansion of the model based.
         # empirically, model_points * 1.1 works well with an IP of 0.058.
-        model_points = model_points * (self.interpupillary_distance * 30)
+        tqdm.write("\n\nModel Size: {}\n\n".format(self.model_size_rescale))
+        model_points = model_points * (self.interpupillary_distance * self.model_size_rescale)
 
         return model_points
 
@@ -315,7 +327,7 @@ class LandmarkMethod(object):
         self.last_rvec[subject_id] = rotation_vector
         self.last_tvec[subject_id] = translation_vector
 
-        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[1] + np.pi, rotation_vector[0]]
+        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[1] + np.pi + self.head_pitch, rotation_vector[0]]
         rot_head = tf_transformations.quaternion_from_euler(*rotation_vector_swapped)
 
         return success, rot_head, translation_vector

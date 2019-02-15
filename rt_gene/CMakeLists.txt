@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tf_conversions
   uvc_camera
+  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -32,7 +33,7 @@ catkin_download(
 add_custom_target(download ALL DEPENDS download_extra_data)
 
 ################################################
-## Declare ROS messages, services and actions ##
+## Declare ROS messages, services, dynamic reconfigure and actions ##
 ################################################
 
 # Generate messages in the 'msg' folder
@@ -48,6 +49,11 @@ generate_messages(
    std_msgs
    sensor_msgs
    geometry_msgs
+)
+
+# Generate the dynamic reconfigure options
+generate_dynamic_reconfigure_options(
+  cfg/ModelSize.cfg
 )
 
 ###################################
