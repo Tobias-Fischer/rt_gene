@@ -21,30 +21,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
-################################################
-## Declare ROS dynamic reconfigure parameters ##
-################################################
-
-## To declare and build dynamic reconfigure parameters within this
-## package, follow these steps:
-## * In the file package.xml:
-##   * add a build_depend and a run_depend tag for "dynamic_reconfigure"
-## * In this file (CMakeLists.txt):
-##   * add "dynamic_reconfigure" to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * uncomment the "generate_dynamic_reconfigure_options" section below
-##     and list every .cfg file to be processed
-
-## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
-
-generate_dynamic_reconfigure_options(
-  cfg/ModelSize.cfg
-)
-
 catkin_download(
     Model_allsubjects1.h5
     https://imperialcollegelondon.box.com/shared/static/zu424pzptmw1klh70jsc697b37h7mwif.h5
@@ -57,7 +33,7 @@ catkin_download(
 add_custom_target(download ALL DEPENDS download_extra_data)
 
 ################################################
-## Declare ROS messages, services and actions ##
+## Declare ROS messages, services, dynamic reconfigure and actions ##
 ################################################
 
 # Generate messages in the 'msg' folder
@@ -73,6 +49,11 @@ generate_messages(
    std_msgs
    sensor_msgs
    geometry_msgs
+)
+
+# Generate the dynamic reconfigure options
+generate_dynamic_reconfigure_options(
+  cfg/ModelSize.cfg
 )
 
 ###################################
