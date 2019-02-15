@@ -40,6 +40,7 @@
   <depend>tf_conversions</depend>
   <depend>camera_info_manager_py</depend>
   <depend>uvc_camera</depend>
+  <depend>dynamic_reconfigure</depend>
   <depend>opencv3</depend>
 
   <depend>python-scipy</depend>
