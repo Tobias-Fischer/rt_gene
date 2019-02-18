@@ -59,7 +59,7 @@ class LandmarkMethod(object):
         self.margin = rospy.get_param("~margin", 42)
         self.margin_eyes_height = rospy.get_param("~margin_eyes_height", 36)
         self.margin_eyes_width = rospy.get_param("~margin_eyes_width", 60)
-        self.interpupillary_distance = rospy.get_param("~interpupillary_distance", default=0.058)
+        self.interpupillary_distance = 0.058
         self.cropped_face_size = (rospy.get_param("~face_size_height", 224), rospy.get_param("~face_size_width", 224))
         self.gpu_id = rospy.get_param("~gpu_id", default="0")
         torch.cuda.set_device(self.gpu_id)
@@ -111,9 +111,10 @@ class LandmarkMethod(object):
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
 
     def _dyn_reconfig_callback(self, config, level):
-        self.model_points /= self.model_size_rescale
+        self.model_points /= (self.model_size_rescale * self.interpupillary_distance)
         self.model_size_rescale = config["model_size"]
-        self.model_points *= self.model_size_rescale
+        self.interpupillary_distance = config["interpupillary_distance"]
+        self.model_points *= (self.model_size_rescale * self.interpupillary_distance)
         self.head_pitch = config["head_pitch"]
         return config
 
@@ -130,8 +131,6 @@ class LandmarkMethod(object):
         model_points[:, -1] *= -1
 
         # index the expansion of the model based.
-        # empirically, model_points * 1.1 works well with an IP of 0.058.
-        tqdm.write("\n\nModel Size: {}\n\n".format(self.model_size_rescale))
         model_points = model_points * (self.interpupillary_distance * self.model_size_rescale)
 
         return model_points
