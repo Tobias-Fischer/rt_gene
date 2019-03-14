@@ -67,8 +67,5 @@ class SubjectListBridge:
         msg = MSG_SubjectImagesList()
         msg.header.stamp = timestamp
         for subject_id, s in subject_dict.items():
-            try:
-                msg.subjects.append(self.__subject_bridge.images_to_msg(subject_id, s))
-            except TypeError:
-                pass
+            msg.subjects.append(self.__subject_bridge.images_to_msg(subject_id, s))
         return msg
