@@ -50,7 +50,7 @@ class SubjectDetected(object):
 
 
 class LandmarkMethod(object):
-    def __init__(self):
+    def __init__(self, img_proc=None):
         self.subjects = dict()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
@@ -61,7 +61,7 @@ class LandmarkMethod(object):
         self.margin_eyes_width = rospy.get_param("~margin_eyes_width", 60)
         self.interpupillary_distance = 0.058
         self.cropped_face_size = (rospy.get_param("~face_size_height", 224), rospy.get_param("~face_size_width", 224))
-        self.gpu_id = rospy.get_param("~gpu_id", default="0")
+        self.gpu_id = rospy.get_param("~gpu_id", default=0)
         torch.cuda.set_device(self.gpu_id)
         rospy.loginfo("Using GPU for landmark: {}".format(self.gpu_id))
 
@@ -81,11 +81,15 @@ class LandmarkMethod(object):
         self.pose_stabilizers = {}  # Introduce scalar stabilizers for pose.
 
         try:
-            tqdm.write("Wait for camera message")
-            cam_info = rospy.wait_for_message("/camera_info", CameraInfo, timeout=None)
-            self.img_proc = PinholeCameraModel()
-            # noinspection PyTypeChecker
-            self.img_proc.fromCameraInfo(cam_info)
+            if img_proc is None:
+                tqdm.write("Wait for camera message")
+                cam_info = rospy.wait_for_message("/camera_info", CameraInfo, timeout=None)
+                self.img_proc = PinholeCameraModel()
+                # noinspection PyTypeChecker
+                self.img_proc.fromCameraInfo(cam_info)
+            else:
+                self.img_proc = img_proc
+
             if np.array_equal(self.img_proc.intrinsicMatrix(), np.matrix([[0., 0., 0.], [0., 0., 0.], [0., 0., 0.]])):
                 raise Exception('Camera matrix is zero-matrix. Did you calibrate'
                                 'the camera and linked to the yaml file in the launch file?')
@@ -103,12 +107,13 @@ class LandmarkMethod(object):
         self.sess_bb = None
         self.face_net = FaceDetector(device="cuda:{}".format(self.gpu_id))
 
-        self.color_sub = rospy.Subscriber("/image", Image, self.callback, buff_size=2 ** 24, queue_size=1)
-
         self.facial_landmark_nn = face_alignment.FaceAlignment(landmarks_type=face_alignment.LandmarksType._2D,
                                                                device="cuda:{}".format(self.gpu_id), flip_input=False)
 
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
+
+        # have the subscriber the last thing that's run to avoid conflicts
+        self.color_sub = rospy.Subscriber("/image", Image, self.callback, buff_size=2 ** 24, queue_size=1)
 
     def _dyn_reconfig_callback(self, config, level):
         self.model_points /= (self.model_size_rescale * self.interpupillary_distance)
@@ -139,16 +144,19 @@ class LandmarkMethod(object):
         faceboxes = []
 
         start_time = time.time()
-        fraction = 4
+        fraction = 4.0
         image = scipy.misc.imresize(image, 1.0 / fraction)
         detections = self.face_net.detect_from_image(image)
         tqdm.write("Face Detector Frequency: {:.2f}Hz".format(1 / (time.time() - start_time)))
 
         for result in detections:
-            x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result * fraction
+            # scale back up to image size
+            x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result
 
-            if confidence > 0.8 * fraction:
+            if x_left_top > 0 and y_left_top > 0 and x_right_bottom < image.shape[0] and y_right_bottom < image.shape[
+                1] and confidence > 0.8:
                 box = [x_left_top, y_left_top, x_right_bottom, y_right_bottom]
+                box = [x * fraction for x in box]  # scale back up
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
                 offset_y = int(abs(diff_height_width / 2))
                 box_moved = self.move_box(box, [0, offset_y])
@@ -254,14 +262,16 @@ class LandmarkMethod(object):
 
                     if euler_angles_head is not None:
                         head_pose_image = self.visualize_headpose_result(subject.face_color,
-                                                                        gaze_tools.get_phi_theta_from_euler(
-                                                                            euler_angles_head))
-                        head_pose_image_resized = cv2.resize(head_pose_image, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+                                                                         gaze_tools.get_phi_theta_from_euler(
+                                                                             euler_angles_head))
+                        head_pose_image_resized = cv2.resize(head_pose_image, dsize=(224, 224),
+                                                             interpolation=cv2.INTER_CUBIC)
 
                         if final_head_pose_images is None:
                             final_head_pose_images = head_pose_image_resized
                         else:
-                            final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image_resized), axis=1)
+                            final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image_resized),
+                                                                    axis=1)
             else:
                 if not success:
                     tqdm.write("Could not get head pose properly")
@@ -273,6 +283,8 @@ class LandmarkMethod(object):
             self.subject_faces_pub.publish(headpose_image_ros)
 
         tqdm.write('Elapsed total: ' + str(time.time() - start_time) + '\n\n')
+
+        return self.subjects[0]
 
     def get_head_pose(self, landmarks, subject_id):
         """
@@ -326,7 +338,8 @@ class LandmarkMethod(object):
         self.last_rvec[subject_id] = rotation_vector
         self.last_tvec[subject_id] = translation_vector
 
-        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[1] + np.pi + self.head_pitch, rotation_vector[0]]
+        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[1] + np.pi + self.head_pitch,
+                                   rotation_vector[0]]
         rot_head = tf_transformations.quaternion_from_euler(*rotation_vector_swapped)
 
         return success, rot_head, translation_vector
@@ -374,7 +387,7 @@ class LandmarkMethod(object):
             print('Translation based on landmarks', nose_center_3d_tf)
             return nose_center_3d_tf
         except ExtrapolationException as e:
-            print(e)
+            print("** Extrapolation Exception **", e)
             return None
 
     def publish_pose(self, timestamp, nose_center_3d_tf, rot_head, subject_id):
@@ -442,7 +455,8 @@ class LandmarkMethod(object):
             transformed_landmarks[:, 1] -= facebox[1]
 
             return face_img, transformed_landmarks, marks_orig
-        except Exception:
+        except Exception as e:
+            print("*** Exception in detecting landmarks from facebox ***", e)
             return None, None, None
 
     def __detect_facial_landmarks(self, color_img, facebox):
@@ -455,13 +469,14 @@ class LandmarkMethod(object):
         self.__update_subjects(faceboxes)
 
         for subject in self.subjects.values():
-            res = self.__detect_landmarks_one_box(subject.face_bb, color_img)
-            subject.face_color = res[0]
-            subject.transformed_landmarks = res[1]
-            subject.marks = res[2]
+            face, landmarks, marks = self.__detect_landmarks_one_box(subject.face_bb, color_img)
+            subject.face_color = face
+            subject.transformed_landmarks = landmarks
+            subject.marks = marks
 
     def __get_eye_image_one(self, transformed_landmarks, face_aligned_color):
         margin_ratio = 1.0
+        desired_ratio = float(self.eye_image_size[0]) / float(self.eye_image_size[1]) / 2.0
 
         try:
             # Get the width of the eye, and compute how big the margin should be according to the width
@@ -471,25 +486,27 @@ class LandmarkMethod(object):
 
             # lefteye_center_x = transformed_landmarks[2][0] + lefteye_width / 2
             # righteye_center_x = transformed_landmarks[0][0] + righteye_width / 2
-            lefteye_center_y = (transformed_landmarks[2][1] + transformed_landmarks[3][1]) / 2
-            righteye_center_y = (transformed_landmarks[1][1] + transformed_landmarks[0][1]) / 2
-
-            desired_ratio = self.eye_image_size[0] / self.eye_image_size[1] / 2
+            lefteye_center_y = (transformed_landmarks[2][1] + transformed_landmarks[3][1]) / 2.0
+            righteye_center_y = (transformed_landmarks[1][1] + transformed_landmarks[0][1]) / 2.0
 
             # Now compute the bounding boxes
             # The left / right x-coordinates are computed as the landmark position plus/minus the margin
             # The bottom / top y-coordinates are computed according to the desired ratio, as the width of the image is known
-            left_bb = np.zeros(4, dtype=np.int32)
-            left_bb[0] = transformed_landmarks[2][0] - lefteye_margin / 2
-            left_bb[1] = lefteye_center_y - (lefteye_width + lefteye_margin) * desired_ratio * 1.25
-            left_bb[2] = transformed_landmarks[3][0] + lefteye_margin / 2
-            left_bb[3] = lefteye_center_y + (lefteye_width + lefteye_margin) * desired_ratio * 1.25
+            left_bb = np.zeros(4, dtype=np.int)
+            left_bb[0] = transformed_landmarks[2][0] - lefteye_margin / 2.0
+            left_bb[1] = lefteye_center_y - (lefteye_width + lefteye_margin) * desired_ratio
+            left_bb[2] = transformed_landmarks[3][0] + lefteye_margin / 2.0
+            left_bb[3] = lefteye_center_y + (lefteye_width + lefteye_margin) * desired_ratio
 
-            right_bb = np.zeros(4, dtype=np.int32)
-            right_bb[0] = transformed_landmarks[0][0] - righteye_margin / 2
-            right_bb[1] = righteye_center_y - (righteye_width + righteye_margin) * desired_ratio * 1.25
-            right_bb[2] = transformed_landmarks[1][0] + righteye_margin / 2
-            right_bb[3] = righteye_center_y + (righteye_width + righteye_margin) * desired_ratio * 1.25
+            left_bb = map(int, left_bb)
+
+            right_bb = np.zeros(4, dtype=np.float)
+            right_bb[0] = transformed_landmarks[0][0] - righteye_margin / 2.0
+            right_bb[1] = righteye_center_y - (righteye_width + righteye_margin) * desired_ratio
+            right_bb[2] = transformed_landmarks[1][0] + righteye_margin / 2.0
+            right_bb[3] = righteye_center_y + (righteye_width + righteye_margin) * desired_ratio
+
+            right_bb = map(int, right_bb)
 
             # Extract the eye images from the aligned image
             left_eye_color = face_aligned_color[left_bb[1]:left_bb[3], left_bb[0]:left_bb[2], :]
@@ -499,12 +516,12 @@ class LandmarkMethod(object):
             #     cv2.circle(face_aligned_color, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
 
             # So far, we have only ensured that the ratio is correct. Now, resize it to the desired size.
-            left_eye_color_resized = scipy.misc.imresize(left_eye_color, self.eye_image_size, interp='lanczos')
-            right_eye_color_resized = scipy.misc.imresize(right_eye_color, self.eye_image_size, interp='lanczos')
-        except (ValueError, TypeError) as e:
-            print(e)
+            left_eye_color_resized = scipy.misc.imresize(left_eye_color, self.eye_image_size, interp='cubic')
+            right_eye_color_resized = scipy.misc.imresize(right_eye_color, self.eye_image_size, interp='cubic')
+
+            return left_eye_color_resized, right_eye_color_resized, left_bb, right_bb
+        except (ValueError, TypeError):
             return None, None, None, None
-        return left_eye_color_resized, right_eye_color_resized, left_bb, right_bb
 
     # noinspection PyUnusedLocal
     def get_eye_image(self):
@@ -514,11 +531,11 @@ class LandmarkMethod(object):
 
         start_time = time.time()
         for subject in self.subjects.values():
-            res = self.__get_eye_image_one(subject.transformed_landmarks, subject.face_color)
-            subject.left_eye_color = res[0]
-            subject.right_eye_color = res[1]
-            subject.left_eye_bb = res[2]
-            subject.right_eye_bb = res[3]
+            le_c, re_c, le_bb, re_bb = self.__get_eye_image_one(subject.transformed_landmarks, subject.face_color)
+            subject.left_eye_color = le_c
+            subject.right_eye_color = re_c
+            subject.left_eye_bb = le_bb
+            subject.right_eye_bb = re_bb
 
         tqdm.write('New get_eye_image time: ' + str(time.time() - start_time))
 
