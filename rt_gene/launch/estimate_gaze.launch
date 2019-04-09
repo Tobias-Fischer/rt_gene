@@ -4,7 +4,6 @@
 
     <arg name="video_namespace" default="/kinect2/hd"/>
     <arg name="video_image_topic" default="image_color_rect"/>
-    <arg name="video_depth_topic" default="image_depth_rect"/>
     <arg name="video_info_topic" default="camera_info"/>
 
     <arg name="rgb_frame_id" default="/kinect2_link"/>
@@ -31,7 +30,6 @@
 
           <remap from="/camera_info" to="$(arg video_namespace)/$(arg video_info_topic)"/>
           <remap from="/image" to="$(arg video_namespace)/$(arg video_image_topic)"/>
-          <remap from="/depth" to="$(arg video_namespace)/$(arg video_depth_topic)"/>
       </node>
 
       <node pkg="rt_gene" type="estimate_gaze.py" name="estimate_gaze_twoeyes" output="screen">
