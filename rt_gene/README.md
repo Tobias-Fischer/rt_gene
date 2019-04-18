@@ -18,14 +18,16 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 
 # Requirements
 ## Manual installation
-1) Download, install, and configure ROS (full installation; we recommend the Kinectic distribution of ROS): http://wiki.ros.org/kinetic/Installation
-1) `sudo apt-get install python-catkin-tools ros-$ROS_DISTRO-ros-numpy ros-$ROS_DISTRO-camera-info-manager-py ros-$ROS_DISTRO-uvc-camera`
-1) `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow face-alignment`
-1) `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
-1) `cd $HOME/catkin_ws && catkin build`
-
-## Additional steps if you use Anaconda
-- `pip install empy rospkg`
+1. Download, install, and configure ROS (full installation; we recommend the Kinectic or Melodic distributions of ROS depending on your Ubuntu version): http://wiki.ros.org/kinetic/Installation or http://wiki.ros.org/melodic/Installation
+1. Install additional packages for ROS:
+    - For kinetic: `sudo apt-get install python-catkin-tools ros-kinetic-ros-numpy ros-kinetic-camera-info-manager-py ros-kinetic-uvc-camera`
+    - For melodic: `sudo apt-get install python-catkin-tools ros-melodic-uvc-camera`
+1. Install required Python packages:
+    - For `conda` users (recommended): `conda install tensorflow-gpu keras numpy scipy tqdm torch torchvision pillow && conda install -c 1adrianb face_alignment && pip install empy rospkg`
+    - For `pip` users: `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow face-alignment`
+1. Download and build RT-GENE:
+    1. `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
+    1. `cd $HOME/catkin_ws && catkin build`
 
 ## Optional ensemble model files
 - To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, download the following files (make sure you comply with the licenses of [MPII](https://www.mpi-inf.mpg.de/departments/computer-vision-and-multimodal-computing/research/gaze-based-human-computer-interaction/appearance-based-gaze-estimation-in-the-wild/) and [UTMV](http://www.hci.iis.u-tokyo.ac.jp/datasets/)! these model files are licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)):
