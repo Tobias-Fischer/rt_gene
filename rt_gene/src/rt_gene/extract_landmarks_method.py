@@ -61,9 +61,11 @@ class LandmarkMethod(object):
         self.margin_eyes_width = rospy.get_param("~margin_eyes_width", 60)
         self.interpupillary_distance = 0.058
         self.cropped_face_size = (rospy.get_param("~face_size_height", 224), rospy.get_param("~face_size_width", 224))
-        self.gpu_id = rospy.get_param("~gpu_id", default=0)
-        torch.cuda.set_device(self.gpu_id)
-        rospy.loginfo("Using GPU for landmark: {}".format(self.gpu_id))
+
+        self.device_id_facedetection = rospy.get_param("~device_id_facedetection", default="cuda:0")
+        self.device_id_facealignment = rospy.get_param("~device_id_facealignment", default="cuda:0")
+        rospy.loginfo("Using device {} for face detection.".format(self.device_id_facedetection))
+        rospy.loginfo("Using device {} for face alignment.".format(self.device_id_facealignment))
 
         self.rgb_frame_id = rospy.get_param("~rgb_frame_id", "/kinect2_link")
         self.rgb_frame_id_ros = rospy.get_param("~rgb_frame_id_ros", "/kinect2_nonrotated_link")
@@ -105,10 +107,10 @@ class LandmarkMethod(object):
         self.model_points = self._get_full_model_points()
 
         self.sess_bb = None
-        self.face_net = FaceDetector(device="cuda:{}".format(self.gpu_id))
+        self.face_net = FaceDetector(device=self.device_id_facedetection)
 
         self.facial_landmark_nn = face_alignment.FaceAlignment(landmarks_type=face_alignment.LandmarksType._2D,
-                                                               device="cuda:{}".format(self.gpu_id), flip_input=False)
+                                                               device=self.device_id_facealignment, flip_input=False)
 
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
 
