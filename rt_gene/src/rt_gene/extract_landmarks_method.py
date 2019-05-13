@@ -155,8 +155,8 @@ class LandmarkMethod(object):
             # scale back up to image size
             x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result
 
-            if x_left_top > 0 and y_left_top > 0 and x_right_bottom < image.shape[0] and y_right_bottom < image.shape[
-                1] and confidence > 0.8:
+            if x_left_top > 0 and y_left_top > 0 and x_right_bottom < image.shape[1] and y_right_bottom < image.shape[
+                0] and confidence > 0.8:
                 box = [x_left_top, y_left_top, x_right_bottom, y_right_bottom]
                 box = [x * fraction for x in box]  # scale back up
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
