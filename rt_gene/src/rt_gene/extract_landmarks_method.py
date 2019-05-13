@@ -153,11 +153,10 @@ class LandmarkMethod(object):
 
         for result in detections:
             # scale back up to image size
-            x_left_top, y_left_top, x_right_bottom, y_right_bottom, confidence = result
+            box = result[:4]
+            confidence = result[4]
 
-            if x_left_top > 0 and y_left_top > 0 and x_right_bottom < image.shape[1] and y_right_bottom < image.shape[
-                0] and confidence > 0.8:
-                box = [x_left_top, y_left_top, x_right_bottom, y_right_bottom]
+            if LandmarkMethod.box_in_image(box, image) and confidence > 0.8:
                 box = [x * fraction for x in box]  # scale back up
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
                 offset_y = int(abs(diff_height_width / 2))
