@@ -51,11 +51,12 @@ class SubjectDetected(object):
 
 class TrackedSubject(TrackedElement):
     def __init__(self, box):
+        super(TrackedSubject, self).__init__()
         self.box = box 
 
     # override method
     def compute_distance(self, other_element):
-        return np.sqrt(np.sum((self.box-other_element.box)**2, axis=1))
+        return np.sqrt(np.sum((self.box-other_element.box)**2))
 
 
 class LandmarkMethod(object):

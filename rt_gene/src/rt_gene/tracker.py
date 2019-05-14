@@ -32,8 +32,8 @@ class GenericTracker(object):
         isinstance_tracked_element(element)
         self.__tracked_elements[element_id] = element
 
-    def __empty_elements(self):
-        del self.__tracked_elements[:]
+    def __clear_elements(self):
+        self.__tracked_elements.clear()
 
     ''' --------------------------------------------------------------------'''
     ''' PROTECTED METHODES (can be overridden if necessary) '''
@@ -51,7 +51,7 @@ class GenericTracker(object):
 
         # if no new elements, remove old elements
         if not new_elements:
-            self.__empty_elements()
+            self.__clear_elements()
             return
 
         # if no elements yet, just add all the new ones
@@ -63,7 +63,7 @@ class GenericTracker(object):
         updated_tracked_element_ids = []
         map_index_to_id = {} # map the matrix indexes with real unique id
 
-        distance_matrix = np.ones((len(self.__tracked_elements, len(new_elements))))
+        distance_matrix = np.ones((len(self.__tracked_elements), len(new_elements)))
         for i, element_id in enumerate(self.__tracked_elements.keys()):
             map_index_to_id[i] = element_id
             for j, new_element in enumerate(new_elements):
