@@ -34,6 +34,7 @@ from rt_gene.kalman_stabilizer import Stabilizer
 from rt_gene.msg import MSG_SubjectImagesList
 from rt_gene.cfg import ModelSizeConfig
 from rt_gene.subject_ros_bridge import SubjectListBridge
+from rt_gene.tracker import GenericTracker, TrackedElement
 
 import face_alignment
 from face_alignment.detection.sfd import FaceDetector
@@ -48,10 +49,19 @@ class SubjectDetected(object):
         self.left_eye_bb = None
         self.right_eye_bb = None
 
+class TrackedSubject(TrackedElement):
+    def __init__(self, box):
+        self.box = box 
+
+    # override method
+    def compute_distance(self, other_element):
+        return np.sqrt(np.sum((self.box-other_element.box)**2, axis=1))
+
 
 class LandmarkMethod(object):
     def __init__(self, img_proc=None):
-        self.subjects = dict()
+
+        self.subject_tracker = GenericTracker()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
         self.model_size_rescale = 30.0
@@ -230,14 +240,14 @@ class LandmarkMethod(object):
 
         tqdm.write('Elapsed after detecting transformed_landmarks: ' + str(time.time() - start_time))
 
-        if not self.subjects:
+        if not self.subject_tracker.get_tracked_elements():
             tqdm.write("No face found")
             return
 
         self.get_eye_image()  # update self.subjects
 
         final_head_pose_images = None
-        for subject_id, subject in self.subjects.items():
+        for subject_id, subject in self.subject_tracker.get_tracked_elements().items():
             if subject.left_eye_color is None or subject.right_eye_color is None:
                 continue
             if subject_id not in self.last_rvec:
@@ -278,14 +288,12 @@ class LandmarkMethod(object):
                     tqdm.write("Could not get head pose properly")
 
         if final_head_pose_images is not None:
-            self.publish_subject_list(timestamp, self.subjects)
+            self.publish_subject_list(timestamp, self.subject_tracker.get_tracked_elements())
             headpose_image_ros = self.bridge.cv2_to_imgmsg(final_head_pose_images, "bgr8")
             headpose_image_ros.header.stamp = timestamp
             self.subject_faces_pub.publish(headpose_image_ros)
 
         tqdm.write('Elapsed total: ' + str(time.time() - start_time) + '\n\n')
-
-        return self.subjects[0]
 
     def get_head_pose(self, landmarks, subject_id):
         """
@@ -412,37 +420,7 @@ class LandmarkMethod(object):
                 pass
             else:
                 raise e
-
-    def __update_subjects(self, new_faceboxes):
-        """
-        Assign the new faces to the existing subjects (id tracking)
-        :param new_faceboxes: new faceboxes detected
-        :return: update self.subjects
-        """
-        assert (self.subjects is not None)
-        assert (new_faceboxes is not None)
-
-        if len(new_faceboxes) == 0:
-            self.subjects = dict()
-            return
-
-        if len(self.subjects) == 0:
-            for j, b_new in enumerate(new_faceboxes):
-                self.subjects[j] = SubjectDetected(b_new)
-            return
-
-        distance_matrix = np.ones((len(self.subjects), len(new_faceboxes)))
-        for i, subject in enumerate(self.subjects.values()):
-            for j, b_new in enumerate(new_faceboxes):
-                distance_matrix[i][j] = np.sqrt(np.mean(((np.array(subject.face_bb) - np.array(b_new)) ** 2)))
-        ids_to_assign = range(len(new_faceboxes))
-        self.subjects = dict()
-        for id in ids_to_assign:
-            subject = np.argmin(distance_matrix[:, id])
-            while subject in self.subjects:
-                subject += 1
-            self.subjects[subject] = SubjectDetected(new_faceboxes[id])
-
+     
     def __detect_landmarks_one_box(self, facebox, color_img):
         try:
             _bb = map(int, facebox)
@@ -467,10 +445,11 @@ class LandmarkMethod(object):
     def detect_landmarks(self, color_img, timestamp):
         faceboxes = self.get_face_bb(color_img)
 
-        self.__update_subjects(faceboxes)
+        # track the new faceboxes according to the previous ones
+        self.subject_tracker.track([TrackedSubject(np.array(new_fb)) for new_fb in faceboxes])
 
-        for subject in self.subjects.values():
-            face, landmarks, marks = self.__detect_landmarks_one_box(subject.face_bb, color_img)
+        for subject in self.subject_tracker.get_tracked_elements().values():
+            face, landmarks, marks = self.__detect_landmarks_one_box(subject.box, color_img)
             subject.face_color = face
             subject.transformed_landmarks = landmarks
             subject.marks = marks
@@ -531,7 +510,7 @@ class LandmarkMethod(object):
         The height of the images is computed according to the desired ratio of the eye images."""
 
         start_time = time.time()
-        for subject in self.subjects.values():
+        for subject in self.subject_tracker.get_tracked_elements().values():
             le_c, re_c, le_bb, re_bb = self.__get_eye_image_one(subject.transformed_landmarks, subject.face_color)
             subject.left_eye_color = le_c
             subject.right_eye_color = re_c
