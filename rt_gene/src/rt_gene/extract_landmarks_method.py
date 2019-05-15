@@ -41,14 +41,6 @@ from face_alignment.detection.sfd import FaceDetector
 
 import torch
 
-
-class SubjectDetected(object):
-    def __init__(self, face_bb):
-        self.face_bb = face_bb
-        self.landmark_points = None
-        self.left_eye_bb = None
-        self.right_eye_bb = None
-
 class TrackedSubject(TrackedElement):
     def __init__(self, box):
         super(TrackedSubject, self).__init__()
