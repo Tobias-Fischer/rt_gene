@@ -11,18 +11,18 @@ def isinstance_tracked_element(element):
     if not isinstance(element, TrackedElement):
         raise ValueError('Inappropriate type: {} for element whereas a TrackedElement is expected'.format(type(element)))
 
+
 class TrackedElement(object):
-    
     def compute_distance(self, other_element):
         raise NotImplementedError("'compute_distance' method must be overridden!")
 
-class GenericTracker(object):
 
+class GenericTracker(object):
     def __init__(self):
         self.__tracked_elements = {}
 
     ''' --------------------------------------------------------------------'''
-    ''' PRIVATE METHODES '''
+    ''' PRIVATE METHODS '''
 
     def __add_new_element(self, element):
         isinstance_tracked_element(element)
@@ -36,19 +36,19 @@ class GenericTracker(object):
         self.__tracked_elements.clear()
 
     ''' --------------------------------------------------------------------'''
-    ''' PROTECTED METHODES (can be overridden if necessary) '''
+    ''' PROTECTED METHODS '''
 
+    # (can be overridden if necessary)
     def _generate_unique_id(self):
         return uuid.uuid4().hex
 
     ''' --------------------------------------------------------------------'''
-    ''' PUBLIC METHODES '''
+    ''' PUBLIC METHODS '''
 
     def get_tracked_elements(self):
         return self.__tracked_elements
 
     def track(self, new_elements):
-
         # if no new elements, remove old elements
         if not new_elements:
             self.__clear_elements()
@@ -86,5 +86,4 @@ class GenericTracker(object):
         # delete all the non-updated elements
         elements_to_delete = list(set(current_tracked_element_ids) - set(updated_tracked_element_ids))
         for i in elements_to_delete:
-            del self.__tracked_elements[i]
-        
+            del self.__tracked_elements[i]   
