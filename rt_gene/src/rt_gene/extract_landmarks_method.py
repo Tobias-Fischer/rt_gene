@@ -53,7 +53,6 @@ class TrackedSubject(TrackedElement):
 
 class LandmarkMethod(object):
     def __init__(self, img_proc=None):
-
         self.subject_tracker = GenericTracker()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
@@ -147,7 +146,6 @@ class LandmarkMethod(object):
 
     def get_face_bb(self, image):
         faceboxes = []
-
         start_time = time.time()
         fraction = 4.0
         image = scipy.misc.imresize(image, 1.0 / fraction)
