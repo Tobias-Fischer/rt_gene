@@ -32,9 +32,6 @@ class GenericTracker(object):
         isinstance_tracked_element(element)
         self.__tracked_elements[element_id] = element
 
-    def __clear_elements(self):
-        self.__tracked_elements.clear()
-
     ''' --------------------------------------------------------------------'''
     ''' PROTECTED METHODS '''
 
@@ -48,10 +45,13 @@ class GenericTracker(object):
     def get_tracked_elements(self):
         return self.__tracked_elements
 
+    def clear_elements(self):
+        self.__tracked_elements.clear()
+
     def track(self, new_elements):
         # if no new elements, remove old elements
         if not new_elements:
-            self.__clear_elements()
+            self.clear_elements()
             return
 
         # if no elements yet, just add all the new ones

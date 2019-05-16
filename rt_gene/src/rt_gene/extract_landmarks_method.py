@@ -42,9 +42,12 @@ from face_alignment.detection.sfd import FaceDetector
 import torch
 
 class TrackedSubject(TrackedElement):
-    def __init__(self, box):
+    def __init__(self, box, face, landmarks, marks):
         super(TrackedSubject, self).__init__()
-        self.box = box 
+        self.box = box
+        self.face_color = face
+        self.transformed_landmarks = landmarks
+        self.marks = marks
 
     # override method
     def compute_distance(self, other_element):
@@ -227,7 +230,7 @@ class LandmarkMethod(object):
         color_img = gaze_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 
-        self.detect_landmarks(color_img, timestamp)  # update self.subjects
+        self.detect_landmarks(color_img, timestamp)  # update self.subject_tracker elements
 
         tqdm.write('Elapsed after detecting transformed_landmarks: ' + str(time.time() - start_time))
 
@@ -394,7 +397,7 @@ class LandmarkMethod(object):
         self.tf_broadcaster.sendTransform(nose_center_3d_tf,
                                           rot_head,
                                           timestamp,
-                                          self.tf_prefix + "/head_pose_estimated" + str(subject_id),
+                                          self.tf_prefix + "/head_pose_estimated_" + str(subject_id[:5]),
                                           self.rgb_frame_id_ros)
 
         return gaze_tools.get_head_pose(nose_center_3d_tf, rot_head)
@@ -411,39 +414,38 @@ class LandmarkMethod(object):
                 pass
             else:
                 raise e
-     
-    def __detect_landmarks_one_box(self, facebox, color_img):
-        try:
-            _bb = map(int, facebox)
-            face_img = color_img[_bb[1]: _bb[3], _bb[0]: _bb[2]]
-            marks_orig = np.array(self.__detect_facial_landmarks(color_img, facebox)[0])
+    
+    @staticmethod
+    def crop_face_from_image(color_img, box):
+        _bb = map(int, box)
+        return color_img[_bb[1]: _bb[3], _bb[0]: _bb[2]]
 
-            eye_indices = np.array([36, 39, 42, 45])
-
-            transformed_landmarks = marks_orig[eye_indices]
-            transformed_landmarks[:, 0] -= facebox[0]
-            transformed_landmarks[:, 1] -= facebox[1]
-
-            return face_img, transformed_landmarks, marks_orig
-        except Exception as e:
-            print("*** Exception in detecting landmarks from facebox ***", e)
-            return None, None, None
-
-    def __detect_facial_landmarks(self, color_img, facebox):
-        marks = self.facial_landmark_nn.get_landmarks(color_img, detected_faces=[facebox])
-        return marks
+    @staticmethod
+    def transform_landmarks(landmarks, box):
+        eye_indices = np.array([36, 39, 42, 45])
+        transformed_landmarks = landmarks[eye_indices]
+        transformed_landmarks[:, 0] -= box[0]
+        transformed_landmarks[:, 1] -= box[1]
+        return transformed_landmarks
 
     def detect_landmarks(self, color_img, timestamp):
         faceboxes = self.get_face_bb(color_img)
+        if not faceboxes:
+            # reset the tracker
+            self.subject_tracker.clear_elements()
+            return
 
+        landmarks = self.facial_landmark_nn.get_landmarks(color_img, detected_faces=faceboxes)
+        face_images = [LandmarkMethod.crop_face_from_image(color_img, b) for b in faceboxes]
+
+        tracked_subjects = []
+        for b, l, f in zip(faceboxes, landmarks, face_images):
+            l = np.array(l)
+            trans_l = LandmarkMethod.transform_landmarks(l, b)
+            tracked_subjects.append(TrackedSubject(np.array(b), f, trans_l, l))
+        
         # track the new faceboxes according to the previous ones
-        self.subject_tracker.track([TrackedSubject(np.array(new_fb)) for new_fb in faceboxes])
-
-        for subject in self.subject_tracker.get_tracked_elements().values():
-            face, landmarks, marks = self.__detect_landmarks_one_box(subject.box, color_img)
-            subject.face_color = face
-            subject.transformed_landmarks = landmarks
-            subject.marks = marks
+        self.subject_tracker.track(tracked_subjects)
 
     def __get_eye_image_one(self, transformed_landmarks, face_aligned_color):
         margin_ratio = 1.0
