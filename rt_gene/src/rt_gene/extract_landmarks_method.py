@@ -397,7 +397,7 @@ class LandmarkMethod(object):
         self.tf_broadcaster.sendTransform(nose_center_3d_tf,
                                           rot_head,
                                           timestamp,
-                                          self.tf_prefix + "/head_pose_estimated_" + str(subject_id[:5]),
+                                          self.tf_prefix + "/head_pose_estimated" + str(subject_id),
                                           self.rgb_frame_id_ros)
 
         return gaze_tools.get_head_pose(nose_center_3d_tf, rot_head)
