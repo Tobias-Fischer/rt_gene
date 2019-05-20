@@ -4,12 +4,10 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 """
 import numpy as np
 import scipy
-import uuid
 
 
 def isinstance_tracked_element(element):
-    if not isinstance(element, TrackedElement):
-        raise ValueError('Inappropriate type: {} for element whereas a TrackedElement is expected'.format(type(element)))
+    return isinstance(element, TrackedElement)
 
 
 class TrackedElement(object):
@@ -20,16 +18,15 @@ class TrackedElement(object):
 class GenericTracker(object):
     def __init__(self):
         self.__tracked_elements = {}
+        self.__i = -1
 
     ''' --------------------------------------------------------------------'''
     ''' PRIVATE METHODS '''
 
     def __add_new_element(self, element):
-        isinstance_tracked_element(element)
         self.__tracked_elements[self._generate_unique_id()] = element
 
     def __update_element(self, element_id, element):
-        isinstance_tracked_element(element)
         self.__tracked_elements[element_id] = element
 
     def __clear_elements(self):
@@ -40,7 +37,8 @@ class GenericTracker(object):
 
     # (can be overridden if necessary)
     def _generate_unique_id(self):
-        return uuid.uuid4().hex
+        self.__i += 1
+        return self.__i
 
     ''' --------------------------------------------------------------------'''
     ''' PUBLIC METHODS '''
@@ -61,12 +59,16 @@ class GenericTracker(object):
 
         current_tracked_element_ids = self.__tracked_elements.keys()
         updated_tracked_element_ids = []
-        map_index_to_id = {} # map the matrix indexes with real unique id
+        map_index_to_id = {}  # map the matrix indexes with real unique id
 
         distance_matrix = np.ones((len(self.__tracked_elements), len(new_elements)))
         for i, element_id in enumerate(self.__tracked_elements.keys()):
             map_index_to_id[i] = element_id
             for j, new_element in enumerate(new_elements):
+                # ensure new_element is of type TrackedElement upon entry
+                if not isinstance_tracked_element(new_element):
+                    raise TypeError("Inappropriate type: {} for element whereas a TrackedElement is expected".format(
+                        type(new_element)))
                 distance_matrix[i][j] = self.__tracked_elements[element_id].compute_distance(new_element)
 
         # get best matching pairs with Hungarian Algorithm
@@ -74,16 +76,18 @@ class GenericTracker(object):
 
         # assign each new element to existing one or store it as new
         for j, new_element in enumerate(new_elements):
-            try:
+            match_idx = col[row.tolist().index(j)]
+
+            if match_idx < len(map_index_to_id):
                 # if the new element matches with existing old one
-                matched_element_id = map_index_to_id[col[row.tolist().index(j)]]
+                matched_element_id = map_index_to_id[match_idx]
                 self.__update_element(matched_element_id, new_element)
                 updated_tracked_element_ids.append(matched_element_id)
-            except ValueError:
+            else:
                 # if the new element is not matching
                 self.__add_new_element(new_element)
 
         # delete all the non-updated elements
         elements_to_delete = list(set(current_tracked_element_ids) - set(updated_tracked_element_ids))
         for i in elements_to_delete:
-            del self.__tracked_elements[i]   
+            del self.__tracked_elements[i]
