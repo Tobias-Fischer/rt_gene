@@ -435,14 +435,14 @@ class LandmarkMethod(object):
             self.subject_tracker.clear_elements()
             return
 
-        landmarks = self.facial_landmark_nn.get_landmarks(color_img, detected_faces=faceboxes)
+        all_landmarks = self.facial_landmark_nn.get_landmarks(color_img, detected_faces=faceboxes)
         face_images = [LandmarkMethod.crop_face_from_image(color_img, b) for b in faceboxes]
 
         tracked_subjects = []
-        for b, l, f in zip(faceboxes, landmarks, face_images):
-            l = np.array(l)
-            trans_l = LandmarkMethod.transform_landmarks(l, b)
-            tracked_subjects.append(TrackedSubject(np.array(b), f, trans_l, l))
+        for facebox, landmarks, face_image in zip(faceboxes, all_landmarks, face_images):
+            np_landmarks = np.array(landmarks)
+            transformed_landmarks = LandmarkMethod.transform_landmarks(np_landmarks, facebox)
+            tracked_subjects.append(TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks))
         
         # track the new faceboxes according to the previous ones
         self.subject_tracker.track(tracked_subjects)
