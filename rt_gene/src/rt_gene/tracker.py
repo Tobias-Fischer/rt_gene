@@ -6,10 +6,6 @@ import numpy as np
 import scipy
 
 
-def isinstance_tracked_element(element):
-    return isinstance(element, TrackedElement)
-
-
 class TrackedElement(object):
     def compute_distance(self, other_element):
         raise NotImplementedError("'compute_distance' method must be overridden!")
@@ -66,7 +62,7 @@ class GenericTracker(object):
             map_index_to_id[i] = element_id
             for j, new_element in enumerate(new_elements):
                 # ensure new_element is of type TrackedElement upon entry
-                if not isinstance_tracked_element(new_element):
+                if not isinstance(new_element, TrackedElement):
                     raise TypeError("Inappropriate type: {} for element whereas a TrackedElement is expected".format(
                         type(new_element)))
                 distance_matrix[i][j] = self.__tracked_elements[element_id].compute_distance(new_element)
