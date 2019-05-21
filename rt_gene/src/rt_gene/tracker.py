@@ -2,11 +2,16 @@
 @Kevin Cortacero <cortacero.k31130@gmail.com>
 Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 """
+from __future__ import print_function
 import numpy as np
 import scipy.optimize
 
 
 class TrackedElement(object):
+
+    def encode(self):
+        raise NotImplementedError("'encode' method must be overridden!")
+
     def compute_distance(self, other_element):
         raise NotImplementedError("'compute_distance' method must be overridden!")
 
@@ -14,13 +19,32 @@ class TrackedElement(object):
 class GenericTracker(object):
     def __init__(self):
         self.__tracked_elements = {}
+        self.__removed_elements = {}
         self.__i = -1
+        self.__threshold = 0.6
 
     ''' --------------------------------------------------------------------'''
     ''' PRIVATE METHODS '''
 
     def __add_new_element(self, element):
-        self.__tracked_elements[self._generate_unique_id()] = element
+        # encode the new array
+        encoding = np.array(element.encode())
+        found_previous = False
+
+        # check to see if we've seen it before
+        for i, previous_encoding in enumerate(self.__removed_elements.keys()):
+            previous_encoding = np.fromstring(previous_encoding[1:-1], dtype=np.float, sep=",")
+            distance = np.linalg.norm(previous_encoding - encoding, axis=0)
+
+            # the new element and the previous encoding are the same person
+            if distance < self.__threshold:
+                previous_id = self.__removed_elements.values()[i]
+                self.__tracked_elements[previous_id] = element
+                found_previous = True
+                break
+
+        if not found_previous:
+            self.__tracked_elements[self._generate_new_id()] = element
 
     def __update_element(self, element_id, element):
         self.__tracked_elements[element_id] = element
@@ -29,7 +53,7 @@ class GenericTracker(object):
     ''' PROTECTED METHODS '''
 
     # (can be overridden if necessary)
-    def _generate_unique_id(self):
+    def _generate_new_id(self):
         self.__i += 1
         return self.__i
 
@@ -72,18 +96,25 @@ class GenericTracker(object):
 
         # assign each new element to existing one or store it as new
         for j, new_element in enumerate(new_elements):
-            match_idx = col[row.tolist().index(j)]
-
-            if match_idx < len(map_index_to_id):
+            try:
+                # find the index of the column matching
+                match_idx = col[np.min(np.nonzero(row == j))]
                 # if the new element matches with existing old one
                 matched_element_id = map_index_to_id[match_idx]
                 self.__update_element(matched_element_id, new_element)
                 updated_tracked_element_ids.append(matched_element_id)
-            else:
+            except ValueError:
                 # if the new element is not matching
                 self.__add_new_element(new_element)
 
-        # delete all the non-updated elements
+        # store non-tracked elements in-case they reappear
         elements_to_delete = list(set(current_tracked_element_ids) - set(updated_tracked_element_ids))
         for i in elements_to_delete:
+            _element = self.__tracked_elements[i]  # the subject itself
+            encoding = np.array2string(np.array(_element.encode()), formatter={'float_kind': lambda x: "%.5f" % x},
+                                       separator=",")
+            # store the encoding and it's respective key
+            self.__removed_elements[encoding] = i
+
+            # don't track it anymore
             del self.__tracked_elements[i]

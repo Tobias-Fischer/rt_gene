@@ -39,9 +39,14 @@ from rt_gene.tracker import GenericTracker, TrackedElement
 import face_alignment
 from face_alignment.detection.sfd import FaceDetector
 
-import torch
+import dlib
+
+FACE_ENCODER = dlib.face_recognition_model_v1(
+    rospkg.RosPack().get_path('rt_gene') + '/model_nets/dlib_face_recognition_resnet_model_v1.dat')
+
 
 class TrackedSubject(TrackedElement):
+
     def __init__(self, box, face, landmarks, marks):
         super(TrackedSubject, self).__init__()
         self.box = box
@@ -49,9 +54,64 @@ class TrackedSubject(TrackedElement):
         self.transformed_landmarks = landmarks
         self.marks = marks
 
+    def _align(self, desired_left_eye=(0.3, 0.3), desired_face_width=150, desired_face_height=150):
+        # extract the left and right eye (x, y)-coordinates
+        right_eye_pts = np.array([self.transformed_landmarks[0], self.transformed_landmarks[1]])
+        left_eye_pts = np.array([self.transformed_landmarks[2], self.transformed_landmarks[3]])
+
+        # compute the center of mass for each eye
+        left_eye_centre = left_eye_pts.mean(axis=0).astype("int")
+        right_eye_centre = right_eye_pts.mean(axis=0).astype("int")
+
+        # compute the angle between the eye centroids
+        d_y = right_eye_centre[1] - left_eye_centre[1]
+        d_x = right_eye_centre[0] - left_eye_centre[0]
+        angle = np.degrees(np.arctan2(d_y, d_x)) - 180
+
+        # compute the desired right eye x-coordinate based on the
+        # desired x-coordinate of the left eye
+        desired_right_eye_x = 1.0 - desired_left_eye[0]
+
+        # determine the scale of the new resulting image by taking
+        # the ratio of the distance between eyes in the *current*
+        # image to the ratio of distance between eyes in the
+        # *desired* image
+        dist = np.sqrt((d_x ** 2) + (d_y ** 2))
+        desired_dist = (desired_right_eye_x - desired_left_eye[0])
+        desired_dist *= desired_face_width
+        scale = desired_dist / dist
+
+        # compute center (x, y)-coordinates (i.e., the median point)
+        # between the two eyes in the input image
+        eyes_center = ((left_eye_centre[0] + right_eye_centre[0]) // 2,
+                       (left_eye_centre[1] + right_eye_centre[1]) // 2)
+
+        # grab the rotation matrix for rotating and scaling the face
+        rotation_matrix = cv2.getRotationMatrix2D(eyes_center, angle, scale)
+
+        # update the translation component of the matrix
+        t_x = desired_face_width * 0.5
+        t_y = desired_face_height * desired_left_eye[1]
+        rotation_matrix[0, 2] += (t_x - eyes_center[0])
+        rotation_matrix[1, 2] += (t_y - eyes_center[1])
+
+        # apply the affine transformation
+        output = cv2.warpAffine(self.face_color, rotation_matrix, (desired_face_width, desired_face_height),
+                                flags=cv2.INTER_CUBIC)
+
+        # return the aligned face
+        return output
+
     # override method
     def compute_distance(self, other_element):
-        return np.sqrt(np.sum((self.box-other_element.box)**2))
+        return np.sqrt(np.sum((self.box - other_element.box) ** 2))
+
+    # override method
+    def encode(self):
+        # get the face_color and face_chip it using the transformed_landmarks
+        face_chip = self._align()
+        encoding = FACE_ENCODER.compute_face_descriptor(face_chip)
+        return encoding
 
 
 class LandmarkMethod(object):
@@ -414,7 +474,7 @@ class LandmarkMethod(object):
                 pass
             else:
                 raise e
-    
+
     @staticmethod
     def crop_face_from_image(color_img, box):
         _bb = map(int, box)
@@ -442,8 +502,9 @@ class LandmarkMethod(object):
         for facebox, landmarks, face_image in zip(faceboxes, all_landmarks, face_images):
             np_landmarks = np.array(landmarks)
             transformed_landmarks = LandmarkMethod.transform_landmarks(np_landmarks, facebox)
-            tracked_subjects.append(TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks))
-        
+            subject = TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks)
+            tracked_subjects.append(subject)
+
         # track the new faceboxes according to the previous ones
         self.subject_tracker.track(tracked_subjects)
 
