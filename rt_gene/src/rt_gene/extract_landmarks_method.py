@@ -41,18 +41,16 @@ from face_alignment.detection.sfd import FaceDetector
 
 import dlib
 
-FACE_ENCODER = dlib.face_recognition_model_v1(
-    rospkg.RosPack().get_path('rt_gene') + '/model_nets/dlib_face_recognition_resnet_model_v1.dat')
-
 
 class TrackedSubject(TrackedElement):
 
-    def __init__(self, box, face, landmarks, marks):
+    def __init__(self, box, face, landmarks, marks, face_encoder):
         super(TrackedSubject, self).__init__()
         self.box = box
         self.face_color = face
         self.transformed_landmarks = landmarks
         self.marks = marks
+        self.face_encoder = face_encoder
 
     def _align(self, desired_left_eye=(0.3, 0.3), desired_face_width=150, desired_face_height=150):
         # extract the left and right eye (x, y)-coordinates
@@ -110,7 +108,7 @@ class TrackedSubject(TrackedElement):
     def encode(self):
         # get the face_color and face_chip it using the transformed_landmarks
         face_chip = self._align()
-        encoding = FACE_ENCODER.compute_face_descriptor(face_chip)
+        encoding = self.face_encoder.compute_face_descriptor(face_chip)
         return encoding
 
 
@@ -176,6 +174,9 @@ class LandmarkMethod(object):
 
         self.facial_landmark_nn = face_alignment.FaceAlignment(landmarks_type=face_alignment.LandmarksType._2D,
                                                                device=self.device_id_facealignment, flip_input=False)
+
+        self.face_encoder = dlib.face_recognition_model_v1(
+            rospkg.RosPack().get_path('rt_gene') + '/model_nets/dlib_face_recognition_resnet_model_v1.dat')
 
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
 
@@ -502,7 +503,8 @@ class LandmarkMethod(object):
         for facebox, landmarks, face_image in zip(faceboxes, all_landmarks, face_images):
             np_landmarks = np.array(landmarks)
             transformed_landmarks = LandmarkMethod.transform_landmarks(np_landmarks, facebox)
-            subject = TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks)
+            subject = TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks,
+                                     self.face_encoder)
             tracked_subjects.append(subject)
 
         # track the new faceboxes according to the previous ones
