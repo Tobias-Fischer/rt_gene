@@ -34,7 +34,9 @@ from rt_gene.kalman_stabilizer import Stabilizer
 from rt_gene.msg import MSG_SubjectImagesList
 from rt_gene.cfg import ModelSizeConfig
 from rt_gene.subject_ros_bridge import SubjectListBridge
-from rt_gene.tracker import GenericTracker, TrackedElement
+from rt_gene.GenericTracker import TrackedElement
+from rt_gene.FaceEncodingTracker import FaceEncodingTracker
+from rt_gene.SequentialTracker import SequentialTracker
 
 import face_alignment
 from face_alignment.detection.sfd import FaceDetector
@@ -114,7 +116,8 @@ class TrackedSubject(TrackedElement):
 
 class LandmarkMethod(object):
     def __init__(self, img_proc=None):
-        self.subject_tracker = GenericTracker()
+        face_encoding_tracker = rospy.get_param("~face_encoding_tracker", default=False)
+        self.subject_tracker = FaceEncodingTracker() if face_encoding_tracker else SequentialTracker()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
         self.model_size_rescale = 30.0
@@ -176,7 +179,7 @@ class LandmarkMethod(object):
                                                                device=self.device_id_facealignment, flip_input=False)
 
         self.face_encoder = dlib.face_recognition_model_v1(
-            rospkg.RosPack().get_path('rt_gene') + '/model_nets/dlib_face_recognition_resnet_model_v1.dat')
+            rospkg.RosPack().get_path('rt_gene') + '/model_nets/dlib_face_recognition_resnet_model_v1.dat') if face_encoding_tracker else None
 
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
 
