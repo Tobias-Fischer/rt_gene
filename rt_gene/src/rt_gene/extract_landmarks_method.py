@@ -445,8 +445,7 @@ class LandmarkMethod(object):
         for facebox, landmarks, face_image in zip(faceboxes, all_landmarks, face_images):
             np_landmarks = np.array(landmarks)
             transformed_landmarks = LandmarkMethod.transform_landmarks(np_landmarks, facebox)
-            subject = TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks,
-                                     self.face_encoder)
+            subject = TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks)
             tracked_subjects.append(subject)
 
         # track the new faceboxes according to the previous ones

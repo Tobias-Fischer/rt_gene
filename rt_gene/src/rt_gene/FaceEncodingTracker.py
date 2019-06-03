@@ -81,7 +81,7 @@ class FaceEncodingTracker(GenericTracker):
         # encode the new array
         found_previous = False
 
-        encoding = np.array(element.encode(self.__encode_subject(element)))
+        encoding = np.array(self.__encode_subject(element))
         # check to see if we've seen it before
         for i, previous_encoding in enumerate(self.__removed_elements.keys()):
             previous_encoding = np.fromstring(previous_encoding[1:-1], dtype=np.float, sep=",")
