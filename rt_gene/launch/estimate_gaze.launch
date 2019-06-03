@@ -26,7 +26,7 @@
       <node pkg="rt_gene" type="extract_landmarks_node.py" name="extract_landmarks_new" output="screen">
           <param name="device_id_facedetection"  value="$(arg device_id_facedetection)" />
           <param name="device_id_facealignment"  value="$(arg device_id_facealignment)" />
-          <param name="face_encoding_tracker" value="True" />
+          <param name="use_face_encoding_tracker" value="False" />
           <param name="rgb_frame_id" value="$(arg rgb_frame_id)" />
           <param name="rgb_frame_id_ros" value="$(arg rgb_frame_id_ros)" />
           <param name="tf_prefix" value="$(arg tf_prefix)" />

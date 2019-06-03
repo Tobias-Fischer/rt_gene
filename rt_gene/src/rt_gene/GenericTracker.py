@@ -8,9 +8,6 @@ from __future__ import print_function
 
 class TrackedElement(object):
 
-    def encode(self):
-        raise NotImplementedError("'encode' method must be overridden!")
-
     def compute_distance(self, other_element):
         raise NotImplementedError("'compute_distance' method must be overridden!")
 
