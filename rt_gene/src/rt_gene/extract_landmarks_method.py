@@ -34,14 +34,16 @@ from rt_gene.kalman_stabilizer import Stabilizer
 from rt_gene.msg import MSG_SubjectImagesList
 from rt_gene.cfg import ModelSizeConfig
 from rt_gene.subject_ros_bridge import SubjectListBridge
-from rt_gene.tracker import GenericTracker, TrackedElement
+from rt_gene.GenericTracker import TrackedElement
+from rt_gene.FaceEncodingTracker import FaceEncodingTracker
+from rt_gene.SequentialTracker import SequentialTracker
 
 import face_alignment
 from face_alignment.detection.sfd import FaceDetector
 
-import torch
 
 class TrackedSubject(TrackedElement):
+
     def __init__(self, box, face, landmarks, marks):
         super(TrackedSubject, self).__init__()
         self.box = box
@@ -51,12 +53,13 @@ class TrackedSubject(TrackedElement):
 
     # override method
     def compute_distance(self, other_element):
-        return np.sqrt(np.sum((self.box-other_element.box)**2))
+        return np.sqrt(np.sum((self.box - other_element.box) ** 2))
 
 
 class LandmarkMethod(object):
     def __init__(self, img_proc=None):
-        self.subject_tracker = GenericTracker()
+        self.subject_tracker = FaceEncodingTracker() if rospy.get_param("~use_face_encoding_tracker",
+                                                                        default=False) else SequentialTracker()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
         self.model_size_rescale = 30.0
@@ -414,7 +417,7 @@ class LandmarkMethod(object):
                 pass
             else:
                 raise e
-    
+
     @staticmethod
     def crop_face_from_image(color_img, box):
         _bb = map(int, box)
@@ -442,8 +445,9 @@ class LandmarkMethod(object):
         for facebox, landmarks, face_image in zip(faceboxes, all_landmarks, face_images):
             np_landmarks = np.array(landmarks)
             transformed_landmarks = LandmarkMethod.transform_landmarks(np_landmarks, facebox)
-            tracked_subjects.append(TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks))
-        
+            subject = TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks)
+            tracked_subjects.append(subject)
+
         # track the new faceboxes according to the previous ones
         self.subject_tracker.track(tracked_subjects)
 

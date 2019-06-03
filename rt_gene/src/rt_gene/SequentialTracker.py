@@ -4,14 +4,10 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 """
 import numpy as np
 import scipy
+from GenericTracker import TrackedElement, GenericTracker
 
 
-class TrackedElement(object):
-    def compute_distance(self, other_element):
-        raise NotImplementedError("'compute_distance' method must be overridden!")
-
-
-class GenericTracker(object):
+class SequentialTracker(GenericTracker):
     def __init__(self):
         self.__tracked_elements = {}
         self.__i = -1
@@ -72,14 +68,13 @@ class GenericTracker(object):
 
         # assign each new element to existing one or store it as new
         for j, new_element in enumerate(new_elements):
-            match_idx = col[row.tolist().index(j)]
-
-            if match_idx < len(map_index_to_id):
+            try:
+                match_idx = col[row.tolist().index(j)]
                 # if the new element matches with existing old one
                 matched_element_id = map_index_to_id[match_idx]
                 self.__update_element(matched_element_id, new_element)
                 updated_tracked_element_ids.append(matched_element_id)
-            else:
+            except ValueError:
                 # if the new element is not matching
                 self.__add_new_element(new_element)
 
