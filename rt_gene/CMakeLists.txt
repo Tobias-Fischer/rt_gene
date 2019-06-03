@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf_conversions
   uvc_camera
   dynamic_reconfigure
-  dlib
 )
 
 ## System dependencies are found with CMake's conventions
@@ -31,14 +30,14 @@ catkin_download(
     REQUIRED
 )
 
-#catkin_download(
-#    dlib_face_recognition_resnet_model_v1.dat
-#    https://insert.correct.url/here
-#    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets
-#    FILENAME dlib_face_recognition_resnet_model_v1.dat
-#    MD5 2316b25ae80acf4ad9b620b00071c423
-#    REQUIRED
-#)
+catkin_download(
+    dlib_face_recognition_resnet_model_v1.dat
+    https://imperialcollegelondon.box.com/shared/static/7zfltrwhrss0zsq2d2z0mgbz4j3ij3fk.dat
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets
+    FILENAME dlib_face_recognition_resnet_model_v1.dat
+    MD5 2316b25ae80acf4ad9b620b00071c423
+    REQUIRED
+)
 
 
 
