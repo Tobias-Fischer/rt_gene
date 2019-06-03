@@ -42,6 +42,7 @@
   <depend>uvc_camera</depend>
   <depend>dynamic_reconfigure</depend>
   <depend>opencv3</depend>
+  <depend>dlib</depend>
 
   <depend>python-scipy</depend>
   <depend>python-numpy</depend>
