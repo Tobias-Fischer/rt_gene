@@ -104,7 +104,7 @@ class FaceEncodingTracker(GenericTracker):
     # (can be overridden if necessary)
     def _generate_new_id(self):
         self.__i += 1
-        return self.__i
+        return str(self.__i)
 
     def get_tracked_elements(self):
         return self.__tracked_elements
