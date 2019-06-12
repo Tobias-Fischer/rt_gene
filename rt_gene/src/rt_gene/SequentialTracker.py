@@ -27,7 +27,7 @@ class SequentialTracker(GenericTracker):
     # (can be overridden if necessary)
     def _generate_unique_id(self):
         self.__i += 1
-        return self.__i
+        return str(self.__i)
 
     ''' --------------------------------------------------------------------'''
     ''' PUBLIC METHODS '''
