@@ -79,7 +79,7 @@ class LandmarkMethod(object):
         self.rgb_frame_id_ros = rospy.get_param("~rgb_frame_id_ros", "/kinect2_nonrotated_link")
 
         self.model_points = None
-        self.eye_image_size = (rospy.get_param("~eye_image_height", 36), rospy.get_param("~eye_image_width", 60))
+        self.eye_image_size = (rospy.get_param("~eye_image_width", 60), rospy.get_param("~eye_image_height", 36))
 
         self.tf_broadcaster = TransformBroadcaster()
         self.tf_listener = TransformListener()
@@ -154,9 +154,11 @@ class LandmarkMethod(object):
         faceboxes = []
         start_time = time.time()
         fraction = 4.0
-        image = scipy.misc.imresize(image, 1.0 / fraction)
+        # image = scipy.misc.imresize(image, 1.0 / fraction)
+        image = cv2.resize(image, (0, 0), fx=1.0 / fraction, fy=1.0 / fraction)
         detections = self.face_net.detect_from_image(image)
-        tqdm.write("Face Detector Frequency: {:.2f}Hz".format(1 / (time.time() - start_time)))
+        tqdm.write(
+            "Face Detector Frequency: {:.2f}Hz for {} Faces".format(1 / (time.time() - start_time), len(detections)))
 
         for result in detections:
             # scale back up to image size
@@ -407,20 +409,11 @@ class LandmarkMethod(object):
 
     def callback(self, color_msg):
         """Simply call process_image."""
-        try:
-            self.process_image(color_msg)
-
-        except CvBridgeError as e:
-            print(e)
-        except rospy.ROSException as e:
-            if str(e) == "publish() to a closed topic":
-                pass
-            else:
-                raise e
+        self.process_image(color_msg)
 
     @staticmethod
     def crop_face_from_image(color_img, box):
-        _bb = map(int, box)
+        _bb = list(map(int, box))
         return color_img[_bb[1]: _bb[3], _bb[0]: _bb[2]]
 
     @staticmethod
@@ -453,7 +446,7 @@ class LandmarkMethod(object):
 
     def __get_eye_image_one(self, transformed_landmarks, face_aligned_color):
         margin_ratio = 1.0
-        desired_ratio = float(self.eye_image_size[0]) / float(self.eye_image_size[1]) / 2.0
+        desired_ratio = float(self.eye_image_size[1]) / float(self.eye_image_size[0]) / 2.0
 
         try:
             # Get the width of the eye, and compute how big the margin should be according to the width
@@ -475,7 +468,7 @@ class LandmarkMethod(object):
             left_bb[2] = transformed_landmarks[3][0] + lefteye_margin / 2.0
             left_bb[3] = lefteye_center_y + (lefteye_width + lefteye_margin) * desired_ratio
 
-            left_bb = map(int, left_bb)
+            left_bb = list(map(int, left_bb))
 
             right_bb = np.zeros(4, dtype=np.float)
             right_bb[0] = transformed_landmarks[0][0] - righteye_margin / 2.0
@@ -483,7 +476,7 @@ class LandmarkMethod(object):
             right_bb[2] = transformed_landmarks[1][0] + righteye_margin / 2.0
             right_bb[3] = righteye_center_y + (righteye_width + righteye_margin) * desired_ratio
 
-            right_bb = map(int, right_bb)
+            right_bb = list(map(int, right_bb))
 
             # Extract the eye images from the aligned image
             left_eye_color = face_aligned_color[left_bb[1]:left_bb[3], left_bb[0]:left_bb[2], :]
@@ -493,8 +486,8 @@ class LandmarkMethod(object):
             #     cv2.circle(face_aligned_color, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
 
             # So far, we have only ensured that the ratio is correct. Now, resize it to the desired size.
-            left_eye_color_resized = scipy.misc.imresize(left_eye_color, self.eye_image_size, interp='cubic')
-            right_eye_color_resized = scipy.misc.imresize(right_eye_color, self.eye_image_size, interp='cubic')
+            left_eye_color_resized = cv2.resize(left_eye_color, self.eye_image_size, interpolation=cv2.INTER_CUBIC)
+            right_eye_color_resized = cv2.resize(right_eye_color, self.eye_image_size, interpolation=cv2.INTER_CUBIC)
 
             return left_eye_color_resized, right_eye_color_resized, left_bb, right_bb
         except (ValueError, TypeError):

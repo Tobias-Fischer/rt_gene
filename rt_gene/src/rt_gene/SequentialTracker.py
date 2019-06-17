@@ -4,7 +4,7 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 """
 import numpy as np
 import scipy
-from GenericTracker import TrackedElement, GenericTracker
+from .GenericTracker import TrackedElement, GenericTracker
 
 
 class SequentialTracker(GenericTracker):
