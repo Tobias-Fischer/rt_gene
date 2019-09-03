@@ -343,6 +343,14 @@ class LandmarkMethod(object):
         rotation_vector = stable_pose[0]
         translation_vector = stable_pose[1]
 
+        # check to see if rotation_vector is wild, if so, stop checking head positions
+        _unit_rotation_vector = rotation_vector / np.linalg.norm(rotation_vector)
+        _unit_last_rotation_vector = self.last_rvec[subject_id] / np.linalg.norm(self.last_rvec[subject_id])
+        if np.arccos(np.dot(_unit_last_rotation_vector, _unit_rotation_vector)) > 0.1:
+            # we have too much rotation here, likely unstable, thus error out
+            print('Could not estimate head pose due to instability of landmarks')
+            return False, None, None
+
         self.last_rvec[subject_id] = rotation_vector
         self.last_tvec[subject_id] = translation_vector
 
