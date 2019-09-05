@@ -1,5 +1,5 @@
 <launch>
-    <arg name="use_face_encoding_tracker" default="False" />
+    <arg name="use_face_encoding_tracker" default="True" />
     <arg name="interpupillary_distance" default="0.058"/>
     <arg name="start_rviz" default="False"/>
 
