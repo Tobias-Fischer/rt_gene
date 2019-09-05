@@ -343,6 +343,16 @@ class LandmarkMethod(object):
         rotation_vector = stable_pose[0]
         translation_vector = stable_pose[1]
 
+        # check to see if rotation_vector is wild, if so, stop checking head positions
+        _unit_rotation_vector = rotation_vector / np.linalg.norm(rotation_vector)
+        _unit_last_rotation_vector = self.last_rvec[subject_id] / np.linalg.norm(self.last_rvec[subject_id])
+        _theta = np.arccos(np.dot(_unit_last_rotation_vector.reshape(3, ), _unit_rotation_vector))
+        tqdm.write("Head Rotation from last frame: {:.2f}".format(_theta))
+        if _theta > 0.1:
+            # we have too much rotation here, likely unstable, thus error out
+            print('Could not estimate head pose due to instability of landmarks')
+            return False, None, None
+
         self.last_rvec[subject_id] = rotation_vector
         self.last_tvec[subject_id] = translation_vector
 
@@ -490,7 +500,7 @@ class LandmarkMethod(object):
             right_eye_color_resized = cv2.resize(right_eye_color, self.eye_image_size, interpolation=cv2.INTER_CUBIC)
 
             return left_eye_color_resized, right_eye_color_resized, left_bb, right_bb
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, cv2.error):
             return None, None, None, None
 
     # noinspection PyUnusedLocal
