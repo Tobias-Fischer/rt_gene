@@ -436,8 +436,7 @@ class LandmarkMethod(object):
 
     def detect_landmarks(self, color_img, timestamp):
         faceboxes = self.get_face_bb(color_img)
-        if not faceboxes:
-            # reset the tracker
+        if len(faceboxes) == 0:
             self.subject_tracker.clear_elements()
             return
 

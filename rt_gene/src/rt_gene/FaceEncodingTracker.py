@@ -10,6 +10,8 @@ from .GenericTracker import GenericTracker, TrackedElement
 import cv2
 import dlib
 import rospkg
+from tqdm import tqdm
+import sys
 
 
 class FaceEncodingTracker(GenericTracker):
@@ -19,7 +21,7 @@ class FaceEncodingTracker(GenericTracker):
 
     def __init__(self):
         self.__tracked_elements = {}
-        self.__removed_elements = {}
+        self.__encoding_list = {}
         self.__i = -1
         self.__threshold = 0.6
 
@@ -80,23 +82,30 @@ class FaceEncodingTracker(GenericTracker):
 
     def __add_new_element(self, element):
         # encode the new array
-        found_previous = False
+        found_id = None
 
         encoding = np.array(self.__encode_subject(element))
         # check to see if we've seen it before
-        for i, previous_encoding in enumerate(self.__removed_elements.keys()):
+        list_to_check = list(set(self.__encoding_list.keys()) - set(self.__tracked_elements.keys()))
+
+        for untracked_encoding_id in list_to_check:
+            previous_encoding = self.__encoding_list[untracked_encoding_id]
             previous_encoding = np.fromstring(previous_encoding[1:-1], dtype=np.float, sep=",")
             distance = np.linalg.norm(previous_encoding - encoding, axis=0)
 
             # the new element and the previous encoding are the same person
             if distance < self.__threshold:
-                previous_id = self.__removed_elements.values()[i]
-                self.__tracked_elements[previous_id] = element
-                found_previous = True
+                self.__tracked_elements[untracked_encoding_id] = element
+                found_id = untracked_encoding_id
                 break
 
-        if not found_previous:
-            self.__tracked_elements[self._generate_new_id()] = element
+        if found_id is None:
+            found_id = self._generate_new_id()
+            self.__tracked_elements[found_id] = element
+
+            self.__encoding_list[found_id] = np.array2string(encoding, formatter={'float_kind': lambda x: "{:.5f}".format(x)}, separator=",")
+
+        return found_id
 
     def __update_element(self, element_id, element):
         self.__tracked_elements[element_id] = element
@@ -113,21 +122,20 @@ class FaceEncodingTracker(GenericTracker):
         self.__tracked_elements.clear()
 
     def track(self, new_elements):
-        # if no new elements, remove old elements
-        if not new_elements:
-            self.clear_elements()
-            return
-
         # if no elements yet, just add all the new ones
         if not self.__tracked_elements:
-            [self.__add_new_element(e) for e in new_elements]
+            for e in new_elements:
+                try:
+                    self.__add_new_element(e)
+                except cv2.error:
+                    pass
             return
 
         current_tracked_element_ids = self.__tracked_elements.keys()
         updated_tracked_element_ids = []
         map_index_to_id = {}  # map the matrix indexes with real unique id
 
-        distance_matrix = np.ones((len(self.__tracked_elements), len(new_elements)))
+        distance_matrix = np.full((len(self.__tracked_elements), len(new_elements)), np.inf)
         for i, element_id in enumerate(self.__tracked_elements.keys()):
             map_index_to_id[i] = element_id
             for j, new_element in enumerate(new_elements):
@@ -142,25 +150,25 @@ class FaceEncodingTracker(GenericTracker):
 
         # assign each new element to existing one or store it as new
         for j, new_element in enumerate(new_elements):
-            try:
+            row_list = row.tolist()
+            if j in row_list:
                 # find the index of the column matching
-                match_idx = col[np.min(np.nonzero(row == j))]
+                row_idx = row_list.index(j)
+
+                match_idx = col[row_idx]
                 # if the new element matches with existing old one
-                matched_element_id = map_index_to_id[match_idx]
-                self.__update_element(matched_element_id, new_element)
-                updated_tracked_element_ids.append(matched_element_id)
-            except ValueError:
-                # if the new element is not matching
-                self.__add_new_element(new_element)
+                _new_idx = map_index_to_id[match_idx]
+                self.__update_element(_new_idx, new_element)
+                updated_tracked_element_ids.append(_new_idx)
+            else:
+                try:
+                    _new_idx = self.__add_new_element(new_element)
+                    updated_tracked_element_ids.append(_new_idx)
+                except cv2.error:
+                    pass
 
         # store non-tracked elements in-case they reappear
         elements_to_delete = list(set(current_tracked_element_ids) - set(updated_tracked_element_ids))
         for i in elements_to_delete:
-            _element = self.__tracked_elements[i]  # the subject itself
-            encoding = np.array2string(np.array(_element.encode()), formatter={'float_kind': lambda x: "%.5f" % x},
-                                       separator=",")
-            # store the encoding and it's respective key
-            self.__removed_elements[encoding] = i
-
             # don't track it anymore
             del self.__tracked_elements[i]

@@ -3,6 +3,8 @@
 Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 """
 import numpy as np
+import rospy
+from scipy import optimize
 import scipy
 from .GenericTracker import TrackedElement, GenericTracker
 
@@ -11,12 +13,15 @@ class SequentialTracker(GenericTracker):
     def __init__(self):
         self.__tracked_elements = {}
         self.__i = -1
+        rospy.logwarn("** SequentialTracker is no longer supported, please use the FaceEncodingTracker instead")
 
     ''' --------------------------------------------------------------------'''
     ''' PRIVATE METHODS '''
 
     def __add_new_element(self, element):
-        self.__tracked_elements[self._generate_unique_id()] = element
+        new_id = self._generate_unique_id()
+        self.__tracked_elements[new_id] = element
+        return new_id
 
     def __update_element(self, element_id, element):
         self.__tracked_elements[element_id] = element
@@ -39,13 +44,8 @@ class SequentialTracker(GenericTracker):
         self.__tracked_elements.clear()
 
     def track(self, new_elements):
-        # if no new elements, remove old elements
-        if not new_elements:
-            self.clear_elements()
-            return
-
         # if no elements yet, just add all the new ones
-        if not self.__tracked_elements:
+        if len(self.__tracked_elements) == 0:
             [self.__add_new_element(e) for e in new_elements]
             return
 
@@ -53,7 +53,7 @@ class SequentialTracker(GenericTracker):
         updated_tracked_element_ids = []
         map_index_to_id = {}  # map the matrix indexes with real unique id
 
-        distance_matrix = np.ones((len(self.__tracked_elements), len(new_elements)))
+        distance_matrix = np.full((len(self.__tracked_elements), len(new_elements)), np.inf)
         for i, element_id in enumerate(self.__tracked_elements.keys()):
             map_index_to_id[i] = element_id
             for j, new_element in enumerate(new_elements):
@@ -68,15 +68,18 @@ class SequentialTracker(GenericTracker):
 
         # assign each new element to existing one or store it as new
         for j, new_element in enumerate(new_elements):
-            try:
-                match_idx = col[row.tolist().index(j)]
+            row_list = row.tolist()
+            if j in row_list:
+                match_idx = col[row_list.index(j)]
                 # if the new element matches with existing old one
                 matched_element_id = map_index_to_id[match_idx]
                 self.__update_element(matched_element_id, new_element)
-                updated_tracked_element_ids.append(matched_element_id)
-            except ValueError:
+                _new_idx = matched_element_id
+
+            else:
                 # if the new element is not matching
-                self.__add_new_element(new_element)
+                _new_idx = self.__add_new_element(new_element)
+            updated_tracked_element_ids.append(_new_idx)
 
         # delete all the non-updated elements
         elements_to_delete = list(set(current_tracked_element_ids) - set(updated_tracked_element_ids))
