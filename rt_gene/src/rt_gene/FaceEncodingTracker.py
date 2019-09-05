@@ -10,8 +10,6 @@ from .GenericTracker import GenericTracker, TrackedElement
 import cv2
 import dlib
 import rospkg
-from tqdm import tqdm
-import sys
 
 
 class FaceEncodingTracker(GenericTracker):
