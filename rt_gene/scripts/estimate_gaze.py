@@ -17,6 +17,7 @@ import time
 from tqdm import tqdm
 
 import rospy
+import psutil
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import rospkg
@@ -45,6 +46,10 @@ class GazeEstimator(object):
     Additionally, two images with the gaze overlaid on the eye images are published."""
 
     def __init__(self):
+        os.environ["OMP_NUM_THREADS"] = psutil.cpu_count(logical=False)
+        os.environ["KMP_SETTING"] = "KMP_AFFINITY=granularity=fine,compact,1,0"
+        os.environ["KMP_BLOCKTIME"] = 1
+
         self.image_height = rospy.get_param("~image_height", 36)
         self.image_width = rospy.get_param("~image_width", 60)
         self.bridge = CvBridge()
