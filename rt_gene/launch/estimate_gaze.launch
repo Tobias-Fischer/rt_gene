@@ -1,4 +1,5 @@
 <launch>
+    <arg name="pytorch_num_threads" default="8" />
     <arg name="use_face_encoding_tracker" default="True" />
     <arg name="interpupillary_distance" default="0.058"/>
     <arg name="start_rviz" default="False"/>
@@ -16,6 +17,10 @@
     <arg name="device_id_facedetection"  default="cuda:0" /> <!-- pyTorch format, e.g. cuda:0 or cpu:0 -->
     <arg name="device_id_facealignment"  default="cuda:0" /> <!-- pyTorch format, e.g. cuda:0 or cpu:0 -->
     <arg name="device_id_gazeestimation"  default="/gpu:0" /> <!-- tensorflow format, e.g. /gpu:0 or /cpu:0 -->
+
+    <env name="OMP_NUM_THREADS" value="$(arg pytorch_num_threads)" />
+    <env name="KMP_SETTING" value="KMP_AFFINITY=granularity=fine,compact,1,0" />
+    <env name="KMP_BLOCKTIME" value="1" />
 
     <group ns="$(arg group_name)">
       <node pkg="tf2_ros" type="static_transform_publisher" name="kinect2_link_broadcaster"
