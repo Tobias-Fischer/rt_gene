@@ -19,6 +19,9 @@ from image_geometry import PinholeCameraModel
 import tf.transformations as tf_transformations
 from geometry_msgs.msg import PointStamped, Point
 from tf import TransformBroadcaster, TransformListener, ExtrapolationException
+import torch
+import torchvision.transforms as transforms
+import torch.backends.cudnn as cudnn
 import scipy
 from dynamic_reconfigure.server import Server
 import time
@@ -38,8 +41,9 @@ from rt_gene.GenericTracker import TrackedElement
 from rt_gene.FaceEncodingTracker import FaceEncodingTracker
 from rt_gene.SequentialTracker import SequentialTracker
 
-import face_alignment
 from face_alignment.detection.sfd import FaceDetector
+from rt_gene.ThreeDDFA.inference import predict_68pts, crop_img, parse_roi_box_from_bbox
+from rt_gene.ThreeDDFA.ddfa import ToTensorGjz, NormalizeGjz
 
 
 class TrackedSubject(TrackedElement):
@@ -117,13 +121,31 @@ class LandmarkMethod(object):
         self.sess_bb = None
         self.face_net = FaceDetector(device=self.device_id_facedetection)
 
-        self.facial_landmark_nn = face_alignment.FaceAlignment(landmarks_type=face_alignment.LandmarksType._2D,
-                                                               device=self.device_id_facealignment, flip_input=False)
+        self.facial_landmark_nn = self._load_face_landmark_model()
+        self._facial_landmark_transform = transforms.Compose([ToTensorGjz(), NormalizeGjz(mean=127.5, std=128)])
 
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
 
         # have the subscriber the last thing that's run to avoid conflicts
         self.color_sub = rospy.Subscriber("/image", Image, self.callback, buff_size=2 ** 24, queue_size=1)
+
+    def _load_face_landmark_model(self):
+        import rt_gene.ThreeDDFA.mobilenet_v1 as mobilenet_v1
+        checkpoint_fp = rospkg.RosPack().get_path('rt_gene') + '/model_nets/phase1_wpdc_vdc.pth.tar'
+        arch = 'mobilenet_1'
+
+        checkpoint = torch.load(checkpoint_fp, map_location=lambda storage, loc: storage)['state_dict']
+        model = getattr(mobilenet_v1, arch)(num_classes=62)  # 62 = 12(pose) + 40(shape) +10(expression)
+
+        model_dict = model.state_dict()
+        # because the model is trained by multiple gpus, prefix module should be removed
+        for k in checkpoint.keys():
+            model_dict[k.replace('module.', '')] = checkpoint[k]
+        model.load_state_dict(model_dict)
+        cudnn.benchmark = True
+        model = model.cuda()
+        model.eval()
+        return model
 
     def _dyn_reconfig_callback(self, config, level):
         self.model_points /= (self.model_size_rescale * self.interpupillary_distance)
@@ -230,14 +252,10 @@ class LandmarkMethod(object):
                    + ' message color: ' + str(color_msg.header.stamp.to_sec())
                    + ' diff: ' + str(rospy.Time.now().to_sec() - color_msg.header.stamp.to_sec()))
 
-        start_time = time.time()
-
         color_img = gaze_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 
         self.detect_landmarks(color_img, timestamp)  # update self.subject_tracker elements
-
-        tqdm.write('Elapsed after detecting transformed_landmarks: ' + str(time.time() - start_time))
 
         if not self.subject_tracker.get_tracked_elements():
             tqdm.write("No face found")
@@ -283,16 +301,13 @@ class LandmarkMethod(object):
                             final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image_resized),
                                                                     axis=1)
             else:
-                if not success:
-                    tqdm.write("Could not get head pose properly")
+                tqdm.write("Could not get head pose properly")
 
         if final_head_pose_images is not None:
             self.publish_subject_list(timestamp, self.subject_tracker.get_tracked_elements())
             headpose_image_ros = self.bridge.cv2_to_imgmsg(final_head_pose_images, "bgr8")
             headpose_image_ros.header.stamp = timestamp
             self.subject_faces_pub.publish(headpose_image_ros)
-
-        tqdm.write('Elapsed total: ' + str(time.time() - start_time) + '\n\n')
 
     def get_head_pose(self, landmarks, subject_id):
         """
@@ -440,12 +455,25 @@ class LandmarkMethod(object):
             self.subject_tracker.clear_elements()
             return
 
-        all_landmarks = self.facial_landmark_nn.get_landmarks(color_img, detected_faces=faceboxes)
         face_images = [LandmarkMethod.crop_face_from_image(color_img, b) for b in faceboxes]
 
         tracked_subjects = []
-        for facebox, landmarks, face_image in zip(faceboxes, all_landmarks, face_images):
-            np_landmarks = np.array(landmarks)
+        for facebox, face_image in zip(faceboxes, face_images):
+            roi_box = parse_roi_box_from_bbox(facebox)
+            img = crop_img(color_img, roi_box)
+
+            # forward: one step
+            img = cv2.resize(img, dsize=(120, 120), interpolation=cv2.INTER_LINEAR)
+
+            _input = self._facial_landmark_transform(img).unsqueeze(0)
+            with torch.no_grad():
+                _input = _input.cuda()
+                param = self.facial_landmark_nn(_input)
+                param = param.squeeze().cpu().numpy().flatten().astype(np.float32)
+
+            # 68 pts
+            pts68 = predict_68pts(param, roi_box)
+            np_landmarks = np.array((pts68[0], pts68[1])).T
             transformed_landmarks = LandmarkMethod.transform_landmarks(np_landmarks, facebox)
             subject = TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks)
             tracked_subjects.append(subject)

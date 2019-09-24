@@ -22,6 +22,33 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_python_setup()
 
 catkin_download(
+    w_shp_sim.npy
+    https://github.com/cleardusk/3DDFA/blob/master/train.configs/w_shp_sim.npy?raw=true
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets/ThreeDDFA
+    FILENAME w_shp_sim.npy
+    MD5 74d41d465580924456defd99401cfcdd
+    REQUIRED
+)
+
+catkin_download(
+    w_exp_sim.npy
+    https://github.com/cleardusk/3DDFA/blob/master/train.configs/w_exp_sim.npy?raw=true
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets/ThreeDDFA
+    FILENAME w_exp_sim.npy
+    MD5 7566556b7760b8691f3a6fddbdd38fcc
+    REQUIRED
+)
+
+catkin_download(
+    phase1_wpdc_vdc.pth.tar
+    https://github.com/cleardusk/3DDFA/blob/master/models/phase1_wpdc_vdc.pth.tar?raw=true
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets
+    FILENAME phase1_wpdc_vdc.pth.tar
+    MD5 01054c039b12b1b5f6e34e1fcf44fbf6
+    REQUIRED
+)
+
+catkin_download(
     Model_allsubjects1.h5
     https://imperialcollegelondon.box.com/shared/static/zu424pzptmw1klh70jsc697b37h7mwif.h5
     DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets

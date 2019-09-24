@@ -9,6 +9,9 @@ rt_gene/model_nets/Model_allsubjects1.h5
 rt_gene/model_nets/dnn_deploy.prototxt
 rt_gene/model_nets/res10_300x300_ssd_iter_140000.caffemodel
 rt_gene/model_nets/dlib_face_recognition_resnet_model_v1.dat
+rt_gene/model_nets/ThreeDDFA/w_exp_sim.npy
+rt_gene/model_nets/ThreeDDFA/w_shp_sim.npy
+rt_gene/model_nets/phase1_wpdc_vdc.pth.tar
 
 *~
 # Byte-compiled / optimized / DLL files

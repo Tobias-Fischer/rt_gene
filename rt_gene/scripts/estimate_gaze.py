@@ -171,8 +171,6 @@ class GazeEstimator(object):
                         'Too big time diff for head pose, do not estimate gaze!' + str((timestamp - lct).to_sec()))
                     return
 
-            start_time = time.time()
-
             est_gaze_c = self.estimate_gaze_twoeyes(input_l, input_r, np.array([theta_head, phi_head]))
 
             self.gaze_buffer_c[subject_id].append(est_gaze_c)           
@@ -183,7 +181,6 @@ class GazeEstimator(object):
                 tqdm.write('est_gaze_c: ' + str(est_gaze_c_med))
                 return est_gaze_c_med
 
-            tqdm.write('Elapsed: ' + str(time.time() - start_time))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception) as tf_e:
             print(tf_e)
         except rospy.ROSException as ros_e:
