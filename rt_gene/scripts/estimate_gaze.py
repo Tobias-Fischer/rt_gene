@@ -45,6 +45,7 @@ class GazeEstimator(object):
     Additionally, two images with the gaze overlaid on the eye images are published."""
 
     def __init__(self):
+        tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
         self.image_height = rospy.get_param("~image_height", 36)
         self.image_width = rospy.get_param("~image_width", 60)
         self.bridge = CvBridge()
