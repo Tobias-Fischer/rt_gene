@@ -154,7 +154,7 @@ class GazeEstimator(object):
                 # tqdm.write('Time diff: ' + str((timestamp - lct).to_sec()))
 
                 (trans_head, rot_head) = self.tf_listener.lookupTransform(self.rgb_frame_id_ros, self.headpose_frame + str(subject_id), lct)
-                euler_angles_head = gaze_tools.get_head_pose(rot_head)
+                euler_angles_head = gaze_tools.limit_yaw(rot_head)
 
                 phi_head, theta_head = gaze_tools.get_phi_theta_from_euler(euler_angles_head)
                 self.last_phi_head, self.last_theta_head = phi_head, theta_head
