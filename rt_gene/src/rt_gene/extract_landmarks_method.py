@@ -45,6 +45,9 @@ from rt_gene.ThreeDDFA.inference import predict_68pts, crop_img, parse_roi_box_f
 from rt_gene.ThreeDDFA.ddfa import ToTensorGjz, NormalizeGjz
 
 
+facial_landmark_transform = transforms.Compose([ToTensorGjz(), NormalizeGjz(mean=127.5, std=128)])
+
+
 class LandmarkMethod(object):
     def __init__(self, img_proc=None):
         self.subject_tracker = FaceEncodingTracker() if rospy.get_param("~use_face_encoding_tracker",
@@ -97,12 +100,11 @@ class LandmarkMethod(object):
         # multiple person faces publication for visualisation
         self.subject_faces_pub = rospy.Publisher("/subjects/faces", Image, queue_size=1)
 
-        self.model_points = self._get_full_model_points()
+        self.model_points = LandmarkMethod.get_full_model_points(self.interpupillary_distance, self.model_size_rescale)
 
         self.face_net = FaceDetector(device=self.device_id_facedetection)
 
-        self.facial_landmark_nn = self._load_face_landmark_model()
-        self._facial_landmark_transform = transforms.Compose([ToTensorGjz(), NormalizeGjz(mean=127.5, std=128)])
+        self.facial_landmark_nn = LandmarkMethod.load_face_landmark_model()
 
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
 
@@ -110,7 +112,7 @@ class LandmarkMethod(object):
         self.color_sub = rospy.Subscriber("/image", Image, self.process_image, buff_size=2 ** 24, queue_size=1)
 
     @staticmethod
-    def _load_face_landmark_model():
+    def load_face_landmark_model():
         import rt_gene.ThreeDDFA.mobilenet_v1 as mobilenet_v1
         checkpoint_fp = rospkg.RosPack().get_path('rt_gene') + '/model_nets/phase1_wpdc_vdc.pth.tar'
         arch = 'mobilenet_1'
@@ -136,7 +138,8 @@ class LandmarkMethod(object):
         self.head_pitch = config["head_pitch"]
         return config
 
-    def _get_full_model_points(self):
+    @staticmethod
+    def get_full_model_points(interpupillary_distance, model_size_rescale):
         """Get all 68 3D model points from file"""
         raw_value = []
         filename = rospkg.RosPack().get_path('rt_gene') + '/model_nets/face_model_68.txt'
@@ -149,7 +152,7 @@ class LandmarkMethod(object):
         model_points[:, -1] *= -1
 
         # index the expansion of the model based.
-        model_points = model_points * (self.interpupillary_distance * self.model_size_rescale)
+        model_points = model_points * (interpupillary_distance * model_size_rescale)
 
         return model_points
 
@@ -158,7 +161,6 @@ class LandmarkMethod(object):
         faceboxes = []
         start_time = time.time()
         fraction = 4.0
-        # image = scipy.misc.imresize(image, 1.0 / fraction)
         image = cv2.resize(image, (0, 0), fx=1.0 / fraction, fy=1.0 / fraction)
         detections = face_net.detect_from_image(image)
         tqdm.write(
@@ -210,14 +212,14 @@ class LandmarkMethod(object):
                     cov_process=0.1,
                     cov_measure=0.1) for _ in range(6)]
 
-            success, rotation_vector, translation_vector = self.get_head_pose(subject.marks, subject_id)
+            success, rotation_quaternion, translation_vector = self.get_head_pose(subject.marks, subject_id)
 
             # Publish all the data
             translation_headpose_tf = self.get_head_translation(timestamp, subject_id)
 
             if success:
                 if translation_headpose_tf is not None:
-                    euler_angles_head = self.publish_pose(timestamp, translation_headpose_tf, rotation_vector, subject_id)
+                    roll_pitch_yaw = self.publish_pose(timestamp, translation_headpose_tf, rotation_quaternion, subject_id)
 
                     if euler_angles_head is not None:
                         head_pose_image = self.visualize_headpose_result(subject.face_color,
@@ -305,11 +307,11 @@ class LandmarkMethod(object):
 
     @staticmethod
     def visualize_headpose_result(face_image, est_headpose):
-        """Here, we take the original eye eye_image and overlay the estimated gaze."""
+        """Here, we take the original eye eye_image and overlay the estimated headpose."""
         output_image = np.copy(face_image)
 
-        center_x = face_image.shape[1] / 2
-        center_y = face_image.shape[0] / 2
+        center_x = output_image.shape[1] / 2
+        center_y = output_image.shape[0] / 2
 
         endpoint_x, endpoint_y = gaze_tools.get_endpoint(est_headpose[1], est_headpose[0], center_x, center_y, 100)
 
@@ -366,19 +368,20 @@ class LandmarkMethod(object):
         transformed_landmarks[:, 1] -= box[1]
         return transformed_landmarks
 
-    def ddfa_forward_pass(self, color_img, roi_box):
+    @staticmethod
+    def ddfa_forward_pass(facial_landmark_nn, color_img, roi_box):
         img_step = crop_img(color_img, roi_box)
         img_step = cv2.resize(img_step, dsize=(120, 120), interpolation=cv2.INTER_LINEAR)
-        _input = self._facial_landmark_transform(img_step).unsqueeze(0)
+        _input = facial_landmark_transform(img_step).unsqueeze(0)
         with torch.no_grad():
             _input = _input.cuda()
-            param = self.facial_landmark_nn(_input)
+            param = facial_landmark_nn(_input)
             param = param.squeeze().cpu().numpy().flatten().astype(np.float32)
 
         return predict_68pts(param, roi_box)
 
     def update_subject_tracker(self, color_img):
-        faceboxes = self.get_face_bb(self.face_net, color_img)
+        faceboxes = LandmarkMethod.get_face_bb(self.face_net, color_img)
         if len(faceboxes) == 0:
             self.subject_tracker.clear_elements()
             return
@@ -388,9 +391,9 @@ class LandmarkMethod(object):
         tracked_subjects = []
         for facebox, face_image in zip(faceboxes, face_images):
             roi_box = parse_roi_box_from_bbox(facebox)
-            initial_pts68 = self.ddfa_forward_pass(color_img, roi_box)
+            initial_pts68 = self.ddfa_forward_pass(self.facial_landmark_nn, color_img, roi_box)
             roi_box_refined = parse_roi_box_from_landmark(initial_pts68)
-            pts68 = self.ddfa_forward_pass(color_img, roi_box_refined)
+            pts68 = self.ddfa_forward_pass(self.facial_landmark_nn, color_img, roi_box_refined)
 
             np_landmarks = np.array((pts68[0], pts68[1])).T
             transformed_landmarks = LandmarkMethod.transform_landmarks(np_landmarks, facebox)
