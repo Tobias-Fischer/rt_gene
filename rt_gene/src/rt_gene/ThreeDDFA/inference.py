@@ -68,7 +68,7 @@ def parse_roi_box_from_landmark(pts):
     center_x = (bbox[2] + bbox[0]) / 2
     center_y = (bbox[3] + bbox[1]) / 2
 
-    roi_box = [0] * 4
+    roi_box = [0.0] * 4
     roi_box[0] = center_x - llength / 2
     roi_box[1] = center_y - llength / 2
     roi_box[2] = roi_box[0] + llength
@@ -91,7 +91,7 @@ def parse_roi_box_from_bbox(bbox):
     return roi_box
 
 
-def _predict_vertices(param, roi_bbox, dense, transform=True):
+def _predict_vertices(param, roi_bbox, dense):
     vertex = reconstruct_vertex(param, dense=dense)
     sx, sy, ex, ey = roi_bbox
     scale_x = (ex - sx) / 120

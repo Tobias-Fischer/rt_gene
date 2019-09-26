@@ -3,13 +3,7 @@
 Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 """
 
-from sensor_msgs.msg import Image
-from geometry_msgs.msg import PointStamped
-import numpy as np
-from math import sqrt, pi
-
 from rt_gene.msg import MSG_SubjectImagesList, MSG_SubjectImages
-import collections
 
 from cv_bridge import CvBridge
 
@@ -34,29 +28,29 @@ class SubjectBridge:
 
     def msg_to_images(self, subject_msg):
         subject = SubjectImages(subject_msg.subject_id)
-        subject.face  = self.__cv_bridge.imgmsg_to_cv2(subject_msg.face_img,      'rgb8')
+        subject.face = self.__cv_bridge.imgmsg_to_cv2(subject_msg.face_img, 'rgb8')
         subject.right = self.__cv_bridge.imgmsg_to_cv2(subject_msg.right_eye_img, 'rgb8')
-        subject.left  = self.__cv_bridge.imgmsg_to_cv2(subject_msg.left_eye_img,  'rgb8')
+        subject.left = self.__cv_bridge.imgmsg_to_cv2(subject_msg.left_eye_img, 'rgb8')
         return subject
 
     def msg_to_complete(self, s_id, s_img):
         subject = CompleteSubject(s_id)
         subject.img = self.msg_to_images(s_img)
         return subject
- 
+
     def images_to_msg(self, subject_id, subject):
         msg = MSG_SubjectImages()
-        msg.subject_id    = subject_id
-        msg.face_img      = self.__cv_bridge.cv2_to_imgmsg(subject.face_color,      "rgb8")
+        msg.subject_id = subject_id
+        msg.face_img = self.__cv_bridge.cv2_to_imgmsg(subject.face_color, "rgb8")
         msg.right_eye_img = self.__cv_bridge.cv2_to_imgmsg(subject.right_eye_color, "rgb8")
-        msg.left_eye_img  = self.__cv_bridge.cv2_to_imgmsg(subject.left_eye_color,  "rgb8")
+        msg.left_eye_img = self.__cv_bridge.cv2_to_imgmsg(subject.left_eye_color, "rgb8")
         return msg
 
 
 class SubjectListBridge:
     def __init__(self):
         self.__subject_bridge = SubjectBridge()
-    
+
     def msg_to_images(self, subject_msg):
         subject_dict = dict()
         for s in subject_msg.subjects:

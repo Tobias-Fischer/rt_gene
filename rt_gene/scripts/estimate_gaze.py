@@ -13,7 +13,6 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 import os
 import cv2
-import time
 from tqdm import tqdm
 
 import rospy
@@ -91,6 +90,7 @@ class GazeEstimator(object):
        
         self.average_weights = np.array([0.1, 0.125, 0.175, 0.2, 0.4])
         self.gaze_buffer_c = {}
+        self.time_last = rospy.Time.now()
 
     def __del__(self):
         if self.sess is not None:
@@ -127,13 +127,9 @@ class GazeEstimator(object):
         image_ros.header.stamp = timestamp
         image_publisher.publish(image_ros)
 
-    def input_from_image(self, eye_img_msg, flip=False):
+    def input_from_image(self, cv_image):
         """This method converts an eye_img_msg provided by the landmark estimator, and converts it to a format
         suitable for the gaze network."""
-        cv_image = eye_img_msg
-        #cv_image = self.bridge.imgmsg_to_cv2(eye_img_msg, "rgb8")
-        if flip:
-            cv_image = cv2.flip(cv_image, 1)
         currimg = cv_image.reshape(self.image_height, self.image_width, 3, order='F')
         currimg = currimg.astype(np.float32)
         # print('currimg.dtype', currimg.dtype)
@@ -143,8 +139,7 @@ class GazeEstimator(object):
         testimg[0, :, :, 1] = currimg[:, :, 1] - 116.779
         testimg[0, :, :, 2] = currimg[:, :, 2] - 123.68
         return testimg
-        
-        
+
     def compute_eye_gaze_estimation(self, subject_id, timestamp,
                                     input_r,         input_l):
         """
@@ -178,7 +173,9 @@ class GazeEstimator(object):
             if len(self.average_weights) == len(self.gaze_buffer_c[subject_id]):
                 est_gaze_c_med = np.average(np.array(self.gaze_buffer_c[subject_id]), axis=0, weights=self.average_weights)
                 self.publish_gaze(est_gaze_c_med, timestamp, subject_id)
-                tqdm.write('est_gaze_c: ' + str(est_gaze_c_med))
+                time_total = (rospy.Time.now() - timestamp).to_sec()
+                tqdm.write('est_gaze_c: {gaze} (fps: {fps:.1f}, latency: {time:.2f}s)'.format(gaze=est_gaze_c_med, fps=1./(rospy.Time.now() - self.time_last).to_sec(), time=time_total))
+                self.time_last = rospy.Time.now()
                 return est_gaze_c_med
 
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception) as tf_e:
@@ -188,7 +185,7 @@ class GazeEstimator(object):
                 print("See ya")
         return None
 
-    def image_callback(self, subject_image_list, masked_list=None):
+    def image_callback(self, subject_image_list):
         """This method is called whenever new input arrives. The input is first converted in a format suitable
         for the gaze estimation network (see :meth:`input_from_image`), then the gaze is estimated (see
         :meth:`estimate_gaze`. The estimated gaze is overlaid on the input image (see :meth:`visualize_eye_result`),
@@ -202,8 +199,8 @@ class GazeEstimator(object):
             if subject_id not in self.gaze_buffer_c.keys():
                 self.gaze_buffer_c[subject_id] = collections.deque(maxlen=5)
                 
-            input_r = self.input_from_image(s.right, flip=False)
-            input_l = self.input_from_image(s.left, flip=False)
+            input_r = self.input_from_image(s.right)
+            input_l = self.input_from_image(s.left)
             gaze_est = self.compute_eye_gaze_estimation(subject_id, timestamp, input_r, input_l)
             
             if gaze_est is not None:
