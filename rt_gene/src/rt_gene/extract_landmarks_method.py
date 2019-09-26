@@ -221,17 +221,18 @@ class LandmarkMethod(object):
                 if translation_headpose_tf is not None:
                     roll_pitch_yaw = self.publish_pose(timestamp, translation_headpose_tf, rotation_quaternion, subject_id)
 
-                    if euler_angles_head is not None:
-                        head_pose_image = self.visualize_headpose_result(subject.face_color,
-                                                                         gaze_tools.get_phi_theta_from_euler(
-                                                                             euler_angles_head))
-                        head_pose_image_resized = cv2.resize(head_pose_image, dsize=(224, 224),
+                    if roll_pitch_yaw is not None:
+                        face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224),
                                                              interpolation=cv2.INTER_CUBIC)
 
+                        head_pose_image = LandmarkMethod.visualize_headpose_result(face_image_resized,
+                                                                                   gaze_tools.get_phi_theta_from_euler(
+                                                                                       roll_pitch_yaw))
+
                         if final_head_pose_images is None:
-                            final_head_pose_images = head_pose_image_resized
+                            final_head_pose_images = head_pose_image
                         else:
-                            final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image_resized),
+                            final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image),
                                                                     axis=1)
             else:
                 tqdm.write("Could not get head pose properly")
