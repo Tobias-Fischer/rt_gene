@@ -69,7 +69,7 @@ def get_endpoint(theta, phi, center_x, center_y, length=300):
     return endpoint_x, endpoint_y
 
 
-def get_head_pose(trans_head, rot_head):
+def get_head_pose(rot_head):
     euler_angles_head = list(tf.transformations.euler_from_quaternion(rot_head))
     # [0]: pos - roll right, neg -   roll left
     # [1]: pos - look down,  neg -   look up

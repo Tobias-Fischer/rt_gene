@@ -83,7 +83,7 @@ class FaceEncodingTracker(GenericTracker):
 
         encoding = np.array(self.__encode_subject(element))
         # check to see if we've seen it before
-        list_to_check = list(set(self.__encoding_list.keys()) - set(self.__tracked_elements.keys()))
+        list_to_check = list(set(self.__encoding_list.keys()) - set(self._tracked_elements.keys()))
 
         for untracked_encoding_id in list_to_check:
             previous_encoding = self.__encoding_list[untracked_encoding_id]
@@ -92,35 +92,35 @@ class FaceEncodingTracker(GenericTracker):
 
             # the new element and the previous encoding are the same person
             if distance < self.__threshold:
-                self.__tracked_elements[untracked_encoding_id] = element
+                self._tracked_elements[untracked_encoding_id] = element
                 found_id = untracked_encoding_id
                 break
 
         if found_id is None:
             found_id = self._generate_new_id()
-            self.__tracked_elements[found_id] = element
+            self._tracked_elements[found_id] = element
 
             self.__encoding_list[found_id] = np.array2string(encoding, formatter={'float_kind': lambda x: "{:.5f}".format(x)}, separator=",")
 
         return found_id
 
     def __update_element(self, element_id, element):
-        self.__tracked_elements[element_id] = element
+        self._tracked_elements[element_id] = element
 
     # (can be overridden if necessary)
     def _generate_new_id(self):
-        self.__i += 1
-        return str(self.__i)
+        self._i += 1
+        return str(self._i)
 
     def get_tracked_elements(self):
-        return self.__tracked_elements
+        return self._tracked_elements
 
     def clear_elements(self):
-        self.__tracked_elements.clear()
+        self._tracked_elements.clear()
 
     def track(self, new_elements):
         # if no elements yet, just add all the new ones
-        if not self.__tracked_elements:
+        if not self._tracked_elements:
             for e in new_elements:
                 try:
                     self.__add_new_element(e)
@@ -128,7 +128,7 @@ class FaceEncodingTracker(GenericTracker):
                     pass
             return
 
-        current_tracked_element_ids = self.__tracked_elements.keys()
+        current_tracked_element_ids = self._tracked_elements.keys()
         updated_tracked_element_ids = []
         distance_matrix, map_index_to_id = self.get_distance_matrix(new_elements)
 
@@ -158,4 +158,4 @@ class FaceEncodingTracker(GenericTracker):
         elements_to_delete = list(set(current_tracked_element_ids) - set(updated_tracked_element_ids))
         for i in elements_to_delete:
             # don't track it anymore
-            del self.__tracked_elements[i]
+            del self._tracked_elements[i]
