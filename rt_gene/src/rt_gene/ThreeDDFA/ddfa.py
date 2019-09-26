@@ -8,7 +8,7 @@ import torch
 import torch.utils.data as data
 import cv2
 import argparse
-from .io import _numpy_to_tensor, _load_cpu, _load_gpu
+from .io import _numpy_to_tensor, _load_cpu
 from .params import *
 
 
@@ -73,6 +73,11 @@ class AverageMeter(object):
     """Computes and stores the average and current value"""
 
     def __init__(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
         self.reset()
 
     def reset(self):

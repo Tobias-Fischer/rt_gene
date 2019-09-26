@@ -12,7 +12,7 @@ Uses face-alignment package (https://github.com/1adrianb/face-alignment)
 from __future__ import print_function, division, absolute_import
 
 import cv2
-from cv_bridge import CvBridge, CvBridgeError
+from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, CameraInfo
 from tqdm import tqdm
 from image_geometry import PinholeCameraModel
@@ -22,7 +22,6 @@ from tf import TransformBroadcaster, TransformListener, ExtrapolationException
 import torch
 import torchvision.transforms as transforms
 import torch.backends.cudnn as cudnn
-import scipy
 from dynamic_reconfigure.server import Server
 import time
 import rospkg
@@ -129,7 +128,8 @@ class LandmarkMethod(object):
         # have the subscriber the last thing that's run to avoid conflicts
         self.color_sub = rospy.Subscriber("/image", Image, self.callback, buff_size=2 ** 24, queue_size=1)
 
-    def _load_face_landmark_model(self):
+    @staticmethod
+    def _load_face_landmark_model():
         import rt_gene.ThreeDDFA.mobilenet_v1 as mobilenet_v1
         checkpoint_fp = rospkg.RosPack().get_path('rt_gene') + '/model_nets/phase1_wpdc_vdc.pth.tar'
         arch = 'mobilenet_1'
@@ -147,7 +147,7 @@ class LandmarkMethod(object):
         model.eval()
         return model
 
-    def _dyn_reconfig_callback(self, config, level):
+    def _dyn_reconfig_callback(self, config, _):
         self.model_points /= (self.model_size_rescale * self.interpupillary_distance)
         self.model_size_rescale = config["model_size"]
         self.interpupillary_distance = config["interpupillary_distance"]

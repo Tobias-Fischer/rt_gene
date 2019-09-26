@@ -23,4 +23,3 @@ if __name__ == '__main__':
         print("See ya")
     except KeyboardInterrupt:
         print("Shutting down")
-

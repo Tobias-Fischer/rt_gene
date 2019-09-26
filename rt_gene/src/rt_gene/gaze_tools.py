@@ -103,4 +103,3 @@ def accuracy_angle(y_true, y_pred):
     angle_value = (pred_x * true_x + pred_y * true_y + pred_z * true_z) / (true_norm * pred_norm)
     K.clip(angle_value, -0.9999999999, 0.999999999)
     return (tensorflow.acos(angle_value) * 180.0) / np.pi
-
