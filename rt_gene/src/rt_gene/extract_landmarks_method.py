@@ -41,7 +41,7 @@ from rt_gene.FaceEncodingTracker import FaceEncodingTracker
 from rt_gene.SequentialTracker import SequentialTracker
 
 from face_alignment.detection.sfd import FaceDetector
-from rt_gene.ThreeDDFA.inference import predict_68pts, crop_img, parse_roi_box_from_bbox
+from rt_gene.ThreeDDFA.inference import predict_68pts, crop_img, parse_roi_box_from_bbox, parse_roi_box_from_landmark
 from rt_gene.ThreeDDFA.ddfa import ToTensorGjz, NormalizeGjz
 
 
@@ -446,6 +446,17 @@ class LandmarkMethod(object):
         transformed_landmarks[:, 1] -= box[1]
         return transformed_landmarks
 
+    def ddfa_forward_pass(self, color_img, roi_box):
+        img_step = crop_img(color_img, roi_box)
+        img_step = cv2.resize(img_step, dsize=(120, 120), interpolation=cv2.INTER_LINEAR)
+        _input = self._facial_landmark_transform(img_step).unsqueeze(0)
+        with torch.no_grad():
+            _input = _input.cuda()
+            param = self.facial_landmark_nn(_input)
+            param = param.squeeze().cpu().numpy().flatten().astype(np.float32)
+
+        return predict_68pts(param, roi_box)
+
     def detect_landmarks(self, color_img):
         faceboxes = self.get_face_bb(color_img)
         if len(faceboxes) == 0:
@@ -457,19 +468,10 @@ class LandmarkMethod(object):
         tracked_subjects = []
         for facebox, face_image in zip(faceboxes, face_images):
             roi_box = parse_roi_box_from_bbox(facebox)
-            img = crop_img(color_img, roi_box)
+            initial_pts68 = self.ddfa_forward_pass(color_img, roi_box)
+            roi_box_refined = parse_roi_box_from_landmark(initial_pts68)
+            pts68 = self.ddfa_forward_pass(color_img, roi_box_refined)
 
-            # forward: one step
-            img = cv2.resize(img, dsize=(120, 120), interpolation=cv2.INTER_LINEAR)
-
-            _input = self._facial_landmark_transform(img).unsqueeze(0)
-            with torch.no_grad():
-                _input = _input.cuda()
-                param = self.facial_landmark_nn(_input)
-                param = param.squeeze().cpu().numpy().flatten().astype(np.float32)
-
-            # 68 pts
-            pts68 = predict_68pts(param, roi_box)
             np_landmarks = np.array((pts68[0], pts68[1])).T
             transformed_landmarks = LandmarkMethod.transform_landmarks(np_landmarks, facebox)
             subject = TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks)
