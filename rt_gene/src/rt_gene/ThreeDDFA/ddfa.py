@@ -42,18 +42,18 @@ def reconstruct_vertex(param, whitening=True, dense=False, transform=True):
     p, offset, alpha_shp, alpha_exp = _parse_param(param)
 
     if dense:
-        vertex = p @ (u + w_shp @ alpha_shp + w_exp @ alpha_exp).reshape(3, -1, order='F') + offset
-
-        if transform:
-            # transform to image coordinate space
-            vertex[1, :] = std_size + 1 - vertex[1, :]
+        t1 = np.dot(w_shp, alpha_shp)
+        t2 = np.dot(w_exp, alpha_exp)
+        vertex = np.matmul(p, (u + t1 + t2).reshape(3, -1, order='F')) + offset
     else:
         """For 68 pts"""
-        vertex = p @ (u_base + w_shp_base @ alpha_shp + w_exp_base @ alpha_exp).reshape(3, -1, order='F') + offset
+        t1 = np.dot(w_shp_base, alpha_shp)
+        t2 = np.dot(w_exp_base, alpha_exp)
+        vertex = np.matmul(p, (u_base + t1 + t2).reshape(3, -1, order='F')) + offset
 
-        if transform:
-            # transform to image coordinate space
-            vertex[1, :] = std_size + 1 - vertex[1, :]
+    if transform:
+        # transform to image coordinate space
+        vertex[1, :] = std_size + 1 - vertex[1, :]
 
     return vertex
 
