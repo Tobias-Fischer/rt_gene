@@ -104,7 +104,7 @@ class LandmarkMethod(object):
             else:
                 self.img_proc = img_proc
 
-            if np.array_equal(self.img_proc.intrinsicMatrix(), np.matrix([[0., 0., 0.], [0., 0., 0.], [0., 0., 0.]])):
+            if np.array_equal(self.img_proc.intrinsicMatrix().A, np.array([[0., 0., 0.], [0., 0., 0.], [0., 0., 0.]])):
                 raise Exception('Camera matrix is zero-matrix. Did you calibrate'
                                 'the camera and linked to the yaml file in the launch file?')
             tqdm.write("Camera message received")
@@ -248,14 +248,12 @@ class LandmarkMethod(object):
         return [left_x, top_y, right_x, bottom_y]
 
     def process_image(self, color_msg):
-        tqdm.write('Time now: ' + str(rospy.Time.now().to_sec())
-                   + ' message color: ' + str(color_msg.header.stamp.to_sec())
-                   + ' diff: ' + str(rospy.Time.now().to_sec() - color_msg.header.stamp.to_sec()))
+        tqdm.write('Time now: {} message color: {} diff: {:.2f}s'.format((rospy.Time.now().to_sec()), color_msg.header.stamp.to_sec(), rospy.Time.now().to_sec() - color_msg.header.stamp.to_sec()))
 
         color_img = gaze_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 
-        self.detect_landmarks(color_img, timestamp)  # update self.subject_tracker elements
+        self.detect_landmarks(color_img)  # update self.subject_tracker elements
 
         if not self.subject_tracker.get_tracked_elements():
             tqdm.write("No face found")
@@ -285,8 +283,7 @@ class LandmarkMethod(object):
 
             if success:
                 if translation_headpose_tf is not None:
-                    euler_angles_head = self.publish_pose(timestamp, translation_headpose_tf, rotation_vector,
-                                                          subject_id)
+                    euler_angles_head = self.publish_pose(timestamp, translation_headpose_tf, rotation_vector, subject_id)
 
                     if euler_angles_head is not None:
                         head_pose_image = self.visualize_headpose_result(subject.face_color,
@@ -317,6 +314,7 @@ class LandmarkMethod(object):
         This method is inspired by http://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
         We are planning to replace this with our own head pose estimator.
         :param landmarks: Landmark positions to be used to determine head pose
+        :param subject_id: ID of the subject that corresponds to the given landmarks
         :return: success - Whether the pose was successfully extracted
                  rotation_vector - rotation vector that along with translation vector brings points from the model
                  coordinate system to the camera coordinate system
@@ -329,8 +327,7 @@ class LandmarkMethod(object):
         dist_coeffs = self.img_proc.distortionCoeffs()
 
         try:
-            if self.last_rvec[subject_id] is not None and self.last_tvec[
-                subject_id] is not None and self.use_previous_headpose_estimate:
+            if self.last_rvec[subject_id] is not None and self.last_tvec[subject_id] is not None and self.use_previous_headpose_estimate:
                 (success, rotation_vector_unstable, translation_vector_unstable) = \
                     cv2.solvePnP(self.model_points, image_points_headpose, camera_matrix, dist_coeffs,
                                  flags=cv2.SOLVEPNP_ITERATIVE, useExtrinsicGuess=True,
@@ -430,7 +427,7 @@ class LandmarkMethod(object):
                                           self.tf_prefix + "/head_pose_estimated" + str(subject_id),
                                           self.rgb_frame_id_ros)
 
-        return gaze_tools.get_head_pose(nose_center_3d_tf, rot_head)
+        return gaze_tools.get_head_pose(rot_head)
 
     def callback(self, color_msg):
         """Simply call process_image."""
@@ -449,7 +446,7 @@ class LandmarkMethod(object):
         transformed_landmarks[:, 1] -= box[1]
         return transformed_landmarks
 
-    def detect_landmarks(self, color_img, timestamp):
+    def detect_landmarks(self, color_img):
         faceboxes = self.get_face_bb(color_img)
         if len(faceboxes) == 0:
             self.subject_tracker.clear_elements()
@@ -530,21 +527,17 @@ class LandmarkMethod(object):
         except (ValueError, TypeError, cv2.error):
             return None, None, None, None
 
-    # noinspection PyUnusedLocal
     def get_eye_image(self):
         """Extract the left and right eye images given the (dlib) transformed_landmarks and the source image.
         First, align the face. Then, extract the width of the eyes given the landmark positions.
         The height of the images is computed according to the desired ratio of the eye images."""
 
-        start_time = time.time()
         for subject in self.subject_tracker.get_tracked_elements().values():
             le_c, re_c, le_bb, re_bb = self.__get_eye_image_one(subject.transformed_landmarks, subject.face_color)
             subject.left_eye_color = le_c
             subject.right_eye_color = re_c
             subject.left_eye_bb = le_bb
             subject.right_eye_bb = re_bb
-
-        tqdm.write('New get_eye_image time: ' + str(time.time() - start_time))
 
     @staticmethod
     def get_image_points_eyes_nose(landmarks):

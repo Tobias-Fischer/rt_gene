@@ -156,10 +156,10 @@ class GazeEstimator(object):
         try:
             lct = self.tf_listener.getLatestCommonTime(self.rgb_frame_id_ros, self.headpose_frame + str(subject_id))
             if (timestamp - lct).to_sec() < 0.25:
-                tqdm.write('Time diff: ' + str((timestamp - lct).to_sec()))
+                # tqdm.write('Time diff: ' + str((timestamp - lct).to_sec()))
 
                 (trans_head, rot_head) = self.tf_listener.lookupTransform(self.rgb_frame_id_ros, self.headpose_frame + str(subject_id), lct)
-                euler_angles_head = gaze_tools.get_head_pose(trans_head, rot_head)
+                euler_angles_head = gaze_tools.get_head_pose(rot_head)
 
                 phi_head, theta_head = gaze_tools.get_phi_theta_from_euler(euler_angles_head)
                 self.last_phi_head, self.last_theta_head = phi_head, theta_head
@@ -168,8 +168,7 @@ class GazeEstimator(object):
                     tqdm.write('Big time diff, use last known headpose! ' + str((timestamp - lct).to_sec()))
                     phi_head, theta_head = self.last_phi_head, self.last_theta_head
                 else:
-                    tqdm.write(
-                        'Too big time diff for head pose, do not estimate gaze!' + str((timestamp - lct).to_sec()))
+                    tqdm.write('Too big time diff for head pose, do not estimate gaze!' + str((timestamp - lct).to_sec()))
                     return
 
             est_gaze_c = self.estimate_gaze_twoeyes(input_l, input_r, np.array([theta_head, phi_head]))

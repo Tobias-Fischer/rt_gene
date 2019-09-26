@@ -19,36 +19,36 @@ class SequentialTracker(GenericTracker):
 
     def __add_new_element(self, element):
         new_id = self._generate_unique_id()
-        self.__tracked_elements[new_id] = element
+        self._tracked_elements[new_id] = element
         return new_id
 
     def __update_element(self, element_id, element):
-        self.__tracked_elements[element_id] = element
+        self._tracked_elements[element_id] = element
 
     ''' --------------------------------------------------------------------'''
     ''' PROTECTED METHODS '''
 
     # (can be overridden if necessary)
     def _generate_unique_id(self):
-        self.__i += 1
-        return str(self.__i)
+        self._i += 1
+        return str(self._i)
 
     ''' --------------------------------------------------------------------'''
     ''' PUBLIC METHODS '''
 
     def get_tracked_elements(self):
-        return self.__tracked_elements
+        return self._tracked_elements
 
     def clear_elements(self):
-        self.__tracked_elements.clear()
+        self._tracked_elements.clear()
 
     def track(self, new_elements):
         # if no elements yet, just add all the new ones
-        if len(self.__tracked_elements) == 0:
+        if len(self._tracked_elements) == 0:
             [self.__add_new_element(e) for e in new_elements]
             return
 
-        current_tracked_element_ids = self.__tracked_elements.keys()
+        current_tracked_element_ids = self._tracked_elements.keys()
         updated_tracked_element_ids = []
         distance_matrix, map_index_to_id = self.get_distance_matrix(new_elements)
 
@@ -73,4 +73,4 @@ class SequentialTracker(GenericTracker):
         # delete all the non-updated elements
         elements_to_delete = list(set(current_tracked_element_ids) - set(updated_tracked_element_ids))
         for i in elements_to_delete:
-            del self.__tracked_elements[i]
+            del self._tracked_elements[i]
