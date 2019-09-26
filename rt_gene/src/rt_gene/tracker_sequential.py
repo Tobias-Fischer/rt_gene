@@ -5,7 +5,7 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 import rospy
 from scipy import optimize
 import scipy
-from .GenericTracker import GenericTracker
+from .tracker_generic import GenericTracker
 
 
 class SequentialTracker(GenericTracker):

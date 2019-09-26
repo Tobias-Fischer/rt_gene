@@ -7,9 +7,17 @@ from __future__ import print_function
 import numpy as np
 
 
-class TrackedElement(object):
+class TrackedSubject(object):
+    def __init__(self, box, face, landmarks, marks):
+        super(TrackedSubject, self).__init__()
+        self.box = box
+        self.face_color = face
+        self.transformed_landmarks = landmarks
+        self.marks = marks
+
+    # override method
     def compute_distance(self, other_element):
-        raise NotImplementedError("'compute_distance' method must be overridden!")
+        return np.sqrt(np.sum((self.box - other_element.box) ** 2))
 
 
 class GenericTracker(object):
@@ -32,8 +40,8 @@ class GenericTracker(object):
         for i, element_id in enumerate(self._tracked_elements.keys()):
             map_index_to_id[i] = element_id
             for j, new_element in enumerate(new_elements):
-                # ensure new_element is of type TrackedElement upon entry
-                if not isinstance(new_element, TrackedElement):
-                    raise TypeError("Inappropriate type: {} for element whereas a TrackedElement is expected".format(type(new_element)))
+                # ensure new_element is of type TrackedSubject upon entry
+                if not isinstance(new_element, TrackedSubject):
+                    raise TypeError("Inappropriate type: {} for element whereas a TrackedSubject is expected".format(type(new_element)))
                 distance_matrix[i][j] = self._tracked_elements[element_id].compute_distance(new_element)
         return distance_matrix, map_index_to_id
