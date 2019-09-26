@@ -53,11 +53,7 @@ class LandmarkMethod(object):
         self.__subject_bridge = SubjectListBridge()
         self.model_size_rescale = 30.0
         self.head_pitch = 0.0
-        self.margin = rospy.get_param("~margin", 42)
-        self.margin_eyes_height = rospy.get_param("~margin_eyes_height", 36)
-        self.margin_eyes_width = rospy.get_param("~margin_eyes_width", 60)
         self.interpupillary_distance = 0.058
-        self.cropped_face_size = (rospy.get_param("~face_size_height", 224), rospy.get_param("~face_size_width", 224))
 
         self.device_id_facedetection = rospy.get_param("~device_id_facedetection", default="cuda:0")
         self.device_id_facealignment = rospy.get_param("~device_id_facealignment", default="cuda:0")
@@ -103,7 +99,6 @@ class LandmarkMethod(object):
 
         self.model_points = self._get_full_model_points()
 
-        self.sess_bb = None
         self.face_net = FaceDetector(device=self.device_id_facedetection)
 
         self.facial_landmark_nn = self._load_face_landmark_model()
@@ -112,7 +107,7 @@ class LandmarkMethod(object):
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
 
         # have the subscriber the last thing that's run to avoid conflicts
-        self.color_sub = rospy.Subscriber("/image", Image, self.callback, buff_size=2 ** 24, queue_size=1)
+        self.color_sub = rospy.Subscriber("/image", Image, self.process_image, buff_size=2 ** 24, queue_size=1)
 
     @staticmethod
     def _load_face_landmark_model():
@@ -158,13 +153,14 @@ class LandmarkMethod(object):
 
         return model_points
 
-    def get_face_bb(self, image):
+    @staticmethod
+    def get_face_bb(face_net, image):
         faceboxes = []
         start_time = time.time()
         fraction = 4.0
         # image = scipy.misc.imresize(image, 1.0 / fraction)
         image = cv2.resize(image, (0, 0), fx=1.0 / fraction, fy=1.0 / fraction)
-        detections = self.face_net.detect_from_image(image)
+        detections = face_net.detect_from_image(image)
         tqdm.write(
             "Face Detector Frequency: {:.2f}Hz for {} Faces".format(1 / (time.time() - start_time), len(detections)))
 
@@ -173,65 +169,17 @@ class LandmarkMethod(object):
             box = result[:4]
             confidence = result[4]
 
-            if LandmarkMethod.box_in_image(box, image) and confidence > 0.8:
+            if gaze_tools.box_in_image(box, image) and confidence > 0.8:
                 box = [x * fraction for x in box]  # scale back up
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
                 offset_y = int(abs(diff_height_width / 2))
-                box_moved = self.move_box(box, [0, offset_y])
+                box_moved = gaze_tools.move_box(box, [0, offset_y])
 
                 # Make box square.
-                facebox = self.get_square_box(box_moved)
+                facebox = gaze_tools.get_square_box(box_moved)
                 faceboxes.append(facebox)
 
         return faceboxes
-
-    @staticmethod
-    def move_box(box, offset):
-        """Move the box to direction specified by vector offset"""
-        left_x = box[0] + offset[0]
-        top_y = box[1] + offset[1]
-        right_x = box[2] + offset[0]
-        bottom_y = box[3] + offset[1]
-
-        return [left_x, top_y, right_x, bottom_y]
-
-    @staticmethod
-    def box_in_image(box, image):
-        """Check if the box is in image"""
-        rows = image.shape[0]
-        cols = image.shape[1]
-
-        return box[0] >= 0 and box[1] >= 0 and box[2] <= cols and box[3] <= rows
-
-    @staticmethod
-    def get_square_box(box):
-        """Get a square box out of the given box, by expanding it."""
-        left_x = box[0]
-        top_y = box[1]
-        right_x = box[2]
-        bottom_y = box[3]
-
-        box_width = right_x - left_x
-        box_height = bottom_y - top_y
-
-        # Check if box is already a square. If not, make it a square.
-        diff = box_height - box_width
-        delta = int(abs(diff) / 2)
-
-        if diff == 0:  # Already a square.
-            return box
-        elif diff > 0:  # Height > width, a slim box.
-            left_x -= delta
-            right_x += delta
-            if diff % 2 == 1:
-                right_x += 1
-        else:  # Width > height, a short box.
-            top_y -= delta
-            bottom_y += delta
-            if diff % 2 == 1:
-                bottom_y += 1
-
-        return [left_x, top_y, right_x, bottom_y]
 
     def process_image(self, color_msg):
         tqdm.write('Time now: {} message color: {} diff: {:.2f}s'.format((rospy.Time.now().to_sec()), color_msg.header.stamp.to_sec(), rospy.Time.now().to_sec() - color_msg.header.stamp.to_sec()))
@@ -239,13 +187,13 @@ class LandmarkMethod(object):
         color_img = gaze_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 
-        self.detect_landmarks(color_img)  # update self.subject_tracker elements
+        self.update_subject_tracker(color_img)
 
         if not self.subject_tracker.get_tracked_elements():
             tqdm.write("No face found")
             return
 
-        self.get_eye_image()  # update self.subjects
+        self.subject_tracker.update_eye_images(self.eye_image_size)
 
         final_head_pose_images = None
         for subject_id, subject in self.subject_tracker.get_tracked_elements().items():
@@ -322,33 +270,17 @@ class LandmarkMethod(object):
                 (success, rotation_vector_unstable, translation_vector_unstable) = \
                     cv2.solvePnP(self.model_points, image_points_headpose, camera_matrix, dist_coeffs,
                                  flags=cv2.SOLVEPNP_ITERATIVE)
-        except Exception:
-            print('Could not estimate head pose')
+        except cv2.error as e:
+            print('Could not estimate head pose', e)
             return False, None, None
 
         if not success:
             print('Could not estimate head pose')
             return False, None, None
 
-        # Apply Kalman filter
-        stable_pose = []
-        pose_np = np.array((rotation_vector_unstable, translation_vector_unstable)).flatten()
-        for value, ps_stb in zip(pose_np, self.pose_stabilizers[subject_id]):
-            ps_stb.update([value])
-            stable_pose.append(ps_stb.state[0])
+        rotation_vector, translation_vector = self.apply_kalman_filter_head_pose(subject_id, rotation_vector_unstable, translation_vector_unstable)
 
-        stable_pose = np.reshape(stable_pose, (-1, 3))
-        rotation_vector = stable_pose[0]
-        translation_vector = stable_pose[1]
-
-        # check to see if rotation_vector is wild, if so, stop checking head positions
-        _unit_rotation_vector = rotation_vector / np.linalg.norm(rotation_vector)
-        _unit_last_rotation_vector = self.last_rvec[subject_id] / np.linalg.norm(self.last_rvec[subject_id])
-        _theta = np.arccos(np.dot(_unit_last_rotation_vector.reshape(3, ), _unit_rotation_vector))
-        tqdm.write("Head Rotation from last frame: {:.2f}".format(_theta))
-        if _theta > 0.1:
-            # we have too much rotation here, likely unstable, thus error out
-            print('Could not estimate head pose due to instability of landmarks')
+        if not gaze_tools.is_rotation_vector_stable(self.last_rvec[subject_id], rotation_vector):
             return False, None, None
 
         self.last_rvec[subject_id] = rotation_vector
@@ -360,12 +292,16 @@ class LandmarkMethod(object):
 
         return success, rot_head, translation_vector
 
-    def publish_subject_list(self, timestamp, subjects):
-        assert (subjects is not None)
-
-        subject_list_message = self.__subject_bridge.images_to_msg(subjects, timestamp)
-
-        self.subject_pub.publish(subject_list_message)
+    def apply_kalman_filter_head_pose(self, subject_id, rotation_vector_unstable, translation_vector_unstable):
+        stable_pose = []
+        pose_np = np.array((rotation_vector_unstable, translation_vector_unstable)).flatten()
+        for value, ps_stb in zip(pose_np, self.pose_stabilizers[subject_id]):
+            ps_stb.update([value])
+            stable_pose.append(ps_stb.state[0])
+        stable_pose = np.reshape(stable_pose, (-1, 3))
+        rotation_vector = stable_pose[0]
+        translation_vector = stable_pose[1]
+        return rotation_vector, translation_vector
 
     @staticmethod
     def visualize_headpose_result(face_image, est_headpose):
@@ -406,6 +342,13 @@ class LandmarkMethod(object):
             print("** Extrapolation Exception **", e)
             return None
 
+    def publish_subject_list(self, timestamp, subjects):
+        assert (subjects is not None)
+
+        subject_list_message = self.__subject_bridge.images_to_msg(subjects, timestamp)
+
+        self.subject_pub.publish(subject_list_message)
+
     def publish_pose(self, timestamp, nose_center_3d_tf, rot_head, subject_id):
         self.tf_broadcaster.sendTransform(nose_center_3d_tf,
                                           rot_head,
@@ -413,16 +356,7 @@ class LandmarkMethod(object):
                                           self.tf_prefix + "/head_pose_estimated" + str(subject_id),
                                           self.rgb_frame_id_ros)
 
-        return gaze_tools.get_head_pose(rot_head)
-
-    def callback(self, color_msg):
-        """Simply call process_image."""
-        self.process_image(color_msg)
-
-    @staticmethod
-    def crop_face_from_image(color_img, box):
-        _bb = list(map(int, box))
-        return color_img[_bb[1]: _bb[3], _bb[0]: _bb[2]]
+        return gaze_tools.limit_yaw(rot_head)
 
     @staticmethod
     def transform_landmarks(landmarks, box):
@@ -443,13 +377,13 @@ class LandmarkMethod(object):
 
         return predict_68pts(param, roi_box)
 
-    def detect_landmarks(self, color_img):
-        faceboxes = self.get_face_bb(color_img)
+    def update_subject_tracker(self, color_img):
+        faceboxes = self.get_face_bb(self.face_net, color_img)
         if len(faceboxes) == 0:
             self.subject_tracker.clear_elements()
             return
 
-        face_images = [LandmarkMethod.crop_face_from_image(color_img, b) for b in faceboxes]
+        face_images = [gaze_tools.crop_face_from_image(color_img, b) for b in faceboxes]
 
         tracked_subjects = []
         for facebox, face_image in zip(faceboxes, face_images):
@@ -465,78 +399,3 @@ class LandmarkMethod(object):
 
         # track the new faceboxes according to the previous ones
         self.subject_tracker.track(tracked_subjects)
-
-    def __get_eye_image_one(self, transformed_landmarks, face_aligned_color):
-        margin_ratio = 1.0
-        desired_ratio = float(self.eye_image_size[1]) / float(self.eye_image_size[0]) / 2.0
-
-        try:
-            # Get the width of the eye, and compute how big the margin should be according to the width
-            lefteye_width = transformed_landmarks[3][0] - transformed_landmarks[2][0]
-            righteye_width = transformed_landmarks[1][0] - transformed_landmarks[0][0]
-            lefteye_margin, righteye_margin = lefteye_width * margin_ratio, righteye_width * margin_ratio
-
-            # lefteye_center_x = transformed_landmarks[2][0] + lefteye_width / 2
-            # righteye_center_x = transformed_landmarks[0][0] + righteye_width / 2
-            lefteye_center_y = (transformed_landmarks[2][1] + transformed_landmarks[3][1]) / 2.0
-            righteye_center_y = (transformed_landmarks[1][1] + transformed_landmarks[0][1]) / 2.0
-
-            # Now compute the bounding boxes
-            # The left / right x-coordinates are computed as the landmark position plus/minus the margin
-            # The bottom / top y-coordinates are computed according to the desired ratio, as the width of the image is known
-            left_bb = np.zeros(4, dtype=np.int)
-            left_bb[0] = transformed_landmarks[2][0] - lefteye_margin / 2.0
-            left_bb[1] = lefteye_center_y - (lefteye_width + lefteye_margin) * desired_ratio
-            left_bb[2] = transformed_landmarks[3][0] + lefteye_margin / 2.0
-            left_bb[3] = lefteye_center_y + (lefteye_width + lefteye_margin) * desired_ratio
-
-            left_bb = list(map(int, left_bb))
-
-            right_bb = np.zeros(4, dtype=np.float)
-            right_bb[0] = transformed_landmarks[0][0] - righteye_margin / 2.0
-            right_bb[1] = righteye_center_y - (righteye_width + righteye_margin) * desired_ratio
-            right_bb[2] = transformed_landmarks[1][0] + righteye_margin / 2.0
-            right_bb[3] = righteye_center_y + (righteye_width + righteye_margin) * desired_ratio
-
-            right_bb = list(map(int, right_bb))
-
-            # Extract the eye images from the aligned image
-            left_eye_color = face_aligned_color[left_bb[1]:left_bb[3], left_bb[0]:left_bb[2], :]
-            right_eye_color = face_aligned_color[right_bb[1]:right_bb[3], right_bb[0]:right_bb[2], :]
-
-            # for p in transformed_landmarks:  # For debug visualization only
-            #     cv2.circle(face_aligned_color, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
-
-            # So far, we have only ensured that the ratio is correct. Now, resize it to the desired size.
-            left_eye_color_resized = cv2.resize(left_eye_color, self.eye_image_size, interpolation=cv2.INTER_CUBIC)
-            right_eye_color_resized = cv2.resize(right_eye_color, self.eye_image_size, interpolation=cv2.INTER_CUBIC)
-
-            return left_eye_color_resized, right_eye_color_resized, left_bb, right_bb
-        except (ValueError, TypeError, cv2.error):
-            return None, None, None, None
-
-    def get_eye_image(self):
-        """Extract the left and right eye images given the (dlib) transformed_landmarks and the source image.
-        First, align the face. Then, extract the width of the eyes given the landmark positions.
-        The height of the images is computed according to the desired ratio of the eye images."""
-
-        for subject in self.subject_tracker.get_tracked_elements().values():
-            le_c, re_c, le_bb, re_bb = self.__get_eye_image_one(subject.transformed_landmarks, subject.face_color)
-            subject.left_eye_color = le_c
-            subject.right_eye_color = re_c
-            subject.left_eye_bb = le_bb
-            subject.right_eye_bb = re_bb
-
-    @staticmethod
-    def get_image_points_eyes_nose(landmarks):
-        landmarks_x, landmarks_y = landmarks.T[0], landmarks.T[1]
-
-        left_eye_center_x = landmarks_x[42] + (landmarks_x[45] - landmarks_x[42]) / 2.0
-        left_eye_center_y = (landmarks_y[42] + landmarks_y[45]) / 2.0
-        right_eye_center_x = landmarks_x[36] + (landmarks_x[40] - landmarks_x[36]) / 2.0
-        right_eye_center_y = (landmarks_y[36] + landmarks_y[40]) / 2.0
-        nose_center_x, nose_center_y = (landmarks_x[33] + landmarks_x[31] + landmarks_x[35]) / 3.0, \
-                                       (landmarks_y[33] + landmarks_y[31] + landmarks_y[35]) / 3.0
-
-        return (nose_center_x, nose_center_y), \
-               (left_eye_center_x, left_eye_center_y), (right_eye_center_x, right_eye_center_y)
