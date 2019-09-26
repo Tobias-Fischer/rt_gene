@@ -20,8 +20,8 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 ## Manual installation
 1. Download, install, and configure ROS (full installation; we recommend the Kinectic or Melodic distributions of ROS depending on your Ubuntu version): http://wiki.ros.org/kinetic/Installation or http://wiki.ros.org/melodic/Installation
 1. Install additional packages for ROS:
-    - For kinetic: `sudo apt-get install python-catkin-tools ros-kinetic-ros-numpy ros-kinetic-camera-info-manager-py ros-kinetic-uvc-camera`
-    - For melodic: `sudo apt-get install python-catkin-tools ros-melodic-uvc-camera`
+    - For kinetic: `sudo apt-get install python-catkin-tools ros-kinetic-ros-numpy ros-kinetic-camera-info-manager-py ros-kinetic-uvc-camera libcamera-info-manager-dev`
+    - For melodic: `sudo apt-get install python-catkin-tools ros-melodic-uvc-camera libcamera-info-manager-dev`
 1. Install required Python packages:
     - For `conda` users (recommended): `conda install tensorflow-gpu keras numpy scipy tqdm pytorch torchvision pillow && conda install -c 1adrianb face_alignment && pip install empy rospkg`
     - For `pip` users: `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow face-alignment`
@@ -64,4 +64,4 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 - ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)
 - Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
 - Keras; [MIT License](https://opensource.org/licenses/MIT), [Link to website](https://keras.io)
-
+- 3DDFA; [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/cleardusk/3DDFA)
