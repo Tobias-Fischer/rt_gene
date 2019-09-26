@@ -86,7 +86,7 @@ class GazeEstimator(object):
 
         self.graph = tensorflow.get_default_graph()
         
-        self.image_subscriber = rospy.Subscriber('/subjects/images', MSG_SubjectImagesList, self.image_callback, queue_size=3)
+        self.image_subscriber = rospy.Subscriber('/subjects/images', MSG_SubjectImagesList, self.image_callback, queue_size=1, buff_size=10000000)
         self.subjects_gaze_img = rospy.Publisher('/subjects/gazeimages', Image, queue_size=3)
        
         self.average_weights = np.array([0.1, 0.125, 0.175, 0.2, 0.4])
