@@ -12,6 +12,7 @@ rt_gene/model_nets/dlib_face_recognition_resnet_model_v1.dat
 rt_gene/model_nets/ThreeDDFA/w_exp_sim.npy
 rt_gene/model_nets/ThreeDDFA/w_shp_sim.npy
 rt_gene/model_nets/phase1_wpdc_vdc.pth.tar
+rt_gene/samples/out
 
 *~
 # Byte-compiled / optimized / DLL files
