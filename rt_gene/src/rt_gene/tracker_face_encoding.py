@@ -6,7 +6,7 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 from __future__ import print_function
 import numpy as np
 import scipy.optimize
-from .GenericTracker import GenericTracker
+from .tracker_generic import GenericTracker
 import cv2
 import dlib
 import rospkg

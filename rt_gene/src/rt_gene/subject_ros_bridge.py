@@ -8,7 +8,7 @@ from rt_gene.msg import MSG_SubjectImagesList, MSG_SubjectImages
 from cv_bridge import CvBridge
 
 
-class SubjectImages:
+class SubjectImages(object):
     def __init__(self, s_id):
         self.id = s_id
         self.face = None
@@ -16,13 +16,7 @@ class SubjectImages:
         self.left = None
 
 
-class CompleteSubject:
-    def __init__(self, s_id):
-        self.id = s_id
-        self.img = SubjectImages(s_id)
-
-
-class SubjectBridge:
+class SubjectBridge(object):
     def __init__(self):
         self.__cv_bridge = CvBridge()
 
@@ -31,11 +25,6 @@ class SubjectBridge:
         subject.face = self.__cv_bridge.imgmsg_to_cv2(subject_msg.face_img, 'rgb8')
         subject.right = self.__cv_bridge.imgmsg_to_cv2(subject_msg.right_eye_img, 'rgb8')
         subject.left = self.__cv_bridge.imgmsg_to_cv2(subject_msg.left_eye_img, 'rgb8')
-        return subject
-
-    def msg_to_complete(self, s_id, s_img):
-        subject = CompleteSubject(s_id)
-        subject.img = self.msg_to_images(s_img)
         return subject
 
     def images_to_msg(self, subject_id, subject):
@@ -47,7 +36,7 @@ class SubjectBridge:
         return msg
 
 
-class SubjectListBridge:
+class SubjectListBridge(object):
     def __init__(self):
         self.__subject_bridge = SubjectBridge()
 

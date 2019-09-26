@@ -36,27 +36,13 @@ from rt_gene.kalman_stabilizer import Stabilizer
 from rt_gene.msg import MSG_SubjectImagesList
 from rt_gene.cfg import ModelSizeConfig
 from rt_gene.subject_ros_bridge import SubjectListBridge
-from rt_gene.GenericTracker import TrackedElement
-from rt_gene.FaceEncodingTracker import FaceEncodingTracker
-from rt_gene.SequentialTracker import SequentialTracker
+from rt_gene.tracker_face_encoding import FaceEncodingTracker
+from rt_gene.tracker_sequential import SequentialTracker
+from rt_gene.tracker_generic import TrackedSubject
 
 from face_alignment.detection.sfd import FaceDetector
 from rt_gene.ThreeDDFA.inference import predict_68pts, crop_img, parse_roi_box_from_bbox, parse_roi_box_from_landmark
 from rt_gene.ThreeDDFA.ddfa import ToTensorGjz, NormalizeGjz
-
-
-class TrackedSubject(TrackedElement):
-
-    def __init__(self, box, face, landmarks, marks):
-        super(TrackedSubject, self).__init__()
-        self.box = box
-        self.face_color = face
-        self.transformed_landmarks = landmarks
-        self.marks = marks
-
-    # override method
-    def compute_distance(self, other_element):
-        return np.sqrt(np.sum((self.box - other_element.box) ** 2))
 
 
 class LandmarkMethod(object):
