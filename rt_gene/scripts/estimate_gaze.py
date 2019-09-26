@@ -45,17 +45,13 @@ class GazeEstimator(object):
 
     def __init__(self):
         tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
-        self.image_height = rospy.get_param("~image_height", 36)
-        self.image_width = rospy.get_param("~image_width", 60)
         self.bridge = CvBridge()
         self.subjects_bridge = SubjectListBridge()
 
         self.tf_broadcaster = TransformBroadcaster()
         self.tf_listener = TransformListener()
 
-        self.use_last_headpose = rospy.get_param("~use_last_headpose", True)
         self.tf_prefix = rospy.get_param("~tf_prefix", "gaze")
-        self.last_phi_head, self.last_theta_head = None, None
 
         self.rgb_frame_id_ros = rospy.get_param("~rgb_frame_id_ros", "/kinect2_nonrotated_link")
 
@@ -96,25 +92,30 @@ class GazeEstimator(object):
         if self.sess is not None:
             self.sess.close()
 
-    def estimate_gaze_twoeyes(self, test_input_left, test_input_right, headpose):
-        test_headpose = headpose.reshape(1, 2)
-        with self.graph.as_default():
+    @staticmethod
+    def estimate_gaze_twoeyes_standalone(inference_input_left, inference_input_right, headpose, graph, models):
+        inference_headpose = headpose.reshape(1, 2)
+        with graph.as_default():
             predictions = []
-            for model in self.models:
-                predictions.append(model.predict({'img_input_L': test_input_left,
-                                                  'img_input_R': test_input_right,
-                                                  'headpose_input': test_headpose})[0])
+            for model in models:
+                predictions.append(model.predict({'img_input_L': inference_input_left,
+                                                  'img_input_R': inference_input_right,
+                                                  'headpose_input': inference_headpose})[0])
             mean_prediction = np.mean(np.array(predictions), axis=0)
-            if len(self.models) == 1:  # only apply offset for single model, not for ensemble models
+            if len(models) == 1:  # only apply offset for single model, not for ensemble models
                 mean_prediction[1] += 0.11
             return mean_prediction
 
-    def visualize_eye_result(self, eye_image, est_gaze):
+    def estimate_gaze_twoeyes(self, inference_input_left, inference_input_right, headpose):
+        return GazeEstimator.estimate_gaze_twoeyes_standalone(inference_input_left, inference_input_right, headpose, self.graph, self.models)
+
+    @staticmethod
+    def visualize_eye_result(eye_image, est_gaze):
         """Here, we take the original eye eye_image and overlay the estimated gaze."""
         output_image = np.copy(eye_image)
 
-        center_x = self.image_width / 2
-        center_y = self.image_height / 2
+        center_x = output_image.shape[1] / 2
+        center_y = output_image.shape[0] / 2
 
         endpoint_x, endpoint_y = gaze_tools.get_endpoint(est_gaze[0], est_gaze[1], center_x, center_y, 50)
 
@@ -127,14 +128,13 @@ class GazeEstimator(object):
         image_ros.header.stamp = timestamp
         image_publisher.publish(image_ros)
 
-    def input_from_image(self, cv_image):
+    @staticmethod
+    def input_from_image(cv_image):
         """This method converts an eye_img_msg provided by the landmark estimator, and converts it to a format
         suitable for the gaze network."""
-        currimg = cv_image.reshape(self.image_height, self.image_width, 3, order='F')
+        currimg = cv_image.reshape(36, 60, 3, order='F')
         currimg = currimg.astype(np.float32)
-        # print('currimg.dtype', currimg.dtype)
-        # cv2.imwrite('/home/tobias/test_inplace.png', currimg)
-        testimg = np.zeros((1, self.image_height, self.image_width, 3))
+        testimg = np.zeros((1, 36, 60, 3))
         testimg[0, :, :, 0] = currimg[:, :, 0] - 103.939
         testimg[0, :, :, 1] = currimg[:, :, 1] - 116.779
         testimg[0, :, :, 2] = currimg[:, :, 2] - 123.68
@@ -157,14 +157,10 @@ class GazeEstimator(object):
                 euler_angles_head = gaze_tools.limit_yaw(rot_head)
 
                 phi_head, theta_head = gaze_tools.get_phi_theta_from_euler(euler_angles_head)
-                self.last_phi_head, self.last_theta_head = phi_head, theta_head
+                print('euler_angles_head estimate_gaze: {}'.format(euler_angles_head))
             else:
-                if self.use_last_headpose and self.last_phi_head is not None:
-                    tqdm.write('Big time diff, use last known headpose! ' + str((timestamp - lct).to_sec()))
-                    phi_head, theta_head = self.last_phi_head, self.last_theta_head
-                else:
-                    tqdm.write('Too big time diff for head pose, do not estimate gaze!' + str((timestamp - lct).to_sec()))
-                    return
+                tqdm.write('Too big time diff for head pose, do not estimate gaze!' + str((timestamp - lct).to_sec()))
+                return
 
             est_gaze_c = self.estimate_gaze_twoeyes(input_l, input_r, np.array([theta_head, phi_head]))
 
