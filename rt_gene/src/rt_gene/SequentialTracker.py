@@ -11,8 +11,7 @@ from .GenericTracker import TrackedElement, GenericTracker
 
 class SequentialTracker(GenericTracker):
     def __init__(self):
-        self.__tracked_elements = {}
-        self.__i = -1
+        super(SequentialTracker, self).__init__()
         rospy.logwarn("** SequentialTracker is no longer supported, please use the FaceEncodingTracker instead")
 
     ''' --------------------------------------------------------------------'''
@@ -51,17 +50,7 @@ class SequentialTracker(GenericTracker):
 
         current_tracked_element_ids = self.__tracked_elements.keys()
         updated_tracked_element_ids = []
-        map_index_to_id = {}  # map the matrix indexes with real unique id
-
-        distance_matrix = np.full((len(self.__tracked_elements), len(new_elements)), np.inf)
-        for i, element_id in enumerate(self.__tracked_elements.keys()):
-            map_index_to_id[i] = element_id
-            for j, new_element in enumerate(new_elements):
-                # ensure new_element is of type TrackedElement upon entry
-                if not isinstance(new_element, TrackedElement):
-                    raise TypeError("Inappropriate type: {} for element whereas a TrackedElement is expected".format(
-                        type(new_element)))
-                distance_matrix[i][j] = self.__tracked_elements[element_id].compute_distance(new_element)
+        distance_matrix, map_index_to_id = self.get_distance_matrix(new_elements)
 
         # get best matching pairs with Hungarian Algorithm
         col, row = scipy.optimize.linear_sum_assignment(distance_matrix)
