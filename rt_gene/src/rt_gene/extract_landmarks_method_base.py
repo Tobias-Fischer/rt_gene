@@ -1,0 +1,149 @@
+import time
+
+import cv2
+import numpy as np
+import rospy
+import torch
+import torchvision.transforms as transforms
+
+from face_alignment.detection.sfd import FaceDetector
+from rt_gene import gaze_tools as gaze_tools
+from rt_gene.ThreeDDFA.inference import crop_img, predict_68pts, parse_roi_box_from_bbox, parse_roi_box_from_landmark
+from rt_gene.tracker_generic import TrackedSubject
+from torch.backends import cudnn as cudnn
+from tqdm import tqdm
+
+from rt_gene.ThreeDDFA.ddfa import ToTensorGjz, NormalizeGjz
+
+facial_landmark_transform = transforms.Compose([ToTensorGjz(), NormalizeGjz(mean=127.5, std=128)])
+
+
+class LandmarkMethodBase(object):
+    def __init__(self, device_id_facedetection, checkpoint_path_landmark=None, model_points_file=None):
+        self.model_size_rescale = 30.0
+        self.head_pitch = 0.0
+        self.interpupillary_distance = 0.058
+        self.eye_image_size = (60, 36)
+
+        rospy.loginfo("Using device {} for face detection.".format(device_id_facedetection))
+
+        self.face_net = FaceDetector(device=device_id_facedetection)
+        self.facial_landmark_nn = self.load_face_landmark_model(checkpoint_path_landmark)
+
+        self.rvec_init = np.array([[0.01891013], [0.08560084], [-3.14392813]])
+        self.tvec_init = np.array([[-14.97821226], [-10.62040383], [-2053.03596872]])
+
+        self.model_points = self.get_full_model_points(model_points_file)
+
+    @staticmethod
+    def load_face_landmark_model(checkpoint_fp=None):
+        import rt_gene.ThreeDDFA.mobilenet_v1 as mobilenet_v1
+        if checkpoint_fp is None:
+            import rospkg
+            checkpoint_fp = rospkg.RosPack().get_path('rt_gene') + '/model_nets/phase1_wpdc_vdc.pth.tar'
+        arch = 'mobilenet_1'
+
+        checkpoint = torch.load(checkpoint_fp, map_location=lambda storage, loc: storage)['state_dict']
+        model = getattr(mobilenet_v1, arch)(num_classes=62)  # 62 = 12(pose) + 40(shape) +10(expression)
+
+        model_dict = model.state_dict()
+        # because the model is trained by multiple gpus, prefix module should be removed
+        for k in checkpoint.keys():
+            model_dict[k.replace('module.', '')] = checkpoint[k]
+        model.load_state_dict(model_dict)
+        cudnn.benchmark = True
+        model = model.cuda()
+        model.eval()
+        return model
+
+    def get_full_model_points(self, model_points_file=None):
+        """Get all 68 3D model points from file"""
+        raw_value = []
+        if model_points_file is None:
+            import rospkg
+            model_points_file = rospkg.RosPack().get_path('rt_gene') + '/model_nets/face_model_68.txt'
+
+        with open(model_points_file) as f:
+            for line in f:
+                raw_value.append(line)
+        model_points = np.array(raw_value, dtype=np.float32)
+        model_points = np.reshape(model_points, (3, -1)).T
+        # model_points *= 4
+        model_points[:, -1] *= -1
+
+        # index the expansion of the model based.
+        model_points = model_points * (self.interpupillary_distance * self.model_size_rescale)
+
+        return model_points
+
+    def get_face_bb(self, image):
+        faceboxes = []
+        start_time = time.time()
+        fraction = 4.0
+        image = cv2.resize(image, (0, 0), fx=1.0 / fraction, fy=1.0 / fraction)
+        detections = self.face_net.detect_from_image(image)
+        tqdm.write("Face Detector Frequency: {:.2f}Hz for {} Faces".format(1 / (time.time() - start_time), len(detections)))
+
+        for result in detections:
+            # scale back up to image size
+            box = result[:4]
+            confidence = result[4]
+
+            if gaze_tools.box_in_image(box, image) and confidence > 0.8:
+                box = [x * fraction for x in box]  # scale back up
+                diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
+                offset_y = int(abs(diff_height_width / 2))
+                box_moved = gaze_tools.move_box(box, [0, offset_y])
+
+                # Make box square.
+                facebox = gaze_tools.get_square_box(box_moved)
+                faceboxes.append(facebox)
+
+        return faceboxes
+
+    @staticmethod
+    def visualize_headpose_result(face_image, est_headpose):
+        """Here, we take the original eye eye_image and overlay the estimated headpose."""
+        output_image = np.copy(face_image)
+
+        center_x = output_image.shape[1] / 2
+        center_y = output_image.shape[0] / 2
+
+        endpoint_x, endpoint_y = gaze_tools.get_endpoint(est_headpose[1], est_headpose[0], center_x, center_y, 100)
+
+        cv2.line(output_image, (int(center_x), int(center_y)), (int(endpoint_x), int(endpoint_y)), (0, 0, 255), 3)
+        return output_image
+
+    @staticmethod
+    def transform_landmarks(landmarks, box):
+        eye_indices = np.array([36, 39, 42, 45])
+        transformed_landmarks = landmarks[eye_indices]
+        transformed_landmarks[:, 0] -= box[0]
+        transformed_landmarks[:, 1] -= box[1]
+        return transformed_landmarks
+
+    def ddfa_forward_pass(self, color_img, roi_box):
+        img_step = crop_img(color_img, roi_box)
+        img_step = cv2.resize(img_step, dsize=(120, 120), interpolation=cv2.INTER_LINEAR)
+        _input = facial_landmark_transform(img_step).unsqueeze(0)
+        with torch.no_grad():
+            _input = _input.cuda()
+            param = self.facial_landmark_nn(_input)
+            param = param.squeeze().cpu().numpy().flatten().astype(np.float32)
+
+        return predict_68pts(param, roi_box)
+
+    def get_subjects_from_faceboxes(self, color_img, faceboxes):
+        face_images = [gaze_tools.crop_face_from_image(color_img, b) for b in faceboxes]
+        subjects = []
+        for facebox, face_image in zip(faceboxes, face_images):
+            roi_box = parse_roi_box_from_bbox(facebox)
+            initial_pts68 = self.ddfa_forward_pass(color_img, roi_box)
+            roi_box_refined = parse_roi_box_from_landmark(initial_pts68)
+            pts68 = self.ddfa_forward_pass(color_img, roi_box_refined)
+
+            np_landmarks = np.array((pts68[0], pts68[1])).T
+            transformed_landmarks = self.transform_landmarks(np_landmarks, facebox)
+            subjects.append(TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks))
+        tqdm.write('Extracted landmarks for {} subject(s)'.format(len(subjects)))
+        return subjects

@@ -15,7 +15,6 @@
     <arg name="group_name" default="gaze" />
     <arg name="tf_prefix" default="$(arg group_name)" />
     <arg name="device_id_facedetection"  default="cuda:0" /> <!-- pyTorch format, e.g. cuda:0 or cpu:0 -->
-    <arg name="device_id_facealignment"  default="cuda:0" /> <!-- pyTorch format, e.g. cuda:0 or cpu:0 -->
     <arg name="device_id_gazeestimation"  default="/gpu:0" /> <!-- tensorflow format, e.g. /gpu:0 or /cpu:0 -->
 
     <env name="OMP_NUM_THREADS" value="$(arg pytorch_num_threads)" />
@@ -31,7 +30,6 @@
 
       <node pkg="rt_gene" type="extract_landmarks_node.py" name="extract_landmarks_new" output="screen">
           <param name="device_id_facedetection"  value="$(arg device_id_facedetection)" />
-          <param name="device_id_facealignment"  value="$(arg device_id_facealignment)" />
           <param name="use_face_encoding_tracker" value="$(arg use_face_encoding_tracker)" />
           <param name="rgb_frame_id" value="$(arg rgb_frame_id)" />
           <param name="rgb_frame_id_ros" value="$(arg rgb_frame_id_ros)" />
