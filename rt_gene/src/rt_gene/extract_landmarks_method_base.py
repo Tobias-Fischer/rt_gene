@@ -2,7 +2,6 @@ import time
 
 import cv2
 import numpy as np
-import rospy
 import torch
 import torchvision.transforms as transforms
 
@@ -25,7 +24,7 @@ class LandmarkMethodBase(object):
         self.interpupillary_distance = 0.058
         self.eye_image_size = (60, 36)
 
-        rospy.loginfo("Using device {} for face detection.".format(device_id_facedetection))
+        tqdm.write("Using device {} for face detection.".format(device_id_facedetection))
 
         self.face_net = FaceDetector(device=device_id_facedetection)
         self.facial_landmark_nn = self.load_face_landmark_model(checkpoint_path_landmark)
