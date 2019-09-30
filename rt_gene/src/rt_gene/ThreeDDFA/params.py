@@ -4,7 +4,6 @@
 import sys
 import os.path as osp
 from .io import _load
-import rospkg
 
 
 d = osp.join(osp.dirname(osp.realpath(__file__)), '../../../model_nets/ThreeDDFA/')
