@@ -103,7 +103,7 @@ if __name__ == '__main__':
     parser.add_argument('--no-vis-headpose', dest='vis_headpose', action='store_true', help='Do not display the head pose images')
     parser.add_argument('--vis-gaze', dest='vis_gaze', action='store_true', help='Display the gaze images')
     parser.add_argument('--no-vis-gaze', dest='vis_gaze', action='store_true', help='Do not display the gaze images')
-    parser.add_argument('--output_path', type=str, default='../samples/out', help='Output directory for head pose and gaze images')
+    parser.add_argument('--output_path', type=str, default=os.path.join(script_path, '../samples/out'), help='Output directory for head pose and gaze images')
     parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')], help='List of gaze estimators')
 
     parser.set_defaults(vis_gaze=True)
