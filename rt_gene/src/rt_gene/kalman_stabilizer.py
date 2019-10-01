@@ -22,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import numpy as np
+import cv2
+
 """
 Code from https://github.com/yinguobing/head-pose-estimation
 Under MIT license: https://opensource.org/licenses/MIT
 Using Kalman Filter as a point stabilizer to stabilize a 2D point.
 """
-import numpy as np
-
-import cv2
 
 
 class Stabilizer(object):

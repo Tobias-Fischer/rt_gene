@@ -14,6 +14,9 @@ from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
 
 
+script_path = os.path.dirname(os.path.realpath(__file__))
+
+
 def load_camera_calibration(calibration_file):
     import yaml
     with open(calibration_file, 'r') as f:
@@ -93,14 +96,15 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Estimate gaze from images')
-    parser.add_argument('im_path', type=str, default='../samples/', nargs='?', help='Path to an image or a directory containing images')
+    parser.add_argument('im_path', type=str, default=os.path.join(script_path, '../samples/'),
+                        nargs='?', help='Path to an image or a directory containing images')
     parser.add_argument('--calib-file', type=str, dest='calib_file', default=None, help='Camera calibration file')
     parser.add_argument('--vis-headpose', dest='vis_headpose', action='store_true', help='Display the head pose images')
     parser.add_argument('--no-vis-headpose', dest='vis_headpose', action='store_true', help='Do not display the head pose images')
     parser.add_argument('--vis-gaze', dest='vis_gaze', action='store_true', help='Display the gaze images')
     parser.add_argument('--no-vis-gaze', dest='vis_gaze', action='store_true', help='Do not display the gaze images')
     parser.add_argument('--output_path', type=str, default='../samples/out', help='Output directory for head pose and gaze images')
-    parser.add_argument('--models', nargs='+', type=str, default=['../model_nets/Model_allsubjects1.h5'], help='List of gaze estimators')
+    parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')], help='List of gaze estimators')
 
     parser.set_defaults(vis_gaze=True)
     parser.set_defaults(vis_headpose=False)
@@ -120,8 +124,8 @@ if __name__ == '__main__':
 
     tqdm.write('Loading networks')
     landmark_estimator = LandmarkMethodBase(device_id_facedetection="cuda:0",
-                                            checkpoint_path_landmark="../model_nets/phase1_wpdc_vdc.pth.tar",
-                                            model_points_file="../model_nets/face_model_68.txt")
+                                            checkpoint_path_landmark=os.path.join(script_path, "../model_nets/phase1_wpdc_vdc.pth.tar"),
+                                            model_points_file=os.path.join(script_path, "../model_nets/face_model_68.txt"))
     gaze_estimator = GazeEstimatorBase(device_id_gaze="/gpu:0", model_files=args.models)
 
     if not os.path.isdir(args.output_path):
