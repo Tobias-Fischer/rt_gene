@@ -29,7 +29,7 @@ def load_camera_calibration(calibration_file):
 
 
 def rotation_vector_to_rpy(rotation_vector):
-    roll_pitch_yaw = np.array([-rotation_vector[2], rotation_vector[1], rotation_vector[0]])
+    roll_pitch_yaw = [-rotation_vector[2], rotation_vector[1], rotation_vector[0]]
     roll_pitch_yaw[0] += np.pi
     if roll_pitch_yaw[0] > np.pi:
         roll_pitch_yaw[0] -= 2 * np.pi
@@ -60,7 +60,7 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
                                                                       useExtrinsicGuess=True,
                                                                       rvec=landmark_estimator.rvec_init.copy(),
                                                                       tvec=landmark_estimator.tvec_init.copy())
-        roll_pitch_yaw = rotation_vector_to_rpy(rotation_vector)
+        roll_pitch_yaw = rotation_vector_to_rpy(rotation_vector.flatten().tolist())
 
         if roll_pitch_yaw is not None:
             phi_head, theta_head = get_phi_theta_from_euler(roll_pitch_yaw)
@@ -78,7 +78,7 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
 
         input_r = gaze_estimator.input_from_image(subject.right_eye_color)
         input_l = gaze_estimator.input_from_image(subject.left_eye_color)
-        gaze_est = gaze_estimator.estimate_gaze_twoeyes(input_l, input_r, np.array([theta_head, phi_head]))
+        gaze_est = gaze_estimator.estimate_gaze_twoeyes([input_l], [input_r], [[theta_head, phi_head]])[0]
 
         # Build visualizations
         r_gaze_img = gaze_estimator.visualize_eye_result(subject.right_eye_color, gaze_est)
@@ -100,9 +100,9 @@ if __name__ == '__main__':
                         nargs='?', help='Path to an image or a directory containing images')
     parser.add_argument('--calib-file', type=str, dest='calib_file', default=None, help='Camera calibration file')
     parser.add_argument('--vis-headpose', dest='vis_headpose', action='store_true', help='Display the head pose images')
-    parser.add_argument('--no-vis-headpose', dest='vis_headpose', action='store_true', help='Do not display the head pose images')
+    parser.add_argument('--no-vis-headpose', dest='vis_headpose', action='store_false', help='Do not display the head pose images')
     parser.add_argument('--vis-gaze', dest='vis_gaze', action='store_true', help='Display the gaze images')
-    parser.add_argument('--no-vis-gaze', dest='vis_gaze', action='store_true', help='Do not display the gaze images')
+    parser.add_argument('--no-vis-gaze', dest='vis_gaze', action='store_false', help='Do not display the gaze images')
     parser.add_argument('--output_path', type=str, default=os.path.join(script_path, '../samples/out'), help='Output directory for head pose and gaze images')
     parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')], help='List of gaze estimators')
 

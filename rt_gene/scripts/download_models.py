@@ -41,3 +41,15 @@ if __name__ == '__main__':
     download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/dlib_face_recognition_resnet_model_v1.dat'),
                           'https://imperialcollegelondon.box.com/shared/static/7zfltrwhrss0zsq2d2z0mgbz4j3ij3fk.dat',
                           '2316b25ae80acf4ad9b620b00071c423')
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/all_subjects_mpii_prl_utmv_0_02.h5'),
+                          "https://imperialcollegelondon.box.com/shared/static/5cjnijpo8qxawbkik0gjrmyc802j2h1v.h5",
+                          "af5554d5b405e5a1515c08d553a96613")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/all_subjects_mpii_prl_utmv_1_02.h5'),
+                          "https://imperialcollegelondon.box.com/shared/static/1ye5jlh5ce11f93yn1s36uysjta7a3ob.h5",
+                          "eccea117ed40c903d07537125f77af88")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/all_subjects_mpii_prl_utmv_2_02.h5'),
+                          "https://imperialcollegelondon.box.com/shared/static/5vl9samndju9zhygtai8z6kkpw2jmjll.h5",
+                          "e41362688850bd3d51f58c14c75f3744")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/all_subjects_mpii_prl_utmv_3_02.h5'),
+                          "https://imperialcollegelondon.box.com/shared/static/hmcoxopu4xetic5bm47xqrl5mqktpg92.h5",
+                          "581f7a96ef88faf3a564aca083496dfa")

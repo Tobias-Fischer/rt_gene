@@ -47,8 +47,6 @@ class GazeEstimatorROS(GazeEstimatorBase):
         self.image_subscriber = rospy.Subscriber('/subjects/images', MSG_SubjectImagesList, self.image_callback, queue_size=1, buff_size=10000000)
         self.subjects_gaze_img = rospy.Publisher('/subjects/gazeimages', Image, queue_size=3)
 
-        self.average_weights = np.array([0.1, 0.125, 0.175, 0.2, 0.4])
-        self.gaze_buffer_c = {}
         self.time_last = rospy.Time.now()
 
     def publish_image(self, image, image_publisher, timestamp):
@@ -56,46 +54,6 @@ class GazeEstimatorROS(GazeEstimatorBase):
         image_ros = self.bridge.cv2_to_imgmsg(image, "rgb8")
         image_ros.header.stamp = timestamp
         image_publisher.publish(image_ros)
-
-    def compute_eye_gaze_estimation(self, subject_id, timestamp, input_r, input_l):
-        """
-        subject_id : integer,  id of the subject
-        input_x    : cv_image, input image of x eye
-        (phi_x)    : double,   phi angle estimated using pupil detection
-        (theta_x)  : double,   theta angle estimated using pupil detection
-        """
-        try:
-            lct = self.tf_listener.getLatestCommonTime(self.rgb_frame_id_ros, self.headpose_frame + str(subject_id))
-            if (timestamp - lct).to_sec() < 0.25:
-                # tqdm.write('Time diff: ' + str((timestamp - lct).to_sec()))
-
-                (trans_head, rot_head) = self.tf_listener.lookupTransform(self.rgb_frame_id_ros, self.headpose_frame + str(subject_id), lct)
-                euler_angles_head = gaze_tools.limit_yaw(rot_head)
-
-                phi_head, theta_head = gaze_tools.get_phi_theta_from_euler(euler_angles_head)
-                print('euler_angles_head estimate_gaze: {}'.format(euler_angles_head))
-            else:
-                tqdm.write('Too big time diff for head pose, do not estimate gaze!' + str((timestamp - lct).to_sec()))
-                return
-
-            est_gaze_c = self.estimate_gaze_twoeyes(input_l, input_r, np.array([theta_head, phi_head]))
-
-            self.gaze_buffer_c[subject_id].append(est_gaze_c)
-
-            if len(self.average_weights) == len(self.gaze_buffer_c[subject_id]):
-                est_gaze_c_med = np.average(np.array(self.gaze_buffer_c[subject_id]), axis=0, weights=self.average_weights)
-                self.publish_gaze(est_gaze_c_med, timestamp, subject_id)
-                time_total = (rospy.Time.now() - timestamp).to_sec()
-                tqdm.write('est_gaze_c: {gaze} (fps: {fps:.1f}, latency: {time:.2f}s)'.format(gaze=est_gaze_c_med, fps=1. / (rospy.Time.now() - self.time_last).to_sec(), time=time_total))
-                self.time_last = rospy.Time.now()
-                return est_gaze_c_med
-
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception) as tf_e:
-            print(tf_e)
-        except rospy.ROSException as ros_e:
-            if str(ros_e) == "publish() to a closed topic":
-                print("See ya")
-        return None
 
     def image_callback(self, subject_image_list):
         """This method is called whenever new input arrives. The input is first converted in a format suitable
@@ -107,22 +65,36 @@ class GazeEstimatorROS(GazeEstimatorBase):
         subjects_gaze_img = None
 
         subjects_dict = self.subjects_bridge.msg_to_images(subject_image_list)
+        input_r_list = []
+        input_l_list = []
+        input_head_list = []
+        valid_subject_list = []
         for subject_id, s in subjects_dict.items():
-            if subject_id not in self.gaze_buffer_c.keys():
-                self.gaze_buffer_c[subject_id] = collections.deque(maxlen=5)
+            try:
+                (trans_head, rot_head) = self.tf_listener.lookupTransform(self.rgb_frame_id_ros, self.headpose_frame + str(subject_id), timestamp)
+                euler_angles_head = gaze_tools.limit_yaw(rot_head)
 
-            input_r = self.input_from_image(s.right)
-            input_l = self.input_from_image(s.left)
-            gaze_est = self.compute_eye_gaze_estimation(subject_id, timestamp, input_r, input_l)
+                phi_head, theta_head = gaze_tools.get_phi_theta_from_euler(euler_angles_head)
+                input_head_list.append([theta_head, phi_head])
+                input_r_list.append(self.input_from_image(s.right))
+                input_l_list.append(self.input_from_image(s.left))
+                valid_subject_list.append(subject_id)
+            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception):
+                pass
 
-            if gaze_est is not None:
-                r_gaze_img = self.visualize_eye_result(s.right, gaze_est)
-                l_gaze_img = self.visualize_eye_result(s.left, gaze_est)
-                s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
-                if subjects_gaze_img is None:
-                    subjects_gaze_img = s_gaze_img
-                else:
-                    subjects_gaze_img = np.concatenate((subjects_gaze_img, s_gaze_img), axis=0)
+        gaze_est = self.estimate_gaze_twoeyes(inference_input_left_list=input_l_list, inference_input_right_list=input_r_list, inference_headpose_list=input_head_list)
+
+        for subject_id, gaze in zip(valid_subject_list, gaze_est.tolist()):
+            s = subjects_dict[subject_id]
+            r_gaze_img = self.visualize_eye_result(s.right, gaze)
+            l_gaze_img = self.visualize_eye_result(s.left, gaze)
+            s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
+            if subjects_gaze_img is None:
+                subjects_gaze_img = s_gaze_img
+            else:
+                subjects_gaze_img = np.concatenate((subjects_gaze_img, s_gaze_img), axis=0)
+
+            self.publish_gaze(gaze, timestamp, subject_id)
 
         if subjects_gaze_img is not None:
             gaze_img_msg = self.bridge.cv2_to_imgmsg(subjects_gaze_img.astype(np.uint8), "bgr8")
