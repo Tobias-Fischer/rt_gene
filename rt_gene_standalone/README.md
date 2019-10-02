@@ -27,11 +27,11 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     1. `export PYTHONPATH=$HOME/rt_gene/rt_gene/src`
 
 ## Optional ensemble model files
-- To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, please see https://github.com/Tobias-Fischer/rt_gene/tree/modularised/rt_gene#optional-ensemble-model-files
+- To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, please follow instructions [here](../rt_gene/README.md#optional-ensemble-model-files)
 
 # Instructions for estimating gaze
 - Run `$HOME/rt_gene/rt_gene/scripts/estimate_gaze_standalone.py`. For supported arguments, run `$HOME/rt_gene/rt_gene/scripts/estimate_gaze_standalone.py --help`
 
 # List of libraries
-See [this README.md](../rt_gene/README.md)
+See [main README.md](../rt_gene/README.md)
 
