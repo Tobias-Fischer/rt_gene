@@ -121,26 +121,25 @@ class LandmarkMethodBase(object):
         transformed_landmarks[:, 1] -= box[1]
         return transformed_landmarks
 
-    def ddfa_forward_pass(self, color_img, roi_box):
-        img_step = crop_img(color_img, roi_box)
-        img_step = cv2.resize(img_step, dsize=(120, 120), interpolation=cv2.INTER_LINEAR)
-        _input = facial_landmark_transform(img_step).unsqueeze(0)
+    def ddfa_forward_pass(self, color_img, roi_box_list):
+        img_step = [crop_img(color_img, roi_box) for roi_box in roi_box_list]
+        img_step = [cv2.resize(img, dsize=(120, 120), interpolation=cv2.INTER_LINEAR) for img in img_step]
+        _input = torch.cat([facial_landmark_transform(img).unsqueeze(0) for img in img_step], 0)
         with torch.no_grad():
             _input = _input.cuda()
-            param = self.facial_landmark_nn(_input)
-            param = param.squeeze().cpu().numpy().flatten().astype(np.float32)
+            param = self.facial_landmark_nn(_input).cpu().numpy().astype(np.float32)
 
-        return predict_68pts(param, roi_box)
+        return [predict_68pts(p.flatten(), roi_box) for p, roi_box in zip(param, roi_box_list)]
 
     def get_subjects_from_faceboxes(self, color_img, faceboxes):
         face_images = [gaze_tools.crop_face_from_image(color_img, b) for b in faceboxes]
         subjects = []
-        for facebox, face_image in zip(faceboxes, face_images):
-            roi_box = parse_roi_box_from_bbox(facebox)
-            initial_pts68 = self.ddfa_forward_pass(color_img, roi_box)
-            roi_box_refined = parse_roi_box_from_landmark(initial_pts68)
-            pts68 = self.ddfa_forward_pass(color_img, roi_box_refined)
+        roi_box_list = [parse_roi_box_from_bbox(facebox) for facebox in faceboxes]
+        initial_pts68_list = self.ddfa_forward_pass(color_img, roi_box_list)
+        roi_box_refined_list = [parse_roi_box_from_landmark(initial_pts68) for initial_pts68 in initial_pts68_list]
+        pts68_list = self.ddfa_forward_pass(color_img, roi_box_refined_list)
 
+        for pts68, face_image, facebox in zip(pts68_list, face_images, faceboxes):
             np_landmarks = np.array((pts68[0], pts68[1])).T
             transformed_landmarks = self.transform_landmarks(np_landmarks, facebox)
             subjects.append(TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks))

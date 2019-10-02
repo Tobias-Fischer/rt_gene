@@ -8,6 +8,8 @@ from keras.engine.saving import load_model
 from rt_gene.gaze_tools import accuracy_angle, angle_loss, get_endpoint
 from tqdm import tqdm
 
+import keras
+
 
 class GazeEstimatorBase(object):
     """This class encapsulates a deep neural network for gaze estimation.
@@ -35,15 +37,28 @@ class GazeEstimatorBase(object):
             self.sess = tensorflow.Session(config=config)
             set_session(self.sess)
 
-        self.models = []
+        models = []
+        img_input_l = keras.Input(shape=(36, 60, 3), name='img_input_L')
+        img_input_r = keras.Input(shape=(36, 60, 3), name='img_input_R')
+        headpose_input = keras.Input(shape=(2,), name='headpose_input')
         for model_file in model_files:
             tqdm.write('Load model ' + model_file)
-            model = load_model(model_file,
-                               custom_objects={'accuracy_angle': accuracy_angle, 'angle_loss': angle_loss})
-            # noinspection PyProtectedMember
-            model._make_predict_function()  # have to initialize before threading
-            self.models.append(model)
-        tqdm.write('Loaded ' + str(len(self.models)) + ' models')
+            models.append(load_model(model_file,
+                                     custom_objects={'accuracy_angle': accuracy_angle, 'angle_loss': angle_loss}))
+            models[-1].name = "model_{}".format(len(models))
+
+        if len(models) == 1:
+            self._gaze_offset = 0.11
+            self.ensemble_model = models[0]
+        else:
+            self._gaze_offset = 0.0
+            tensors = [model([img_input_l, img_input_r, headpose_input]) for model in models]
+            output_layer = keras.layers.average(tensors)
+            self.ensemble_model = keras.Model(inputs=[img_input_l, img_input_r, headpose_input], outputs=output_layer)
+        # noinspection PyProtectedMember
+        self.ensemble_model._make_predict_function()
+
+        tqdm.write('Loaded ' + str(len(models)) + ' models')
 
         self.graph = tensorflow.get_default_graph()
 
@@ -51,18 +66,13 @@ class GazeEstimatorBase(object):
         if self.sess is not None:
             self.sess.close()
 
-    def estimate_gaze_twoeyes(self, inference_input_left, inference_input_right, headpose):
-        inference_headpose = headpose.reshape(1, 2)
+    def estimate_gaze_twoeyes(self, inference_input_left_list, inference_input_right_list, inference_headpose_list):
         with self.graph.as_default():
-            predictions = []
-            for model in self.models:
-                predictions.append(model.predict({'img_input_L': inference_input_left,
-                                                  'img_input_R': inference_input_right,
-                                                  'headpose_input': inference_headpose})[0])
-            mean_prediction = np.mean(np.array(predictions), axis=0)
-            if len(self.models) == 1:  # only apply offset for single model, not for ensemble models
-                mean_prediction[1] += 0.11
-            return mean_prediction
+            mean_prediction = self.ensemble_model.predict({'img_input_L': np.array(inference_input_left_list),
+                                                           'img_input_R': np.array(inference_input_right_list),
+                                                           'headpose_input': np.array(inference_headpose_list)})
+            mean_prediction[:, 1] += self._gaze_offset
+            return mean_prediction  # returns [subject : [gaze_pose]]
 
     @staticmethod
     def visualize_eye_result(eye_image, est_gaze):
@@ -83,8 +93,8 @@ class GazeEstimatorBase(object):
         suitable for the gaze network."""
         currimg = cv_image.reshape(36, 60, 3, order='F')
         currimg = currimg.astype(np.float32)
-        testimg = np.zeros((1, 36, 60, 3))
-        testimg[0, :, :, 0] = currimg[:, :, 0] - 103.939
-        testimg[0, :, :, 1] = currimg[:, :, 1] - 116.779
-        testimg[0, :, :, 2] = currimg[:, :, 2] - 123.68
+        testimg = np.zeros((36, 60, 3))
+        testimg[:, :, 0] = currimg[:, :, 0] - 103.939
+        testimg[:, :, 1] = currimg[:, :, 1] - 116.779
+        testimg[:, :, 2] = currimg[:, :, 2] - 123.68
         return testimg
