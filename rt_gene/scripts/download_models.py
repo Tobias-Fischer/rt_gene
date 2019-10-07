@@ -53,3 +53,6 @@ if __name__ == '__main__':
     download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/all_subjects_mpii_prl_utmv_3_02.h5'),
                           "https://imperialcollegelondon.box.com/shared/static/hmcoxopu4xetic5bm47xqrl5mqktpg92.h5",
                           "581f7a96ef88faf3a564aca083496dfa")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/SFD/s3fd_facedetector.pth'),
+                          "https://imperialcollegelondon.box.com/shared/static/wgfkq3pyzzuewiiwq0pzj0xiebolvlju.pth",
+                          "3b5a9888bf0beb93c177db5a18375a6c")

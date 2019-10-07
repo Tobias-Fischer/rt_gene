@@ -22,6 +22,15 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_python_setup()
 
 catkin_download(
+    s3fd_facedetector.pth
+    https://imperialcollegelondon.box.com/shared/static/wgfkq3pyzzuewiiwq0pzj0xiebolvlju.pth
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets/SFD
+    FILENAME s3fd_facedetector.pth
+    MD5 3b5a9888bf0beb93c177db5a18375a6c
+    REQUIRED
+)
+
+catkin_download(
     w_shp_sim.npy
     https://github.com/cleardusk/3DDFA/blob/master/train.configs/w_shp_sim.npy?raw=true
     DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets/ThreeDDFA

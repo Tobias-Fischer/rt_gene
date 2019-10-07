@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 
-from face_alignment.detection.sfd import FaceDetector
+from rt_gene.SFD.sfd_detector import SFDDetector
 from rt_gene import gaze_tools as gaze_tools
 from rt_gene.ThreeDDFA.inference import crop_img, predict_68pts, parse_roi_box_from_bbox, parse_roi_box_from_landmark
 from rt_gene.tracker_generic import TrackedSubject
@@ -18,7 +18,7 @@ facial_landmark_transform = transforms.Compose([ToTensorGjz(), NormalizeGjz(mean
 
 
 class LandmarkMethodBase(object):
-    def __init__(self, device_id_facedetection, checkpoint_path_landmark=None, model_points_file=None):
+    def __init__(self, device_id_facedetection, checkpoint_path_face=None, checkpoint_path_landmark=None, model_points_file=None):
         self.model_size_rescale = 30.0
         self.head_pitch = 0.0
         self.interpupillary_distance = 0.058
@@ -26,7 +26,7 @@ class LandmarkMethodBase(object):
 
         tqdm.write("Using device {} for face detection.".format(device_id_facedetection))
 
-        self.face_net = FaceDetector(device=device_id_facedetection)
+        self.face_net = SFDDetector(device=device_id_facedetection, path_to_detector=checkpoint_path_face)
         self.facial_landmark_nn = self.load_face_landmark_model(checkpoint_path_landmark)
 
         self.rvec_init = np.array([[0.01891013], [0.08560084], [-3.14392813]])

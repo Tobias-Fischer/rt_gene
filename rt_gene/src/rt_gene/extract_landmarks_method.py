@@ -38,8 +38,8 @@ from rt_gene.tracker_sequential import SequentialTracker
 
 class LandmarkMethod(LandmarkMethodBase):
     def __init__(self, img_proc=None):
-        super(LandmarkMethod, self).__init__(rospy.get_param("~device_id_facedetection", default="cuda:0"))
-        self.subject_tracker = FaceEncodingTracker() if rospy.get_param("~use_face_encoding_tracker", default=False) else SequentialTracker()
+        super(LandmarkMethod, self).__init__(device_id_facedetection=rospy.get_param("~device_id_facedetection", default="cuda:0"))
+        self.subject_tracker = FaceEncodingTracker() if rospy.get_param("~use_face_encoding_tracker", default=True) else SequentialTracker()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
 
