@@ -18,14 +18,14 @@ This work was supported in part by the Samsung Global Research Outreach program,
 The code is split into three parts, each having its own README contained. There is also an accompanying [dataset](https://zenodo.org/record/2529036) [(alternative link)](https://goo.gl/tfUaDm) to the code. For more information, other datasets and more open-source software please visit the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>.
 
 ## rt_gene (ROS package)
-The `rt_gene` directory contains a ROS package for real-time eye gaze estimation. This contains all the code required at inference time.
+The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze estimation. This contains all the code required at inference time.
 
 ## rt_gene (Standalone)
-The `rt_gene_standalone` directory contains instructions for eye gaze estimation given a set of images. It relies on the `rt_gene` package (above).
+The [rt_gene_standalone](./rt_gene_standalone) directory contains instructions for eye gaze estimation given a set of images. It relies on the `rt_gene` package (above).
 
 ## rt_gene_inpainting
-The `rt_gene_inpainting` directory contains code to inpaint the region covered by the eyetracking glasses.
+The [rt_gene_inpainting](./rt_gene_inpainting) directory contains code to inpaint the region covered by the eyetracking glasses.
 
 ## rt_gene_model_training
-The `rt_gene_model_training` directory allows using the inpainted images to train a deep neural network for eye gaze estimation.
+The [rt_gene_model_training](./rt_gene_model_training) directory allows using the inpainted images to train a deep neural network for eye gaze estimation.
 
