@@ -1,3 +1,5 @@
+# Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
+
 import os
 
 import cv2
@@ -16,9 +18,8 @@ class GazeEstimatorBase(object):
 
     It retrieves two image streams, one containing the left eye and another containing the right eye.
     It synchronizes these two images with the estimated head pose.
-    The images are then converted in a suitable format, and a forward pass (one per eye) of the deep neural network
-    results in the estimated gaze for this frame. The estimated gaze is then published in the (theta, phi) notation.
-    Additionally, two images with the gaze overlaid on the eye images are published."""
+    The images are then converted in a suitable format, and a forward pass of the deep neural network
+    results in the estimated gaze for this frame. The estimated gaze is then published in the (theta, phi) notation."""
 
     def __init__(self, device_id_gaze, model_files):
         if "OMP_NUM_THREADS" not in os.environ:

@@ -1,9 +1,26 @@
-#!/usr/bin/env python3
-# coding: utf-8
+"""
+MIT License
 
-from __future__ import division
+Copyright (c) 2018 Jianzhu Guo
 
-""" 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 Creates a MobileNet Model as defined in:
 Andrew G. Howard Menglong Zhu Bo Chen, et.al. (2017). 
 MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications. 
@@ -11,6 +28,9 @@ Copyright (c) Yang Lu, 2017
 
 Modified By cleardusk
 """
+
+from __future__ import division
+
 import math
 import torch.nn as nn
 
@@ -152,3 +172,4 @@ def mobilenet_05(num_classes=62, input_channel=3):
 def mobilenet_025(num_classes=62, input_channel=3):
     model = MobileNet(widen_factor=0.25, num_classes=num_classes, input_channel=input_channel)
     return model
+

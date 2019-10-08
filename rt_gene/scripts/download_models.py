@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
+
 from __future__ import print_function, division, absolute_import
 
 import os

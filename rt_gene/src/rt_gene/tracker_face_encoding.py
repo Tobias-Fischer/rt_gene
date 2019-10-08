@@ -3,6 +3,7 @@
 @Ahmed Al-Hindawi <a.al-hindawi@imperial.ac.uk>
 Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 """
+
 from __future__ import print_function
 import numpy as np
 import scipy.optimize
