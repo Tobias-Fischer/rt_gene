@@ -17,20 +17,19 @@ This work was supported in part by the Samsung Global Research Outreach program,
 More information can be found on the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>.
 
 # Requirements
-## Manual installation
 1. Install required Python packages:
-    - For `conda` users (recommended): `conda install tensorflow-gpu keras numpy scipy tqdm pytorch torchvision pillow && conda install -c 1adrianb face_alignment`
-    - For `pip` users: `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow face-alignment`
+    - For `conda` users (recommended): `conda install tensorflow-gpu keras numpy scipy tqdm pytorch torchvision pillow`
+    - For `pip` users: `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow`
 1. Download RT-GENE, the required model files and add the source folder to your `PYTHONPATH` environment variable:
     1. `cd $HOME/ && git clone https://github.com/Tobias-Fischer/rt_gene.git`
     1. `python $HOME/rt_gene/rt_gene/scripts/download_models.py`
     1. `export PYTHONPATH=$HOME/rt_gene/rt_gene/src`
 
-## Optional ensemble model files
-- To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, please follow instructions [here](../rt_gene/README.md#optional-ensemble-model-files)
-
-# Instructions for estimating gaze
+# Basic usage
 - Run `$HOME/rt_gene/rt_gene/scripts/estimate_gaze_standalone.py`. For supported arguments, run `$HOME/rt_gene/rt_gene/scripts/estimate_gaze_standalone.py --help`
+
+## Optional ensemble model files
+- To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, simply use the `--models` argument, e.g `cd $HOME/rt_gene/ && ./rt_gene/scripts/estimate_gaze_standalone.py --models './rt_gene/model_nets/all_subjects_mpii_prl_utmv_0_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_1_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_2_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_3_02.h5'`
 
 # List of libraries
 See [main README.md](../rt_gene/README.md)
