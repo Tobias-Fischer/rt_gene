@@ -3,6 +3,7 @@
 CMakeLists.txt.user
 .idea*
 scripts/.idea*
+.vscode
 
 # Model files
 rt_gene/model_nets/Model_allsubjects1.h5
@@ -12,6 +13,11 @@ rt_gene/model_nets/dlib_face_recognition_resnet_model_v1.dat
 rt_gene/model_nets/ThreeDDFA/w_exp_sim.npy
 rt_gene/model_nets/ThreeDDFA/w_shp_sim.npy
 rt_gene/model_nets/phase1_wpdc_vdc.pth.tar
+rt_gene/model_nets/SFD/s3fd_facedetector.pth
+rt_gene/model_nets/all_subjects_mpii_prl_utmv_0_02.h5
+rt_gene/model_nets/all_subjects_mpii_prl_utmv_1_02.h5
+rt_gene/model_nets/all_subjects_mpii_prl_utmv_2_02.h5
+rt_gene/model_nets/all_subjects_mpii_prl_utmv_3_02.h5
 rt_gene/samples/out
 
 *~
