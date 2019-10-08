@@ -12,7 +12,6 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import numpy as np
-from tqdm import tqdm
 
 import rospkg
 import rospy
@@ -23,7 +22,6 @@ from cv_bridge import CvBridge
 import rt_gene.gaze_tools as gaze_tools
 from tf import TransformBroadcaster, TransformListener
 import tf.transformations
-import collections
 
 from rt_gene.subject_ros_bridge import SubjectListBridge
 from rt_gene.msg import MSG_SubjectImagesList
