@@ -74,6 +74,7 @@ class SFDDetector(object):
             tensor_or_path {numpy.ndarray, torch.tensor or string} -- path to the image, or the image itself
         """
         if isinstance(tensor_or_path, str):
+            from skimage import io
             return cv2.imread(tensor_or_path) if not rgb else io.imread(tensor_or_path)
         elif torch.is_tensor(tensor_or_path):
             # Call cpu in case its coming from cuda
