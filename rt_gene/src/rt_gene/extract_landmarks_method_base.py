@@ -31,9 +31,6 @@ class LandmarkMethodBase(object):
         self.face_net = SFDDetector(device=device_id_facedetection, path_to_detector=checkpoint_path_face)
         self.facial_landmark_nn = self.load_face_landmark_model(checkpoint_path_landmark)
 
-        self.rvec_init = np.array([[0.01891013], [0.08560084], [-3.14392813]])
-        self.tvec_init = np.array([[-14.97821226], [-10.62040383], [-2053.03596872]])
-
         self.model_points = self.get_full_model_points(model_points_file)
 
     @staticmethod

@@ -69,10 +69,7 @@ def get_endpoint(theta, phi, center_x, center_y, length=300):
     return endpoint_x, endpoint_y
 
 
-def limit_yaw(rot_head):
-    import tf.transformations
-
-    euler_angles_head = list(tf.transformations.euler_from_quaternion(rot_head))
+def limit_yaw(euler_angles_head):
     # [0]: pos - roll right, neg -   roll left
     # [1]: pos - look down,  neg -   look up
     # [2]: pos - rotate left,  neg - rotate right

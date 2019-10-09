@@ -17,7 +17,7 @@ from tqdm import tqdm
 from image_geometry import PinholeCameraModel
 import tf.transformations as tf_transformations
 from geometry_msgs.msg import PointStamped, Point
-from tf import TransformBroadcaster, TransformListener, ExtrapolationException
+from tf import TransformBroadcaster, TransformListener, ExtrapolationException, transformations
 from dynamic_reconfigure.server import Server
 import rospy
 
@@ -41,16 +41,13 @@ class LandmarkMethod(LandmarkMethodBase):
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
 
-        self.rgb_frame_id = rospy.get_param("~rgb_frame_id", "/kinect2_link")
-        self.rgb_frame_id_ros = rospy.get_param("~rgb_frame_id_ros", "/kinect2_nonrotated_link")
+        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_nonrotated_link")
 
         self.tf_broadcaster = TransformBroadcaster()
         self.tf_listener = TransformListener()
         self.tf_prefix = rospy.get_param("~tf_prefix", default="gaze")
 
         self.use_previous_headpose_estimate = True
-        self.last_rvec = {}
-        self.last_tvec = {}
         self.pose_stabilizers = {}  # Introduce scalar stabilizers for pose.
 
         try:
@@ -89,7 +86,8 @@ class LandmarkMethod(LandmarkMethodBase):
         return config
 
     def process_image(self, color_msg):
-        tqdm.write('Time now: {} message color: {} diff: {:.2f}s'.format((rospy.Time.now().to_sec()), color_msg.header.stamp.to_sec(), rospy.Time.now().to_sec() - color_msg.header.stamp.to_sec()))
+        tqdm.write('Time now: {} message color: {} diff: {:.2f}s'.format((rospy.Time.now().to_sec()), color_msg.header.stamp.to_sec(),
+                                                                         rospy.Time.now().to_sec() - color_msg.header.stamp.to_sec()))
 
         color_img = gaze_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
@@ -106,31 +104,24 @@ class LandmarkMethod(LandmarkMethodBase):
         for subject_id, subject in self.subject_tracker.get_tracked_elements().items():
             if subject.left_eye_color is None or subject.right_eye_color is None:
                 continue
-            if subject_id not in self.last_rvec:
-                self.last_rvec[subject_id] = self.rvec_init.copy()
-            if subject_id not in self.last_tvec:
-                self.last_tvec[subject_id] = self.tvec_init.copy()
             if subject_id not in self.pose_stabilizers:
                 self.pose_stabilizers[subject_id] = [Stabilizer(state_num=2, measure_num=1, cov_process=0.1, cov_measure=0.1) for _ in range(6)]
 
-            success, rotation_quaternion, translation_vector = self.get_head_pose(subject.marks, subject_id)
-
-            # Publish all the data
-            translation_headpose_tf = self.get_head_translation(timestamp, subject_id)
+            success, head_rpy, translation_vector = self.get_head_pose(subject.marks, subject_id)
 
             if success:
-                if translation_headpose_tf is not None:
-                    roll_pitch_yaw = self.publish_pose(timestamp, translation_headpose_tf, rotation_quaternion, subject_id)
+                # Publish all the data
+                self.publish_pose(timestamp, translation_vector, head_rpy, subject_id)
 
-                    if roll_pitch_yaw is not None:
-                        face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+                roll_pitch_yaw = gaze_tools.limit_yaw(head_rpy)
+                face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
-                        head_pose_image = LandmarkMethod.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw))
+                head_pose_image = LandmarkMethod.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw))
 
-                        if final_head_pose_images is None:
-                            final_head_pose_images = head_pose_image
-                        else:
-                            final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image), axis=1)
+                if final_head_pose_images is None:
+                    final_head_pose_images = head_pose_image
+                else:
+                    final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image), axis=1)
             else:
                 tqdm.write("Could not get head pose properly")
 
@@ -161,11 +152,10 @@ class LandmarkMethod(LandmarkMethodBase):
         dist_coeffs = self.img_proc.distortionCoeffs()
 
         try:
-            if self.last_rvec[subject_id] is not None and self.last_tvec[subject_id] is not None and self.use_previous_headpose_estimate:
-                (success, rotation_vector_unstable, translation_vector_unstable) = cv2.solvePnP(self.model_points, image_points_headpose, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE,
-                                                                                                useExtrinsicGuess=True, rvec=self.last_rvec[subject_id], tvec=self.last_tvec[subject_id])
-            else:
-                (success, rotation_vector_unstable, translation_vector_unstable) = cv2.solvePnP(self.model_points, image_points_headpose, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
+            success, rotation_vector_unstable, translation_vector_unstable = cv2.solvePnP(self.model_points,
+                                                                                          image_points_headpose.reshape(len(self.model_points), 1, 2),
+                                                                                          cameraMatrix=camera_matrix,
+                                                                                          distCoeffs=dist_coeffs, flags=cv2.SOLVEPNP_DLS)
         except cv2.error as e:
             print('Could not estimate head pose', e)
             return False, None, None
@@ -176,16 +166,10 @@ class LandmarkMethod(LandmarkMethodBase):
 
         rotation_vector, translation_vector = self.apply_kalman_filter_head_pose(subject_id, rotation_vector_unstable, translation_vector_unstable)
 
-        if not gaze_tools.is_rotation_vector_stable(self.last_rvec[subject_id], rotation_vector):
-            return False, None, None
+        translation_vector = np.array([translation_vector[2], -translation_vector[0], -translation_vector[1]]) / 1000.0
+        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[0] + self.head_pitch, rotation_vector[1] + np.pi]
 
-        self.last_rvec[subject_id] = rotation_vector
-        self.last_tvec[subject_id] = translation_vector
-
-        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[1] + np.pi + self.head_pitch, rotation_vector[0]]
-        rot_head = tf_transformations.quaternion_from_euler(*rotation_vector_swapped)
-
-        return success, rot_head, translation_vector
+        return success, rotation_vector_swapped, translation_vector
 
     def apply_kalman_filter_head_pose(self, subject_id, rotation_vector_unstable, translation_vector_unstable):
         stable_pose = []
@@ -198,28 +182,6 @@ class LandmarkMethod(LandmarkMethodBase):
         translation_vector = stable_pose[1]
         return rotation_vector, translation_vector
 
-    def get_head_translation(self, timestamp, subject_id):
-        trans_reshaped = self.last_tvec[subject_id].reshape(3, 1)
-        nose_center_3d_rot = [-float(trans_reshaped[0] / 1000.0), -float(trans_reshaped[1] / 1000.0), -float(trans_reshaped[2] / 1000.0)]
-
-        nose_center_3d_rot_frame = self.rgb_frame_id
-
-        try:
-            nose_center_3d_rot_pt = PointStamped()
-            nose_center_3d_rot_pt.header.frame_id = nose_center_3d_rot_frame
-            nose_center_3d_rot_pt.header.stamp = timestamp
-            nose_center_3d_rot_pt.point = Point(x=nose_center_3d_rot[0], y=nose_center_3d_rot[1], z=nose_center_3d_rot[2])
-            nose_center_3d = self.tf_listener.transformPoint(self.rgb_frame_id_ros, nose_center_3d_rot_pt)
-            nose_center_3d.header.stamp = timestamp
-
-            nose_center_3d_tf = gaze_tools.position_ros_to_tf(nose_center_3d.point)
-
-            print('Translation based on landmarks', nose_center_3d_tf)
-            return nose_center_3d_tf
-        except ExtrapolationException as e:
-            print("** Extrapolation Exception **", e)
-            return None
-
     def publish_subject_list(self, timestamp, subjects):
         assert (subjects is not None)
 
@@ -227,10 +189,10 @@ class LandmarkMethod(LandmarkMethodBase):
 
         self.subject_pub.publish(subject_list_message)
 
-    def publish_pose(self, timestamp, nose_center_3d_tf, rot_head, subject_id):
-        self.tf_broadcaster.sendTransform(nose_center_3d_tf, rot_head, timestamp, self.tf_prefix + "/head_pose_estimated" + str(subject_id), self.rgb_frame_id_ros)
-
-        return gaze_tools.limit_yaw(rot_head)
+    def publish_pose(self, timestamp, nose_center_3d_tf, head_rpy, subject_id):
+        self.tf_broadcaster.sendTransform(nose_center_3d_tf, transformations.quaternion_from_euler(*head_rpy), timestamp,
+                                          self.tf_prefix + "/head_pose_estimated" + str(subject_id),
+                                          self.ros_tf_frame)
 
     def update_subject_tracker(self, color_img):
         faceboxes = self.get_face_bb(color_img)

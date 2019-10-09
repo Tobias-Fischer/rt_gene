@@ -42,6 +42,7 @@ class GazeEstimatorBase(object):
         img_input_l = keras.Input(shape=(36, 60, 3), name='img_input_L')
         img_input_r = keras.Input(shape=(36, 60, 3), name='img_input_R')
         headpose_input = keras.Input(shape=(2,), name='headpose_input')
+
         for model_file in model_files:
             tqdm.write('Load model ' + model_file)
             models.append(load_model(model_file,
@@ -51,11 +52,13 @@ class GazeEstimatorBase(object):
         if len(models) == 1:
             self._gaze_offset = 0.11
             self.ensemble_model = models[0]
-        else:
+        elif len(models) > 1:
             self._gaze_offset = 0.0
             tensors = [model([img_input_l, img_input_r, headpose_input]) for model in models]
             output_layer = keras.layers.average(tensors)
             self.ensemble_model = keras.Model(inputs=[img_input_l, img_input_r, headpose_input], outputs=output_layer)
+        else:
+            raise ValueError("No models were loaded")
         # noinspection PyProtectedMember
         self.ensemble_model._make_predict_function()
 
