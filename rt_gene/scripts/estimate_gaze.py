@@ -40,7 +40,7 @@ class GazeEstimatorROS(GazeEstimatorBase):
 
         self.tf_prefix = rospy.get_param("~tf_prefix", "gaze")
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
-        self.rgb_frame_id_ros = rospy.get_param("~rgb_frame_id_ros", "/kinect2_nonrotated_link")
+        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_nonrotated_link")
 
         self.image_subscriber = rospy.Subscriber('/subjects/images', MSG_SubjectImagesList, self.image_callback, queue_size=1, buff_size=10000000)
         self.subjects_gaze_img = rospy.Publisher('/subjects/gazeimages', Image, queue_size=3)
@@ -69,8 +69,9 @@ class GazeEstimatorROS(GazeEstimatorBase):
         valid_subject_list = []
         for subject_id, s in subjects_dict.items():
             try:
-                (trans_head, rot_head) = self.tf_listener.lookupTransform(self.rgb_frame_id_ros, self.headpose_frame + str(subject_id), timestamp)
-                euler_angles_head = gaze_tools.limit_yaw(rot_head)
+                (trans_head, rot_head) = self.tf_listener.lookupTransform(self.ros_tf_frame, self.headpose_frame + str(subject_id), timestamp)
+                euler_angles_head = list(tf.transformations.euler_from_quaternion(rot_head))
+                euler_angles_head = gaze_tools.limit_yaw(euler_angles_head)
 
                 phi_head, theta_head = gaze_tools.get_phi_theta_from_euler(euler_angles_head)
                 input_head_list.append([theta_head, phi_head])

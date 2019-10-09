@@ -11,10 +11,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from rt_gene.gaze_tools import get_phi_theta_from_euler
+from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
-
 
 script_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -57,12 +56,13 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
     extract_eye_image_patches(subjects)
 
     for idx, subject in enumerate(subjects):
-        (success, rotation_vector, translation_vector) = cv2.solvePnP(landmark_estimator.model_points, subject.marks, cameraMatrix=camera_matrix,
-                                                                      distCoeffs=dist_coefficients, flags=cv2.SOLVEPNP_ITERATIVE,
-                                                                      useExtrinsicGuess=True,
-                                                                      rvec=landmark_estimator.rvec_init.copy(),
-                                                                      tvec=landmark_estimator.tvec_init.copy())
-        roll_pitch_yaw = rotation_vector_to_rpy(rotation_vector.flatten().tolist())
+        _, rotation_vector, _ = cv2.solvePnP(landmark_estimator.model_points,
+                                             subject.marks.reshape(len(subject.marks), 1, 2),
+                                             cameraMatrix=camera_matrix,
+                                             distCoeffs=dist_coefficients, flags=cv2.SOLVEPNP_DLS)
+
+        roll_pitch_yaw = [-rotation_vector[2], -rotation_vector[0], rotation_vector[1] + np.pi]
+        roll_pitch_yaw = limit_yaw(np.array(roll_pitch_yaw).flatten().tolist())
 
         if roll_pitch_yaw is not None:
             phi_head, theta_head = get_phi_theta_from_euler(roll_pitch_yaw)
@@ -106,7 +106,8 @@ if __name__ == '__main__':
     parser.add_argument('--vis-gaze', dest='vis_gaze', action='store_true', help='Display the gaze images')
     parser.add_argument('--no-vis-gaze', dest='vis_gaze', action='store_false', help='Do not display the gaze images')
     parser.add_argument('--output_path', type=str, default=os.path.join(script_path, '../samples/out'), help='Output directory for head pose and gaze images')
-    parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')], help='List of gaze estimators')
+    parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')],
+                        help='List of gaze estimators')
 
     parser.set_defaults(vis_gaze=True)
     parser.set_defaults(vis_headpose=False)
@@ -144,6 +145,7 @@ if __name__ == '__main__':
         else:
             im_width, im_height = image.shape[1], image.shape[0]
             tqdm.write('WARNING!!! You should provide the camera calibration file, otherwise you might get bad results. Using a crude approximation!')
-            _dist_coefficients, _camera_matrix = np.zeros((1, 5)), np.array([[im_height / 1.05, 0.0, im_width / 2.0], [0.0, im_height / 1.05, im_height / 2.0], [0.0, 0.0, 1.0]])
+            _dist_coefficients, _camera_matrix = np.zeros((1, 5)), np.array(
+                [[im_height / 1.05, 0.0, im_width / 2.0], [0.0, im_height / 1.05, im_height / 2.0], [0.0, 0.0, 1.0]])
 
         estimate_gaze(image_filename, image, _dist_coefficients, _camera_matrix)
