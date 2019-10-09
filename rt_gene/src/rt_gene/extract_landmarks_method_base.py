@@ -21,7 +21,7 @@ facial_landmark_transform = transforms.Compose([ToTensorGjz(), NormalizeGjz(mean
 
 class LandmarkMethodBase(object):
     def __init__(self, device_id_facedetection, checkpoint_path_face=None, checkpoint_path_landmark=None, model_points_file=None):
-        self.model_size_rescale = 30.0
+        self.model_size_rescale = 16.0
         self.head_pitch = 0.0
         self.interpupillary_distance = 0.058
         self.eye_image_size = (60, 36)
