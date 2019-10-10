@@ -23,8 +23,8 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     - For kinetic: `sudo apt-get install python-catkin-tools ros-kinetic-ros-numpy ros-kinetic-camera-info-manager-py ros-kinetic-uvc-camera libcamera-info-manager-dev`
     - For melodic: `sudo apt-get install python-catkin-tools ros-melodic-uvc-camera libcamera-info-manager-dev`
 1. Install required Python packages:
-    - For `conda` users (recommended): `conda install tensorflow-gpu keras numpy scipy tqdm pytorch torchvision pillow && pip install empy rospkg`
-    - For `pip` users: `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow`
+    - For `conda` users (recommended): `conda install tensorflow-gpu numpy scipy tqdm pytorch torchvision pillow && pip install empy rospkg`
+    - For `pip` users: `pip install tensorflow-gpu numpy scipy tqdm torch torchvision Pillow`
 1. Download and build RT-GENE:
     1. `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
     1. `cd $HOME/catkin_ws && catkin build`
@@ -59,7 +59,6 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 # List of libraries
 - ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)
 - Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
-- Keras; [MIT License](https://opensource.org/licenses/MIT), [Link to website](https://keras.io)
 - 3DDFA face alignment in [./src/rt_gene/ThreeDDFA](./src/rt_gene/ThreeDDFA); [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/cleardusk/3DDFA), [Link to paper](https://arxiv.org/abs/1804.01005)
 - S3FD face detector in [./src/rt_gene/SFD](./src/rt_gene/SFD); [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to GitHub](https://github.com/1adrianb/face-alignment)
 - Kalman filter in [./src/rt_gene/kalman_stabilizer.py](./src/rt_gene/kalman_stabilizer.py): [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/yinguobing/head-pose-estimation)
