@@ -1,7 +1,7 @@
 <launch>
     <arg name="pytorch_num_threads" default="8" />
     <arg name="use_face_encoding_tracker" default="True" />
-    <arg name="interpupillary_distance" default="0.058"/>
+    <arg name="face_encoding_threshold" default="0.6"/>
     <arg name="start_rviz" default="False"/>
 
     <arg name="video_namespace" default="/kinect2/hd"/>
@@ -23,6 +23,7 @@
       <node pkg="rt_gene" type="extract_landmarks_node.py" name="extract_landmarks_new" output="screen">
           <param name="device_id_facedetection"  value="$(arg device_id_facedetection)" />
           <param name="use_face_encoding_tracker" value="$(arg use_face_encoding_tracker)" />
+          <param name="face_encoding_threshold" value="$(arg face_encoding_threshold)" />
           <param name="ros_tf_frame" value="$(arg ros_tf_frame)" />
           <param name="tf_prefix" value="$(arg tf_prefix)" />
           <param name="interpupillary_distance" value="$(arg interpupillary_distance)" />
