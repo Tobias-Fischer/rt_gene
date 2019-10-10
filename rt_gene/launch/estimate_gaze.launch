@@ -32,8 +32,8 @@
       </node>
 
       <node pkg="rt_gene" type="estimate_gaze.py" name="estimate_gaze_twoeyes" output="screen">
-          <!-- rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam -->
-          <rosparam param="model_files">['model_nets/Model_allsubjects1.h5', 'model_nets/all_subjects_mpii_prl_utmv_0_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_1_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_2_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_3_02.h5']</rosparam>
+          <rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>
+          <!-- rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_1_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_2_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_3_02.h5']</rosparam-->
           <param name="tf_prefix" value="$(arg tf_prefix)" />/
           <param name="ros_tf_frame" value="$(arg ros_tf_frame)" />
           <param name="device_id_gazeestimation"  value="$(arg device_id_gazeestimation)" />
