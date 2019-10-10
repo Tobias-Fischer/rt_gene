@@ -7,7 +7,7 @@
   <arg name="video_info_topic" default="camera_info"/>
 
   <arg name="rgb_frame_id" default="/kinect2_link"/>
-  <arg name="rgb_frame_id_ros" default="/kinect2_nonrotated_link"/>
+  <arg name="rgb_frame_id_ros" default="/kinect2_nonrotated_link"/> <!-- must match ros_tf_frame in estimate_gaze.launch -->
   <arg name="publish_ros_static_frame" default="True"/>
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="ros_static_transform_publisher"
