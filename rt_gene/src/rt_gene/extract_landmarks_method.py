@@ -15,9 +15,7 @@ from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from sensor_msgs.msg import Image, CameraInfo
 from tqdm import tqdm
 from image_geometry import PinholeCameraModel
-import tf.transformations as tf_transformations
-from geometry_msgs.msg import PointStamped, Point
-from tf import TransformBroadcaster, TransformListener, ExtrapolationException, transformations
+from tf import TransformBroadcaster, TransformListener, transformations
 from dynamic_reconfigure.server import Server
 import rospy
 
