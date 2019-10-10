@@ -43,7 +43,7 @@ batch_size = args.batch_size
 epoch = args.epoch
 
 
-config = tf.ConfigProto()
+config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
 config.gpu_options.visible_device_list = args.gpu_num
 # config.gpu_options.per_process_gpu_memory_fraction = 0.7
@@ -96,7 +96,7 @@ for model_num in range(0, len(model_suffixes)):
 for subjects_train, subjects_test in zip(subjects_train_threefold, subjects_test_threefold):
     print('subjects_test:', subjects_test)
     K.clear_session()
-    set_session(tf.Session(config=config))
+    set_session(tf.compat.v1.Session(config=config))
 
     models = []
     for prefix, suffix in zip(model_prefixes, model_suffixes):
