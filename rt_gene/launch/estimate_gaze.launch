@@ -3,6 +3,8 @@
     <arg name="use_face_encoding_tracker" default="True" />
     <arg name="face_encoding_threshold" default="0.6"/>
     <arg name="start_rviz" default="False"/>
+    <arg name="visualise_headpose" default="True" />
+    <arg name="visualise_eyepose" default="True" />
 
     <arg name="video_namespace" default="/kinect2/hd"/>
     <arg name="video_image_topic" default="image_color_rect"/>
@@ -26,6 +28,7 @@
           <param name="face_encoding_threshold" value="$(arg face_encoding_threshold)" />
           <param name="ros_tf_frame" value="$(arg ros_tf_frame)" />
           <param name="tf_prefix" value="$(arg tf_prefix)" />
+          <param name="visualise_headpose" value="$(arg visualise_headpose)" />
 
           <remap from="/camera_info" to="$(arg video_namespace)/$(arg video_info_topic)"/>
           <remap from="/image" to="$(arg video_namespace)/$(arg video_image_topic)"/>
@@ -37,6 +40,7 @@
           <param name="tf_prefix" value="$(arg tf_prefix)" />/
           <param name="ros_tf_frame" value="$(arg ros_tf_frame)" />
           <param name="device_id_gazeestimation"  value="$(arg device_id_gazeestimation)" />
+          <param name="visualise_eyepose" value="$(arg visualise_eyepose)" />
       </node>      
     </group>
 
