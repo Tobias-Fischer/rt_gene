@@ -29,14 +29,6 @@ def load_camera_calibration(calibration_file):
     return dist_coefficients, camera_matrix
 
 
-def rotation_vector_to_rpy(rotation_vector):
-    roll_pitch_yaw = [-rotation_vector[2], rotation_vector[1], rotation_vector[0]]
-    roll_pitch_yaw[0] += np.pi
-    if roll_pitch_yaw[0] > np.pi:
-        roll_pitch_yaw[0] -= 2 * np.pi
-    return roll_pitch_yaw
-
-
 def extract_eye_image_patches(subjects):
     for subject in subjects:
         le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject.transformed_landmarks, subject.face_color, landmark_estimator.eye_image_size)
@@ -55,36 +47,49 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
     subjects = landmark_estimator.get_subjects_from_faceboxes(color_img, faceboxes)
     extract_eye_image_patches(subjects)
 
+    input_r_list = []
+    input_l_list = []
+    input_head_list = []
+    valid_subject_list = []
+
     for idx, subject in enumerate(subjects):
-        _, rotation_vector, _ = cv2.solvePnP(landmark_estimator.model_points,
-                                             subject.marks.reshape(len(subject.marks), 1, 2),
-                                             cameraMatrix=camera_matrix,
-                                             distCoeffs=dist_coefficients, flags=cv2.SOLVEPNP_DLS)
+        success, rotation_vector, _ = cv2.solvePnP(landmark_estimator.model_points,
+                                                   subject.marks.reshape(len(subject.marks), 1, 2),
+                                                   cameraMatrix=camera_matrix,
+                                                   distCoeffs=dist_coefficients, flags=cv2.SOLVEPNP_DLS)
+
+        if not success:
+            tqdm.write('Not able to extract head pose for subject {}'.format(idx))
+            continue
 
         roll_pitch_yaw = [-rotation_vector[2], -rotation_vector[0], rotation_vector[1] + np.pi]
         roll_pitch_yaw = limit_yaw(np.array(roll_pitch_yaw).flatten().tolist())
 
-        if roll_pitch_yaw is not None:
-            phi_head, theta_head = get_phi_theta_from_euler(roll_pitch_yaw)
+        phi_head, theta_head = get_phi_theta_from_euler(roll_pitch_yaw)
 
-            face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-            head_pose_image = landmark_estimator.visualize_headpose_result(face_image_resized, (phi_head, theta_head))
+        face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+        head_pose_image = landmark_estimator.visualize_headpose_result(face_image_resized, (phi_head, theta_head))
+        cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_headpose.jpg'), head_pose_image)
 
-            if args.vis_headpose:
-                plt.axis("off")
-                plt.imshow(cv2.cvtColor(head_pose_image, cv2.COLOR_BGR2RGB))
-                plt.show()
-        else:
-            tqdm.write('Not able to extract head pose for subject {}'.format(idx))
-            continue
+        if args.vis_headpose:
+            plt.axis("off")
+            plt.imshow(cv2.cvtColor(head_pose_image, cv2.COLOR_BGR2RGB))
+            plt.show()
 
-        input_r = gaze_estimator.input_from_image(subject.right_eye_color)
-        input_l = gaze_estimator.input_from_image(subject.left_eye_color)
-        gaze_est = gaze_estimator.estimate_gaze_twoeyes([input_l], [input_r], [[theta_head, phi_head]])[0]
+        input_r_list.append(gaze_estimator.input_from_image(subject.right_eye_color))
+        input_l_list.append(gaze_estimator.input_from_image(subject.left_eye_color))
+        input_head_list.append([theta_head, phi_head])
+        valid_subject_list.append(idx)
 
+    gaze_est = gaze_estimator.estimate_gaze_twoeyes(inference_input_left_list=input_l_list,
+                                                    inference_input_right_list=input_r_list,
+                                                    inference_headpose_list=input_head_list)
+
+    for subject_id, gaze in zip(valid_subject_list, gaze_est.tolist()):
+        subject = subjects[subject_id]
         # Build visualizations
-        r_gaze_img = gaze_estimator.visualize_eye_result(subject.right_eye_color, gaze_est)
-        l_gaze_img = gaze_estimator.visualize_eye_result(subject.left_eye_color, gaze_est)
+        r_gaze_img = gaze_estimator.visualize_eye_result(subject.right_eye_color, gaze)
+        l_gaze_img = gaze_estimator.visualize_eye_result(subject.left_eye_color, gaze)
         s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
 
         if args.vis_gaze:
@@ -92,7 +97,6 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
             plt.imshow(cv2.cvtColor(s_gaze_img, cv2.COLOR_BGR2RGB))
             plt.show()
 
-        cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_headpose.jpg'), head_pose_image)
         cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_gaze.jpg'), s_gaze_img)
 
 
