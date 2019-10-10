@@ -26,7 +26,6 @@
           <param name="face_encoding_threshold" value="$(arg face_encoding_threshold)" />
           <param name="ros_tf_frame" value="$(arg ros_tf_frame)" />
           <param name="tf_prefix" value="$(arg tf_prefix)" />
-          <param name="interpupillary_distance" value="$(arg interpupillary_distance)" />
 
           <remap from="/camera_info" to="$(arg video_namespace)/$(arg video_info_topic)"/>
           <remap from="/image" to="$(arg video_namespace)/$(arg video_image_topic)"/>

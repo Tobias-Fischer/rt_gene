@@ -44,8 +44,8 @@ class LandmarkMethod(LandmarkMethodBase):
         self.tf_broadcaster = TransformBroadcaster()
         self.tf_listener = TransformListener()
         self.tf_prefix = rospy.get_param("~tf_prefix", default="gaze")
+        self.visualise_headpose = rospy.get_param("~visualise_headpose", default=True)
 
-        self.use_previous_headpose_estimate = True
         self.pose_stabilizers = {}  # Introduce scalar stabilizers for pose.
 
         try:
@@ -66,14 +66,14 @@ class LandmarkMethod(LandmarkMethodBase):
             raise Exception("Could not get camera info")
 
         # multiple person images publication
-        self.subject_pub = rospy.Publisher("/subjects/images", MSG_SubjectImagesList, queue_size=1)
+        self.subject_pub = rospy.Publisher("/subjects/images", MSG_SubjectImagesList, queue_size=3)
         # multiple person faces publication for visualisation
-        self.subject_faces_pub = rospy.Publisher("/subjects/faces", Image, queue_size=1)
+        self.subject_faces_pub = rospy.Publisher("/subjects/faces", Image, queue_size=3)
 
         Server(ModelSizeConfig, self._dyn_reconfig_callback)
 
         # have the subscriber the last thing that's run to avoid conflicts
-        self.color_sub = rospy.Subscriber("/image", Image, self.process_image, buff_size=2 ** 24, queue_size=1)
+        self.color_sub = rospy.Subscriber("/image", Image, self.process_image, buff_size=2 ** 24, queue_size=3)
 
     def _dyn_reconfig_callback(self, config, _):
         self.model_points /= (self.model_size_rescale * self.interpupillary_distance)
@@ -111,20 +111,23 @@ class LandmarkMethod(LandmarkMethodBase):
                 # Publish all the data
                 self.publish_pose(timestamp, translation_vector, head_rpy, subject_id)
 
-                roll_pitch_yaw = gaze_tools.limit_yaw(head_rpy)
-                face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+                if self.visualise_headpose:
+                    roll_pitch_yaw = gaze_tools.limit_yaw(head_rpy)
+                    face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
-                head_pose_image = LandmarkMethod.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw))
+                    head_pose_image = LandmarkMethod.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw))
 
-                if final_head_pose_images is None:
-                    final_head_pose_images = head_pose_image
-                else:
-                    final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image), axis=1)
+                    if final_head_pose_images is None:
+                        final_head_pose_images = head_pose_image
+                    else:
+                        final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image), axis=1)
             else:
                 tqdm.write("Could not get head pose properly")
 
-        if final_head_pose_images is not None:
+        if len(self.subject_tracker.get_tracked_elements().items()) > 0:
             self.publish_subject_list(timestamp, self.subject_tracker.get_tracked_elements())
+
+        if final_head_pose_images is not None:
             headpose_image_ros = self.bridge.cv2_to_imgmsg(final_head_pose_images, "bgr8")
             headpose_image_ros.header.stamp = timestamp
             self.subject_faces_pub.publish(headpose_image_ros)
