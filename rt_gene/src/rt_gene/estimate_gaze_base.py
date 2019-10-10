@@ -24,7 +24,8 @@ class GazeEstimatorBase(object):
 
         self.device_id_gazeestimation = device_id_gaze
         tf.compat.v1.disable_eager_execution()
-        tf.compat.v1.experimental.output_all_intermediates(True)
+        if 'output_all_intermediates' in dir(tf.compat.v1.experimental):
+            tf.compat.v1.experimental.output_all_intermediates(True)
 
         with tf.device(self.device_id_gazeestimation):
             config = tf.compat.v1.ConfigProto(inter_op_parallelism_threads=1,
@@ -71,6 +72,7 @@ class GazeEstimatorBase(object):
 
     def estimate_gaze_twoeyes(self, inference_input_left_list, inference_input_right_list, inference_headpose_list):
         with self.graph.as_default():
+            tf.compat.v1.keras.backend.set_session(self.sess)
             mean_prediction = self.ensemble_model.predict({'img_input_L': np.array(inference_input_left_list),
                                                            'img_input_R': np.array(inference_input_right_list),
                                                            'headpose_input': np.array(inference_headpose_list)})
