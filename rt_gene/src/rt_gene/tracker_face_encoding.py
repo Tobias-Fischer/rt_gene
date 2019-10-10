@@ -11,6 +11,7 @@ from .tracker_generic import GenericTracker
 import cv2
 import dlib
 import rospkg
+import rospy
 
 
 class FaceEncodingTracker(GenericTracker):
@@ -21,7 +22,7 @@ class FaceEncodingTracker(GenericTracker):
     def __init__(self):
         super(FaceEncodingTracker, self).__init__()
         self.__encoding_list = {}
-        self.__threshold = 0.6
+        self.__threshold = float(rospy.get_param("~face_encoding_threshold", default=0.6))
 
     @staticmethod
     def __align_tracked_subject(tracked_subject, desired_left_eye=(0.3, 0.3), desired_face_width=150, desired_face_height=150):
