@@ -41,8 +41,10 @@ class GazeEstimatorROS(GazeEstimatorBase):
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
         self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_nonrotated_link")
 
-        self.image_subscriber = rospy.Subscriber('/subjects/images', MSG_SubjectImagesList, self.image_callback, queue_size=1, buff_size=10000000)
+        self.image_subscriber = rospy.Subscriber('/subjects/images', MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
         self.subjects_gaze_img = rospy.Publisher('/subjects/gazeimages', Image, queue_size=3)
+
+        self.visualise_eyepose = rospy.get_param("~visualise_eyepose", default=True)
 
         self.time_last = rospy.Time.now()
 
@@ -85,16 +87,18 @@ class GazeEstimatorROS(GazeEstimatorBase):
                                               inference_headpose_list=input_head_list)
 
         for subject_id, gaze in zip(valid_subject_list, gaze_est.tolist()):
-            s = subjects_dict[subject_id]
-            r_gaze_img = self.visualize_eye_result(s.right, gaze)
-            l_gaze_img = self.visualize_eye_result(s.left, gaze)
-            s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
-            if subjects_gaze_img is None:
-                subjects_gaze_img = s_gaze_img
-            else:
-                subjects_gaze_img = np.concatenate((subjects_gaze_img, s_gaze_img), axis=0)
-
             self.publish_gaze(gaze, timestamp, subject_id)
+
+            if self.visualise_eyepose:
+                s = subjects_dict[subject_id]
+                r_gaze_img = self.visualize_eye_result(s.right, gaze)
+                l_gaze_img = self.visualize_eye_result(s.left, gaze)
+                s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
+
+                if subjects_gaze_img is None:
+                    subjects_gaze_img = s_gaze_img
+                else:
+                    subjects_gaze_img = np.concatenate((subjects_gaze_img, s_gaze_img), axis=0)
 
         if subjects_gaze_img is not None:
             gaze_img_msg = self.bridge.cv2_to_imgmsg(subjects_gaze_img.astype(np.uint8), "bgr8")
