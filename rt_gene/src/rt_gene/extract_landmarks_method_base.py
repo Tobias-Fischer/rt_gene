@@ -6,8 +6,8 @@ import cv2
 import numpy as np
 import torch
 import torchvision.transforms as transforms
-
 from rt_gene.SFD.sfd_detector import SFDDetector
+# noinspection PyUnresolvedReferences
 from rt_gene import gaze_tools as gaze_tools
 from rt_gene.ThreeDDFA.inference import crop_img, predict_68pts, parse_roi_box_from_bbox, parse_roi_box_from_landmark
 from rt_gene.tracker_generic import TrackedSubject
