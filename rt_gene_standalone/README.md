@@ -18,8 +18,8 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 
 # Requirements
 1. Install required Python packages:
-    - For `conda` users (recommended): `conda install tensorflow-gpu keras numpy scipy tqdm pytorch torchvision pillow`
-    - For `pip` users: `pip install tensorflow-gpu keras numpy scipy tqdm torch torchvision Pillow`
+    - For `conda` users (recommended): `conda install tensorflow-gpu numpy scipy tqdm pytorch torchvision pillow`
+    - For `pip` users: `pip install tensorflow-gpu numpy scipy tqdm torch torchvision Pillow`
 1. Download RT-GENE, the required model files and add the source folder to your `PYTHONPATH` environment variable:
     1. `cd $HOME/ && git clone https://github.com/Tobias-Fischer/rt_gene.git`
     1. `python $HOME/rt_gene/rt_gene/scripts/download_models.py`
