@@ -5,12 +5,8 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
-from keras.backend import set_session
-from keras.engine.saving import load_model
 from rt_gene.gaze_tools import accuracy_angle, angle_loss, get_endpoint
 from tqdm import tqdm
-
-import keras
 
 
 class GazeEstimatorBase(object):
@@ -27,6 +23,8 @@ class GazeEstimatorBase(object):
         tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
 
         self.device_id_gazeestimation = device_id_gaze
+        tf.compat.v1.disable_eager_execution()
+        tf.compat.v1.experimental.output_all_intermediates(True)
 
         with tf.device(self.device_id_gazeestimation):
             config = tf.compat.v1.ConfigProto(inter_op_parallelism_threads=1,
@@ -36,18 +34,19 @@ class GazeEstimatorBase(object):
                 config.gpu_options.per_process_gpu_memory_fraction = 0.3
             config.log_device_placement = False
             self.sess = tf.compat.v1.Session(config=config)
-            set_session(self.sess)
+            tf.compat.v1.keras.backend.set_session(self.sess)
 
         models = []
-        img_input_l = keras.Input(shape=(36, 60, 3), name='img_input_L')
-        img_input_r = keras.Input(shape=(36, 60, 3), name='img_input_R')
-        headpose_input = keras.Input(shape=(2,), name='headpose_input')
+        img_input_l = tf.keras.Input(shape=(36, 60, 3), name='img_input_L')
+        img_input_r = tf.keras.Input(shape=(36, 60, 3), name='img_input_R')
+        headpose_input = tf.keras.Input(shape=(2,), name='headpose_input')
 
         for model_file in model_files:
             tqdm.write('Load model ' + model_file)
-            models.append(load_model(model_file,
-                                     custom_objects={'accuracy_angle': accuracy_angle, 'angle_loss': angle_loss}))
-            models[-1].name = "model_{}".format(len(models))
+            models.append(tf.keras.models.load_model(model_file,
+                                                     custom_objects={'accuracy_angle': accuracy_angle, 'angle_loss': angle_loss}))
+            # noinspection PyProtectedMember
+            models[-1]._name = "model_{}".format(len(models))
 
         if len(models) == 1:
             self._gaze_offset = 0.11
@@ -55,8 +54,8 @@ class GazeEstimatorBase(object):
         elif len(models) > 1:
             self._gaze_offset = 0.0
             tensors = [model([img_input_l, img_input_r, headpose_input]) for model in models]
-            output_layer = keras.layers.average(tensors)
-            self.ensemble_model = keras.Model(inputs=[img_input_l, img_input_r, headpose_input], outputs=output_layer)
+            output_layer = tf.keras.layers.average(tensors)
+            self.ensemble_model = tf.keras.Model(inputs=[img_input_l, img_input_r, headpose_input], outputs=output_layer)
         else:
             raise ValueError("No models were loaded")
         # noinspection PyProtectedMember

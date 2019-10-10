@@ -148,24 +148,24 @@ def get_square_box(box):
 
 
 def angle_loss(y_true, y_pred):
-    from keras import backend as K
+    # noinspection PyUnresolvedReferences
+    from tensorflow.keras import backend as K
     return K.sum(K.square(y_pred - y_true), axis=-1)
 
 
 def accuracy_angle(y_true, y_pred):
-    from keras import backend as K
     import tensorflow as tf
 
-    pred_x = -1 * K.cos(y_pred[0]) * K.sin(y_pred[1])
-    pred_y = -1 * K.sin(y_pred[0])
-    pred_z = -1 * K.cos(y_pred[0]) * K.cos(y_pred[1])
-    pred_norm = K.sqrt(pred_x * pred_x + pred_y * pred_y + pred_z * pred_z)
+    pred_x = -1 * tf.cos(y_pred[0]) * tf.sin(y_pred[1])
+    pred_y = -1 * tf.sin(y_pred[0])
+    pred_z = -1 * tf.cos(y_pred[0]) * tf.cos(y_pred[1])
+    pred_norm = tf.sqrt(pred_x * pred_x + pred_y * pred_y + pred_z * pred_z)
 
-    true_x = -1 * K.cos(y_true[0]) * K.sin(y_true[1])
-    true_y = -1 * K.sin(y_true[0])
-    true_z = -1 * K.cos(y_true[0]) * K.cos(y_true[1])
-    true_norm = K.sqrt(true_x * true_x + true_y * true_y + true_z * true_z)
+    true_x = -1 * tf.cos(y_true[0]) * tf.sin(y_true[1])
+    true_y = -1 * tf.sin(y_true[0])
+    true_z = -1 * tf.cos(y_true[0]) * tf.cos(y_true[1])
+    true_norm = tf.sqrt(true_x * true_x + true_y * true_y + true_z * true_z)
 
     angle_value = (pred_x * true_x + pred_y * true_y + pred_z * true_z) / (true_norm * pred_norm)
-    K.clip(angle_value, -0.9999999999, 0.999999999)
+    tf.clip_by_value(angle_value, -0.9999999999, 0.999999999)
     return (tf.acos(angle_value) * 180.0) / np.pi

@@ -23,7 +23,7 @@ class ElapsedTimer(object):
             return str(sec / (60*60)) + " hr"
 
     def elapsed_time(self):
-        print("Elapsed: %s "% self.elapsed(time.time()-self.start_time))
+        print("Elapsed: %s " % self.elapsed(time.time()-self.start_time))
 
 # cifar10 dataset -------------------------
 def cifar10_process(x):
@@ -31,7 +31,7 @@ def cifar10_process(x):
     return x
 
 def cifar10_data():
-    from keras.datasets import cifar10
+    from tensorflow.keras.datasets import cifar10
     (xtrain, ytrain), (xtest, ytest) = cifar10.load_data()
     return cifar10_process(xtrain), cifar10_process(xtest)
 
@@ -42,7 +42,7 @@ def mnist_process(x):
     return x
 
 def mnist_data():
-    from keras.datasets import mnist
+    from tensorflow.keras.datasets import mnist
     (xtrain, ytrain), (xtest, ytest) = mnist.load_data()
     return mnist_process(xtrain), mnist_process(xtest)
 
@@ -50,15 +50,15 @@ def mnist_data():
 # celebA dataset -------------------------
 def celebA_data(sample_idx=0):
     data = glob(os.path.join("../../../data", 'celebA_aligned', '*.png'))
-    data_files = map(lambda i:data[i], sample_idx)
+    data_files = map(lambda i: data[i], sample_idx)
 
     data = [get_image(data_file, 
-                input_height = 108,
-                input_width = 108,
-                resize_height = 64,
-                resize_width = 64,
-                is_crop=False,
-                is_grayscale = False) for data_file in data_files]
+            input_height=108,
+            input_width=108,
+            resize_height=64,
+            resize_width=64,
+            is_crop=False,
+            is_grayscale=False) for data_file in data_files]
     data_images = np.array(data).astype(np.float32)         
 
     return data_images
@@ -67,7 +67,7 @@ def celebA_data(sample_idx=0):
 # PRL dataset -------------------------
 def PRL_data(sample_idx=0):
     data = glob(os.path.join("../../../data/Cat/noGlasses", 'resized_64x64', '*.png'))
-    data_files = map(lambda i:data[i], sample_idx)
+    data_files = map(lambda i: data[i], sample_idx)
 
     data = [imread_PRL(data_file,
                 is_grayscale = False) for data_file in data_files]
@@ -77,7 +77,7 @@ def PRL_data(sample_idx=0):
 
 def PRL_data224(sample_idx=0):
     data = glob(os.path.join("../../../data/Cat/noGlasses", 'rgb', '*.png'))
-    data_files = map(lambda i:data[i], sample_idx)
+    data_files = map(lambda i: data[i], sample_idx)
 
     data = [imread_PRL(data_file,
                 is_grayscale = False) for data_file in data_files]
@@ -86,7 +86,7 @@ def PRL_data224(sample_idx=0):
     return data_images    
 
 def PRL_data_image_load(data, sample_idx=0):
-    data_files = map(lambda i:data[i], sample_idx)
+    data_files = map(lambda i: data[i], sample_idx)
 
     data = [imread_PRL(data_file,
                 is_grayscale = False) for data_file in data_files]
@@ -95,7 +95,7 @@ def PRL_data_image_load(data, sample_idx=0):
     return data_images  
 
 def PRL_data224_depth(data, sample_idx=0):
-    data_files = map(lambda i:data[i], sample_idx)
+    data_files = map(lambda i: data[i], sample_idx)
 
     data = [imread_PRL_depth(data_file) for data_file in data_files]
     data_images = np.array(data).astype(np.float32)         
@@ -104,15 +104,15 @@ def PRL_data224_depth(data, sample_idx=0):
 
 def PRL_data_Glasses(sample_idx=0):
     data = glob(os.path.join("../../../data/Cat", 'face_overlay', '*.png'))
-    data_files = map(lambda i:data[i], sample_idx)
+    data_files = map(lambda i: data[i], sample_idx)
 
     data = [get_image(data_file, 
-                input_height = 224,
-                input_width = 224,
-                resize_height = 64,
-                resize_width = 64,
-                is_crop=False,
-                is_grayscale = False) for data_file in data_files]
+            input_height=224,
+            input_width=224,
+            resize_height=64,
+            resize_width=64,
+            is_crop=False,
+            is_grayscale=False) for data_file in data_files]
 
     data_images = np.array(data).astype(np.float32)         
 
@@ -164,6 +164,7 @@ def GAN_plot_images(generator, x_train, dataset='result', save2file=False, fake=
     else:
         plt.show()
 
+
 def CoGAN_plot_images(generator1, generator2, x_train1, x_train2, dataset='result', save2file=False, fake=True, samples=16, noise=None, step=0, folder_path = 'result'):
     img_rows = x_train.shape[1]
     img_cols = x_train.shape[2]
@@ -205,6 +206,7 @@ def CoGAN_plot_images(generator1, generator2, x_train1, x_train2, dataset='resul
     else:
         plt.show()        
 
+
 def GAN_plot_images_depth(generator, x_train, dataset='result', save2file=False, fake=True, samples=16, noise=None, step=0):
     img_rows = x_train.shape[1]
     img_cols = x_train.shape[2]
@@ -239,7 +241,6 @@ def GAN_plot_images_depth(generator, x_train, dataset='result', save2file=False,
 
 
 def my_save_images(images, filename, sample_num=36, save2file=True):
-
     img_rows = images.shape[1]
     img_cols = images.shape[2]
     channel = images.shape[3]    
@@ -264,3 +265,4 @@ def my_save_images(images, filename, sample_num=36, save2file=True):
         plt.close('all')
     else:
         plt.show()
+

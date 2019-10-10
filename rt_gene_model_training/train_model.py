@@ -14,12 +14,13 @@ import h5py
 import gc
 
 import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
-from keras import backend as K
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from keras.optimizers import Adam
+from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
+from tensorflow.keras.optimizers import Adam
 
 from train_tools import *
+
+tf.compat.v1.disable_eager_execution()
 
 path = '/recordings_hdd/mtcnn_twoeyes_inpainted_eccv/'
 
@@ -80,7 +81,7 @@ for subjects_train, subjects_test in zip(subjects_train_threefold, subjects_test
         continue
 
     K.clear_session()
-    set_session(tf.compat.v1.Session(config=config))
+    tf.compat.v1.keras.backend.set_session(tf.compat.v1.Session(config=config))
 
     train_file_names = [path+'/RT_GENE_train_'+subject+'.mat' for subject in subjects_train]
     train_files = [h5py.File(train_file_name) for train_file_name in train_file_names]
@@ -110,6 +111,7 @@ for subjects_train, subjects_test in zip(subjects_train_threefold, subjects_test
 
     for train_file in train_files:
         train_file.close()
+
     train_images_L, train_images_R, train_gazes, train_headposes = None, None, None, None
     model = None
     gc.collect()
