@@ -9,9 +9,8 @@ import os
 from glob import glob
 from tqdm import tqdm, tnrange
 
-from keras.models import load_model
-from keras.callbacks import TensorBoard
-import keras.backend as K
+from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras import backend as K
 
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -68,8 +67,8 @@ class GlassesCompletion(object):
         # For GAN
         self.noise_dim = 100   
 
-        self.generator = load_model(self.path_GAN_model+"/GAN_"+str(epoch_num)+"_"+self.dataset+"_forganECCV_generator_uniform.h5")              
-        self.adversarial_cost = load_model(self.path_GAN_model+"/GAN_"+str(epoch_num)+"_"+self.dataset+"_forganECCV_adversarial_model_uniform.h5", custom_objects={'loss_LSGAN': loss_LSGAN})
+        self.generator = tf.keras.models.load_model(self.path_GAN_model+"/GAN_"+str(epoch_num)+"_"+self.dataset+"_forganECCV_generator_uniform.h5")
+        self.adversarial_cost = tf.keras.models.load_model(self.path_GAN_model+"/GAN_"+str(epoch_num)+"_"+self.dataset+"_forganECCV_adversarial_model_uniform.h5", custom_objects={'loss_LSGAN': loss_LSGAN})
 
         print('Done Loading Pre-trained Network!')
 

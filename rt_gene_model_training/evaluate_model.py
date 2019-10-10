@@ -17,12 +17,13 @@ import glob
 from sklearn.model_selection import KFold
 
 import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
-from keras.models import Model, load_model
-from keras import backend as K
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras import backend as K
 
 from train_tools import *
 
+
+tf.compat.v1.disable_eager_execution()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("fc1_size", type=int)
@@ -96,7 +97,7 @@ for model_num in range(0, len(model_suffixes)):
 for subjects_train, subjects_test in zip(subjects_train_threefold, subjects_test_threefold):
     print('subjects_test:', subjects_test)
     K.clear_session()
-    set_session(tf.compat.v1.Session(config=config))
+    tf.compat.v1.keras.backend.set_session(tf.compat.v1.Session(config=config))
 
     models = []
     for prefix, suffix in zip(model_prefixes, model_suffixes):

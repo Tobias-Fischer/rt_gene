@@ -3,22 +3,23 @@ from __future__ import print_function, division
 import math
 import numpy as np
 
-from keras.applications.vgg16 import VGG16
-from keras.applications.vgg19 import VGG19
-from keras.applications.mobilenet import MobileNet
-from keras.applications.densenet import DenseNet121, DenseNet169, DenseNet201
-from keras.layers import Dense, GlobalAveragePooling2D, Input, concatenate, \
+from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.applications.vgg19 import VGG19
+from tensorflow.keras.applications.mobilenet import MobileNet
+from tensorflow.keras.applications.densenet import DenseNet121, DenseNet169, DenseNet201
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Input, concatenate, \
     BatchNormalization, Activation, Conv2D, MaxPooling2D, Flatten
-from keras import initializers
-from keras.models import Model
+from tensorflow.keras import initializers
+from tensorflow.keras.models import Model
 
 from tqdm import tqdm
 # from tqdm import tqdm_notebook as tqdm
 
 
 def angle_loss(y_true, y_pred):
-    from keras import backend as K
+    from tensorflow.keras import backend as K
     return K.sum(K.square(y_pred - y_true), axis=-1)
+
 
 class GeneratorsTwoEyes(object):
     def __init__(self, train_num, size_validation_set, batch_size, num_steps_epoch,
@@ -217,7 +218,7 @@ def get_train_info(train_num, validation_split, batch_size):
 
 
 def accuracy_angle(y_true, y_pred):
-    from keras import backend as K
+    from tensorflow.keras import backend as K
     import tensorflow as tf
 
     pred_x = -1*K.cos(y_pred[0])*K.sin(y_pred[1])

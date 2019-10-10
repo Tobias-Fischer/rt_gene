@@ -1,17 +1,17 @@
-from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Activation, Flatten, Reshape
-from keras.layers import Conv2D, Conv2DTranspose, UpSampling2D, MaxPooling2D
-from keras.layers import LeakyReLU, Dropout
-from keras.layers import BatchNormalization
-from keras import initializers
-import keras.backend as K
-from keras.optimizers import Adam, RMSprop, Adamax
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Input, Dense, Activation, Flatten, Reshape
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose, UpSampling2D, MaxPooling2D
+from tensorflow.keras.layers import BatchNormalization, LeakyReLU, Dropout
+from tensorflow.keras import initializers
+from tensorflow.keras import backend as K
+from tensorflow.keras.optimizers import Adam, RMSprop, Adamax
 
 
 def set_trainability(model, trainable=False):
     model.trainable = trainable
     for layer in model.layers:
         layer.trainable = trainable
+
 
 # LSGAN Model
 class LSGAN_Model(object):
@@ -169,6 +169,7 @@ class Completion_Model(object):
         out_gen_img = gen(input_noise_CL)
         out_gen_img = Dropout(1.0, name='name_out_gen_img')(out_gen_img)        
         out_dis_val = dis(out_gen_img)
+
         out_dis_val = Dropout(1.0, name='name_out_dis_val')(out_dis_val)
         self.CL = Model(inputs=input_noise_CL, outputs=[out_dis_val, out_gen_img])          
         return self.CL            
