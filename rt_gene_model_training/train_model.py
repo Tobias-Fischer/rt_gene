@@ -58,7 +58,7 @@ validation_split = 0.05
 
 suffix = 'eccv_'+model_type+'_'+str(fc1_size)+'_'+str(fc2_size)+'_'+str(fc3_size)+'_'+str(batch_size)+'_'+str(args.ensemble_num)
 
-config = tf.ConfigProto()
+config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
 config.gpu_options.visible_device_list = args.gpu_num
 
@@ -80,7 +80,7 @@ for subjects_train, subjects_test in zip(subjects_train_threefold, subjects_test
         continue
 
     K.clear_session()
-    set_session(tf.Session(config=config))
+    set_session(tf.compat.v1.Session(config=config))
 
     train_file_names = [path+'/RT_GENE_train_'+subject+'.mat' for subject in subjects_train]
     train_files = [h5py.File(train_file_name) for train_file_name in train_file_names]

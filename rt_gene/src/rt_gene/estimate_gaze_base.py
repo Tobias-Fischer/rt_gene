@@ -4,7 +4,7 @@ import os
 
 import cv2
 import numpy as np
-import tensorflow
+import tensorflow as tf
 from keras.backend import set_session
 from keras.engine.saving import load_model
 from rt_gene.gaze_tools import accuracy_angle, angle_loss, get_endpoint
@@ -28,14 +28,14 @@ class GazeEstimatorBase(object):
 
         self.device_id_gazeestimation = device_id_gaze
 
-        with tensorflow.device(self.device_id_gazeestimation):
-            config = tensorflow.ConfigProto(inter_op_parallelism_threads=1,
-                                            intra_op_parallelism_threads=1)
+        with tf.device(self.device_id_gazeestimation):
+            config = tf.compat.v1.ConfigProto(inter_op_parallelism_threads=1,
+                                              intra_op_parallelism_threads=1)
             if "gpu" in self.device_id_gazeestimation:
                 config.gpu_options.allow_growth = True
                 config.gpu_options.per_process_gpu_memory_fraction = 0.3
             config.log_device_placement = False
-            self.sess = tensorflow.Session(config=config)
+            self.sess = tf.compat.v1.Session(config=config)
             set_session(self.sess)
 
         models = []
@@ -64,7 +64,7 @@ class GazeEstimatorBase(object):
 
         tqdm.write('Loaded ' + str(len(models)) + ' models')
 
-        self.graph = tensorflow.get_default_graph()
+        self.graph = tf.compat.v1.get_default_graph()
 
     def __del__(self):
         if self.sess is not None:

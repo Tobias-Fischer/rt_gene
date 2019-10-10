@@ -154,7 +154,7 @@ def angle_loss(y_true, y_pred):
 
 def accuracy_angle(y_true, y_pred):
     from keras import backend as K
-    import tensorflow
+    import tensorflow as tf
 
     pred_x = -1 * K.cos(y_pred[0]) * K.sin(y_pred[1])
     pred_y = -1 * K.sin(y_pred[0])
@@ -168,4 +168,4 @@ def accuracy_angle(y_true, y_pred):
 
     angle_value = (pred_x * true_x + pred_y * true_y + pred_z * true_z) / (true_norm * pred_norm)
     K.clip(angle_value, -0.9999999999, 0.999999999)
-    return (tensorflow.acos(angle_value) * 180.0) / np.pi
+    return (tf.acos(angle_value) * 180.0) / np.pi

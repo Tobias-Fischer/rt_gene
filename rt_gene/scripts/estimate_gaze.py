@@ -18,7 +18,6 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
-# noinspection PyUnresolvedReferences
 import rt_gene.gaze_tools as gaze_tools
 from tf import TransformBroadcaster, TransformListener
 import tf.transformations

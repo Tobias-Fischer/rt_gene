@@ -92,11 +92,13 @@ class GlassesCompletion(object):
 
         complete_loss_model = GAN_Completion_model.cal_complete_loss(gen_4_loss, dis_4_loss)
 
-        mask_tensor = tf.placeholder(tf.float32, self.image_shape, name='mask')
-        images_tensor = tf.placeholder(tf.float32, self.image_shape, name='real_images')       
-        G_images_tensor = tf.placeholder(tf.float32, self.image_shape, name='fake_images')       
+        mask_tensor = tf.compat.v1.placeholder(tf.float32, self.image_shape, name='mask')
+        images_tensor = tf.compat.v1.placeholder(tf.float32, self.image_shape, name='real_images')       
+        G_images_tensor = tf.compat.v1.placeholder(tf.float32, self.image_shape, name='fake_images')
 
-        loss_contextual = tf.reduce_sum(tf.contrib.layers.flatten(tf.abs(tf.multiply(mask_tensor, G_images_tensor) - tf.multiply(mask_tensor, images_tensor))), 1)
+        loss_contextual_temp = tf.abs(tf.multiply(mask_tensor, G_images_tensor) - tf.multiply(mask_tensor, images_tensor))
+
+        loss_contextual = tf.reduce_sum(input_tensor=tf.reshape(loss_contextual_temp, [tf.shape(input=loss_contextual_temp)[0], -1]), axis=1)
         loss_perceptual = complete_loss_model.output[0]
         loss = loss_contextual + 0.1*loss_perceptual
 
@@ -105,12 +107,12 @@ class GlassesCompletion(object):
 
         print('=======================================================')
 
-        config = tf.ConfigProto()
+        config = tf.compat.v1.ConfigProto()
         config.gpu_options.visible_device_list = GPU_ID
         config.gpu_options.allow_growth = True
 
-        sess = tf.Session(config=config)    
-        sess.run(tf.global_variables_initializer())
+        sess = tf.compat.v1.Session(config=config)    
+        sess.run(tf.compat.v1.global_variables_initializer())
 
         print(self.path_completion)
 
