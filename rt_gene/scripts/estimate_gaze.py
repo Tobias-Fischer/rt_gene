@@ -82,6 +82,9 @@ class GazeEstimatorROS(GazeEstimatorBase):
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception):
                 pass
 
+        if len(valid_subject_list) == 0:
+            return
+
         gaze_est = self.estimate_gaze_twoeyes(inference_input_left_list=input_l_list,
                                               inference_input_right_list=input_r_list,
                                               inference_headpose_list=input_head_list)
