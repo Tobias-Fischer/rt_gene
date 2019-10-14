@@ -15,7 +15,7 @@ from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from sensor_msgs.msg import Image, CameraInfo
 from tqdm import tqdm
 from image_geometry import PinholeCameraModel
-from tf import TransformBroadcaster, TransformListener, transformations
+from tf import TransformBroadcaster, transformations
 from dynamic_reconfigure.server import Server
 import rospy
 
@@ -42,7 +42,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_nonrotated_link")
 
         self.tf_broadcaster = TransformBroadcaster()
-        self.tf_listener = TransformListener()
         self.tf_prefix = rospy.get_param("~tf_prefix", default="gaze")
         self.visualise_headpose = rospy.get_param("~visualise_headpose", default=True)
 
@@ -147,14 +146,12 @@ class LandmarkMethodROS(LandmarkMethodBase):
                  translation_vector - see rotation_vector
         """
 
-        image_points_headpose = landmarks
-
         camera_matrix = self.img_proc.intrinsicMatrix()
         dist_coeffs = self.img_proc.distortionCoeffs()
 
         try:
             success, rotation_vector_unstable, translation_vector_unstable = cv2.solvePnP(self.model_points,
-                                                                                          image_points_headpose.reshape(len(self.model_points), 1, 2),
+                                                                                          landmarks.reshape(len(self.model_points), 1, 2),
                                                                                           cameraMatrix=camera_matrix,
                                                                                           distCoeffs=dist_coeffs, flags=cv2.SOLVEPNP_DLS)
         except cv2.error as e:

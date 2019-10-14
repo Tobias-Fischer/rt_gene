@@ -56,6 +56,17 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 1) `roslaunch rt_gene start_webcam.launch`
 1) `roslaunch rt_gene estimate_gaze.launch`
 
+## Estimate gaze from Video
+1) `roscore`
+1) `roslaunch rt_gene start_video.launch` (make sure to change the `camera_info_url` and `video_file` arguments)
+1) `roslaunch rt_gene estimate_gaze.launch`
+
+## Estimate gaze from ROSBag
+1) `roscore`
+1) `rosbag play --clock /path/to/rosbag.bag`
+1) `rosrun image_transport republish compressed in:=/kinect2/hd/image_color_rect raw out:=/kinect2/hd/image_color_rect`
+1) `roslaunch rt_gene estimate_gaze.launch`
+
 # List of libraries
 - ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)
 - Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)

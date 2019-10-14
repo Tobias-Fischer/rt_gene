@@ -46,8 +46,6 @@ class GazeEstimatorROS(GazeEstimatorBase):
 
         self.visualise_eyepose = rospy.get_param("~visualise_eyepose", default=True)
 
-        self.time_last = rospy.Time.now()
-
     def publish_image(self, image, image_publisher, timestamp):
         """This image publishes the `image` to the `image_publisher` with the given `timestamp`."""
         image_ros = self.bridge.cv2_to_imgmsg(image, "rgb8")
