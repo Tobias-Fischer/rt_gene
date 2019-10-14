@@ -62,7 +62,7 @@ class GazeEstimatorBase(object):
         # noinspection PyProtectedMember
         self.ensemble_model._make_predict_function()
 
-        tqdm.write('Loaded ' + str(len(models)) + ' models')
+        tqdm.write('Loaded ' + str(len(models)) + ' model(s)')
 
         self.graph = tf.compat.v1.get_default_graph()
 
