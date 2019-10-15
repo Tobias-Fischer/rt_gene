@@ -40,4 +40,6 @@ The [rt_gene_inpainting](./rt_gene_inpainting) directory contains code to inpain
 ### rt_gene_model_training
 The [rt_gene_model_training](./rt_gene_model_training) directory allows using the inpainted images to train a deep neural network for eye gaze estimation.
 
-<div style="text-align:center"><img src="./accuracy_prl.jpg" /></div>
+<p align="center">
+  <img src="./accuracy_prl.jpg" alt="Accuracy on RT-GENE dataset"/>
+</p>
