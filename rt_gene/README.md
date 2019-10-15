@@ -31,8 +31,8 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     - For kinetic: `sudo apt-get install python-catkin-tools ros-kinetic-ros-numpy ros-kinetic-camera-info-manager-py ros-kinetic-uvc-camera libcamera-info-manager-dev`
     - For melodic: `sudo apt-get install python-catkin-tools ros-melodic-uvc-camera libcamera-info-manager-dev`
 1. Install required Python packages:
-    - For `conda` users (recommended): `conda install tensorflow-gpu numpy scipy tqdm pytorch torchvision pillow && pip install empy rospkg`
-    - For `pip` users: `pip install tensorflow-gpu numpy scipy tqdm torch torchvision Pillow`
+    - For `conda` users (recommended): `conda install tensorflow-gpu numpy scipy tqdm pytorch torchvision pillow && conda install -c conda-forge dlib && pip install empy rospkg`
+    - For `pip` users: `pip install tensorflow-gpu numpy scipy tqdm torch torchvision Pillow dlib opencv-python`
 1. Download and build RT-GENE:
     1. `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
     1. `cd $HOME/catkin_ws && catkin build`
