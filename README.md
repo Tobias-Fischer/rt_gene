@@ -27,12 +27,17 @@ The code is split into three parts, each having its own README contained. There 
 ### rt_gene (ROS package)
 The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze estimation. This contains all the code required at inference time.
 
+![Inference example](./dataset_figure.jpg)
+
 ### rt_gene (Standalone)
 The [rt_gene_standalone](./rt_gene_standalone) directory contains instructions for eye gaze estimation given a set of images. It relies on the `rt_gene` package (above).
 
 ### rt_gene_inpainting
 The [rt_gene_inpainting](./rt_gene_inpainting) directory contains code to inpaint the region covered by the eyetracking glasses.
 
+![Inpaining example](./inpaint_example.jpg)
+
 ### rt_gene_model_training
 The [rt_gene_model_training](./rt_gene_model_training) directory allows using the inpainted images to train a deep neural network for eye gaze estimation.
 
+<div style="text-align:center"><img src="./accuracy_prl.jpg" /></div>
