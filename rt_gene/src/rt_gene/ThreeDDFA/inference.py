@@ -26,6 +26,7 @@ SOFTWARE.
 import numpy as np
 from math import sqrt
 from .ddfa import reconstruct_vertex
+from .params import std_size
 
 
 def get_suffix(filename):
@@ -115,8 +116,8 @@ def parse_roi_box_from_bbox(bbox):
 def _predict_vertices(param, roi_bbox, dense):
     vertex = reconstruct_vertex(param, dense=dense)
     sx, sy, ex, ey = roi_bbox
-    scale_x = (ex - sx) / 120
-    scale_y = (ey - sy) / 120
+    scale_x = (ex - sx) / std_size
+    scale_y = (ey - sy) / std_size
     vertex[0, :] = vertex[0, :] * scale_x + sx
     vertex[1, :] = vertex[1, :] * scale_y + sy
 
@@ -129,3 +130,6 @@ def _predict_vertices(param, roi_bbox, dense):
 def predict_68pts(param, roi_box):
     return _predict_vertices(param, roi_box, dense=False)
 
+
+def predict_dense(param, roi_box):
+    return _predict_vertices(param, roi_box, dense=True)

@@ -69,6 +69,15 @@ def get_endpoint(theta, phi, center_x, center_y, length=300):
     return endpoint_x, endpoint_y
 
 
+def visualize_landmarks(image, landmarks):
+    import cv2
+
+    output_image = np.copy(image)
+    for landmark in landmarks.reshape(-1, 2):
+        cv2.circle(output_image, (landmark[0], landmark[1]), 2, (0, 0, 255), -1)
+    return output_image
+
+
 def limit_yaw(euler_angles_head):
     # [0]: pos - roll right, neg -   roll left
     # [1]: pos - look down,  neg -   look up
@@ -82,6 +91,14 @@ def limit_yaw(euler_angles_head):
 
 def crop_face_from_image(color_img, box):
     _bb = list(map(int, box))
+    if _bb[0] < 0:
+        _bb[0] = 0
+    if _bb[1] < 0:
+        _bb[1] = 0
+    if _bb[2] > color_img.shape[1]:
+        _bb[2] = color_img.shape[1]
+    if _bb[3] > color_img.shape[0]:
+        _bb[3] = color_img.shape[0]
     return color_img[_bb[1]: _bb[3], _bb[0]: _bb[2]]
 
 

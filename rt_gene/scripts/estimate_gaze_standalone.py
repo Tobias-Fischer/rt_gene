@@ -2,6 +2,8 @@
 
 # Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 
+from __future__ import print_function, division, absolute_import
+
 import sys
 import os
 import argparse
@@ -53,6 +55,10 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
     valid_subject_list = []
 
     for idx, subject in enumerate(subjects):
+        if subject.left_eye_color is None or subject.right_eye_color is None:
+            tqdm.write('Failed to extract eye image patches')
+            continue
+
         success, rotation_vector, _ = cv2.solvePnP(landmark_estimator.model_points,
                                                    subject.marks.reshape(len(subject.marks), 1, 2),
                                                    cameraMatrix=camera_matrix,
@@ -69,23 +75,28 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
 
         face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
         head_pose_image = landmark_estimator.visualize_headpose_result(face_image_resized, (phi_head, theta_head))
-        cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_headpose.jpg'), head_pose_image)
 
         if args.vis_headpose:
             plt.axis("off")
             plt.imshow(cv2.cvtColor(head_pose_image, cv2.COLOR_BGR2RGB))
             plt.show()
 
+        if args.save_headpose:
+            cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_headpose.jpg'), head_pose_image)
+
         input_r_list.append(gaze_estimator.input_from_image(subject.right_eye_color))
         input_l_list.append(gaze_estimator.input_from_image(subject.left_eye_color))
         input_head_list.append([theta_head, phi_head])
         valid_subject_list.append(idx)
 
+    if len(valid_subject_list) == 0:
+        return
+
     gaze_est = gaze_estimator.estimate_gaze_twoeyes(inference_input_left_list=input_l_list,
                                                     inference_input_right_list=input_r_list,
                                                     inference_headpose_list=input_head_list)
 
-    for subject_id, gaze in zip(valid_subject_list, gaze_est.tolist()):
+    for subject_id, gaze, headpose in zip(valid_subject_list, gaze_est.tolist(), input_head_list):
         subject = subjects[subject_id]
         # Build visualizations
         r_gaze_img = gaze_estimator.visualize_eye_result(subject.right_eye_color, gaze)
@@ -97,7 +108,9 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
             plt.imshow(cv2.cvtColor(s_gaze_img, cv2.COLOR_BGR2RGB))
             plt.show()
 
-        cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_gaze.jpg'), s_gaze_img)
+        if args.save_gaze:
+            cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_gaze.jpg'), s_gaze_img)
+
 
 
 if __name__ == '__main__':
@@ -107,26 +120,34 @@ if __name__ == '__main__':
     parser.add_argument('--calib-file', type=str, dest='calib_file', default=None, help='Camera calibration file')
     parser.add_argument('--vis-headpose', dest='vis_headpose', action='store_true', help='Display the head pose images')
     parser.add_argument('--no-vis-headpose', dest='vis_headpose', action='store_false', help='Do not display the head pose images')
+    parser.add_argument('--save-headpose', dest='save_headpose', action='store_true', help='Save the head pose images')
+    parser.add_argument('--no-save-headpose', dest='save_headpose', action='store_false', help='Do not save the head pose images')
     parser.add_argument('--vis-gaze', dest='vis_gaze', action='store_true', help='Display the gaze images')
     parser.add_argument('--no-vis-gaze', dest='vis_gaze', action='store_false', help='Do not display the gaze images')
+    parser.add_argument('--save-gaze', dest='save_gaze', action='store_true', help='Save the gaze images')
+    parser.add_argument('--no-save-gaze', dest='save_gaze', action='store_false', help='Do not save the gaze images')
     parser.add_argument('--output_path', type=str, default=os.path.join(script_path, '../samples/out'), help='Output directory for head pose and gaze images')
     parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')],
                         help='List of gaze estimators')
 
     parser.set_defaults(vis_gaze=True)
+    parser.set_defaults(save_gaze=True)
     parser.set_defaults(vis_headpose=False)
+    parser.set_defaults(save_headpose=True)
 
     args = parser.parse_args()
 
     image_path_list = []
     if os.path.isfile(args.im_path):
-        image_path_list.append(args.im_path)
+        image_path_list.append(os.path.split(args.im_path)[1])
+        args.im_path = os.path.split(args.im_path)[0]
     elif os.path.isdir(args.im_path):
         for image_file_name in os.listdir(args.im_path):
             if image_file_name.endswith('.jpg') or image_file_name.endswith('.png'):
-                image_path_list.append(image_file_name)
+                if 'gaze' not in image_file_name and 'headpose' not in image_file_name:
+                    image_path_list.append(image_file_name)
     else:
-        print('Provide either a path to an image or a path to a directory containing images')
+        tqdm.write('Provide either a path to an image or a path to a directory containing images')
         sys.exit(1)
 
     tqdm.write('Loading networks')
@@ -139,10 +160,12 @@ if __name__ == '__main__':
     if not os.path.isdir(args.output_path):
         os.makedirs(args.output_path)
 
-    for image_filename in image_path_list:
-        image = cv2.imread(os.path.join(args.im_path, image_filename))
+    for image_file_name in tqdm(image_path_list):
+        tqdm.write('Estimate gaze on ' + image_file_name)
+        image = cv2.imread(os.path.join(args.im_path, image_file_name))
         if image is None:
-            tqdm.write('Could not load ' + image_filename + ', skipping this image.')
+            tqdm.write('Could not load ' + image_file_name + ', skipping this image.')
+            continue
 
         if args.calib_file is not None:
             _dist_coefficients, _camera_matrix = load_camera_calibration(args.calib_file)
@@ -150,6 +173,6 @@ if __name__ == '__main__':
             im_width, im_height = image.shape[1], image.shape[0]
             tqdm.write('WARNING!!! You should provide the camera calibration file, otherwise you might get bad results. Using a crude approximation!')
             _dist_coefficients, _camera_matrix = np.zeros((1, 5)), np.array(
-                [[im_height / 1.05, 0.0, im_width / 2.0], [0.0, im_height / 1.05, im_height / 2.0], [0.0, 0.0, 1.0]])
+                [[im_height, 0.0, im_width / 2.0], [0.0, im_height, im_height / 2.0], [0.0, 0.0, 1.0]])
 
-        estimate_gaze(image_filename, image, _dist_coefficients, _camera_matrix)
+        estimate_gaze(image_file_name, image, _dist_coefficients, _camera_matrix)
