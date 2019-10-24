@@ -27,7 +27,7 @@ import rt_gene.gaze_tools as gaze_tools
 
 from rt_gene.kalman_stabilizer import Stabilizer
 
-from rt_gene.msg import MSG_SubjectImagesList
+from rt_gene.msg import MSG_SubjectImagesList, MSG_Headpose
 from rt_gene.cfg import ModelSizeConfig
 from rt_gene.subject_ros_bridge import SubjectListBridge
 from rt_gene.tracker_face_encoding import FaceEncodingTracker
@@ -55,6 +55,8 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.visualise_headpose = rospy.get_param("~visualise_headpose", default=True)
 
         self.pose_stabilizers = {}  # Introduce scalar stabilizers for pose.
+
+        self.headpose_publishers = {}
 
         try:
             if img_proc is None:
@@ -198,6 +200,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.subject_pub.publish(subject_list_message)
 
     def publish_pose(self, timestamp, nose_center_3d_tf, head_rpy, subject_id):
+
         t = TransformStamped()
         t.header.frame_id = self.camera_frame
         t.header.stamp = timestamp
@@ -221,6 +224,16 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 raise exc
 
         self.tf2_buffer.set_transform(t, 'extract_landmarks')
+
+        headpose = MSG_Headpose()
+        headpose.header.stamp = timestamp
+        headpose.header.frame_id = '0'
+        headpose.roll = head_rpy[0]
+        headpose.pitch = head_rpy[1]
+        headpose.yaw = head_rpy[2]
+        if str(subject_id) not in self.headpose_publishers:
+            self.headpose_publishers[str(subject_id)] = rospy.Publisher('/subjects/head_pose'+str(subject_id), MSG_Headpose, queue_size=3)
+        self.headpose_publishers[str(subject_id)].publish(headpose)
 
     def update_subject_tracker(self, color_img):
         faceboxes = self.get_face_bb(color_img)
