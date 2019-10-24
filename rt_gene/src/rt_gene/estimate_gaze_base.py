@@ -42,6 +42,9 @@ class GazeEstimatorBase(object):
         img_input_r = tf.keras.Input(shape=(36, 60, 3), name='img_input_R')
         headpose_input = tf.keras.Input(shape=(2,), name='headpose_input')
 
+        if not isinstance(model_files, list):
+            model_files = [model_files]
+
         for model_file in model_files:
             tqdm.write('Load model ' + model_file)
             models.append(tf.keras.models.load_model(model_file,
