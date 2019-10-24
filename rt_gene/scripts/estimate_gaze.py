@@ -23,7 +23,7 @@ from tf import TransformBroadcaster, TransformListener
 import tf.transformations
 
 from rt_gene.subject_ros_bridge import SubjectListBridge
-from rt_gene.msg import MSG_SubjectImagesList
+from rt_gene.msg import MSG_SubjectImagesList, MSG_Gaze
 
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
 
@@ -43,6 +43,7 @@ class GazeEstimatorROS(GazeEstimatorBase):
 
         self.image_subscriber = rospy.Subscriber('/subjects/images', MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
         self.subjects_gaze_img = rospy.Publisher('/subjects/gazeimages', Image, queue_size=3)
+        self.gaze_publishers = {}
 
         self.visualise_eyepose = rospy.get_param("~visualise_eyepose", default=True)
 
@@ -87,23 +88,29 @@ class GazeEstimatorROS(GazeEstimatorBase):
                                               inference_input_right_list=input_r_list,
                                               inference_headpose_list=input_head_list)
 
-        for subject_id, gaze in zip(valid_subject_list, gaze_est.tolist()):
-            self.publish_gaze(gaze, timestamp, subject_id)
+        try:
+            for subject_id, gaze in zip(valid_subject_list, gaze_est.tolist()):
+                self.publish_gaze(gaze, timestamp, subject_id)
 
-            if self.visualise_eyepose:
-                s = subjects_dict[subject_id]
-                r_gaze_img = self.visualize_eye_result(s.right, gaze)
-                l_gaze_img = self.visualize_eye_result(s.left, gaze)
-                s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
+                if self.visualise_eyepose:
+                    s = subjects_dict[subject_id]
+                    r_gaze_img = self.visualize_eye_result(s.right, gaze)
+                    l_gaze_img = self.visualize_eye_result(s.left, gaze)
+                    s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
 
-                if subjects_gaze_img is None:
-                    subjects_gaze_img = s_gaze_img
-                else:
-                    subjects_gaze_img = np.concatenate((subjects_gaze_img, s_gaze_img), axis=0)
+                    if subjects_gaze_img is None:
+                        subjects_gaze_img = s_gaze_img
+                    else:
+                        subjects_gaze_img = np.concatenate((subjects_gaze_img, s_gaze_img), axis=0)
 
-        if subjects_gaze_img is not None:
-            gaze_img_msg = self.bridge.cv2_to_imgmsg(subjects_gaze_img.astype(np.uint8), "bgr8")
-            self.subjects_gaze_img.publish(gaze_img_msg)
+            if subjects_gaze_img is not None:
+                gaze_img_msg = self.bridge.cv2_to_imgmsg(subjects_gaze_img.astype(np.uint8), "bgr8")
+                self.subjects_gaze_img.publish(gaze_img_msg)
+        except rospy.ROSException as e:
+            if str(e) == "publish() to a closed topic":
+                pass
+            else:
+                raise e
 
     def publish_gaze(self, est_gaze, msg_stamp, subject_id):
         """Publish the gaze vector as a PointStamped."""
@@ -113,6 +120,14 @@ class GazeEstimatorROS(GazeEstimatorBase):
         quaternion_gaze = tf.transformations.quaternion_from_euler(*euler_angle_gaze)
         self.tf_broadcaster.sendTransform((0, 0, 0.05),  # publish it 5cm above the head pose's origin (nose tip)
                                           quaternion_gaze, msg_stamp, self.tf_prefix + "/world_gaze" + str(subject_id), self.headpose_frame + str(subject_id))
+        gaze_msg = MSG_Gaze()
+        gaze_msg.header.stamp = msg_stamp
+        gaze_msg.header.frame_id = '0'
+        gaze_msg.theta = theta_gaze
+        gaze_msg.phi = phi_gaze
+        if str(subject_id) not in self.gaze_publishers:
+            self.gaze_publishers[str(subject_id)] = rospy.Publisher('/subjects/gaze'+str(subject_id), MSG_Gaze, queue_size=3)
+        self.gaze_publishers[str(subject_id)].publish(gaze_msg)
 
 
 if __name__ == '__main__':

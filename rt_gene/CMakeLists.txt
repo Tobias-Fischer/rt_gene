@@ -88,6 +88,8 @@ add_message_files(
    FILES
    MSG_SubjectImages.msg
    MSG_SubjectImagesList.msg
+   MSG_Gaze.msg
+   MSG_Headpose.msg
 )
 
 # Generate added messages and services with any dependencies listed here
