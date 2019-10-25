@@ -22,9 +22,9 @@ class SubjectBridge(object):
 
     def msg_to_images(self, subject_msg):
         subject = SubjectImages(subject_msg.subject_id)
-        subject.face = self.__cv_bridge.imgmsg_to_cv2(subject_msg.face_img, 'rgb8')
-        subject.right = self.__cv_bridge.imgmsg_to_cv2(subject_msg.right_eye_img, 'rgb8')
-        subject.left = self.__cv_bridge.imgmsg_to_cv2(subject_msg.left_eye_img, 'rgb8')
+        subject.face = self.__cv_bridge.imgmsg_to_cv2(subject_msg.face_img, "rgb8")
+        subject.right = self.__cv_bridge.imgmsg_to_cv2(subject_msg.right_eye_img, "rgb8")
+        subject.left = self.__cv_bridge.imgmsg_to_cv2(subject_msg.left_eye_img, "rgb8")
         return subject
 
     def images_to_msg(self, subject_id, subject):

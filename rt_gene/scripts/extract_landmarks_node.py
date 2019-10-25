@@ -97,7 +97,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
 
         self.subject_tracker.update_eye_images(self.eye_image_size)
 
-        final_head_pose_images = None
+        final_head_pose_images = []
         for subject_id, subject in self.subject_tracker.get_tracked_elements().items():
             if subject.left_eye_color is None or subject.right_eye_color is None:
                 continue
@@ -114,20 +114,15 @@ class LandmarkMethodROS(LandmarkMethodBase):
                     roll_pitch_yaw = gaze_tools.limit_yaw(head_rpy)
                     face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
-                    head_pose_image = LandmarkMethodROS.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw))
-
-                    if final_head_pose_images is None:
-                        final_head_pose_images = head_pose_image
-                    else:
-                        final_head_pose_images = np.concatenate((final_head_pose_images, head_pose_image), axis=1)
+                    final_head_pose_images.append(LandmarkMethodROS.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw)))
             else:
                 tqdm.write("Could not get head pose properly")
 
         if len(self.subject_tracker.get_tracked_elements().items()) > 0:
             self.publish_subject_list(timestamp, self.subject_tracker.get_tracked_elements())
 
-        if final_head_pose_images is not None:
-            headpose_image_ros = self.bridge.cv2_to_imgmsg(final_head_pose_images, "bgr8")
+        if len(final_head_pose_images) > 0:
+            headpose_image_ros = self.bridge.cv2_to_imgmsg(np.hstack(final_head_pose_images), "bgr8")
             headpose_image_ros.header.stamp = timestamp
             self.subject_faces_pub.publish(headpose_image_ros)
 

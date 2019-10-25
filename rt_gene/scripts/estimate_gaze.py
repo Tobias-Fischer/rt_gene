@@ -41,8 +41,8 @@ class GazeEstimatorROS(GazeEstimatorBase):
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
         self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_nonrotated_link")
 
-        self.image_subscriber = rospy.Subscriber('/subjects/images', MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
-        self.subjects_gaze_img = rospy.Publisher('/subjects/gazeimages', Image, queue_size=3)
+        self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
+        self.subjects_gaze_img = rospy.Publisher("/subjects/gazeimages", Image, queue_size=3)
 
         self.visualise_eyepose = rospy.get_param("~visualise_eyepose", default=True)
 
@@ -59,7 +59,6 @@ class GazeEstimatorROS(GazeEstimatorBase):
         and this image is published along with the estimated gaze vector (see :meth:`publish_image` and
         :func:`publish_gaze`)"""
         timestamp = subject_image_list.header.stamp
-        subjects_gaze_img = None
 
         subjects_dict = self.subjects_bridge.msg_to_images(subject_image_list)
         input_r_list = []
@@ -87,6 +86,7 @@ class GazeEstimatorROS(GazeEstimatorBase):
                                               inference_input_right_list=input_r_list,
                                               inference_headpose_list=input_head_list)
 
+        subjects_gaze_img_list = []
         for subject_id, gaze in zip(valid_subject_list, gaze_est.tolist()):
             self.publish_gaze(gaze, timestamp, subject_id)
 
@@ -95,14 +95,11 @@ class GazeEstimatorROS(GazeEstimatorBase):
                 r_gaze_img = self.visualize_eye_result(s.right, gaze)
                 l_gaze_img = self.visualize_eye_result(s.left, gaze)
                 s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
+                subjects_gaze_img_list.append(s_gaze_img)
 
-                if subjects_gaze_img is None:
-                    subjects_gaze_img = s_gaze_img
-                else:
-                    subjects_gaze_img = np.concatenate((subjects_gaze_img, s_gaze_img), axis=0)
-
-        if subjects_gaze_img is not None:
-            gaze_img_msg = self.bridge.cv2_to_imgmsg(subjects_gaze_img.astype(np.uint8), "bgr8")
+        if len(subjects_gaze_img_list) > 0:
+            gaze_img_msg = self.bridge.cv2_to_imgmsg(np.hstack(subjects_gaze_img_list).astype(np.uint8), "bgr8")
+            gaze_img_msg.header.stamp = timestamp
             self.subjects_gaze_img.publish(gaze_img_msg)
 
     def publish_gaze(self, est_gaze, msg_stamp, subject_id):
@@ -115,11 +112,11 @@ class GazeEstimatorROS(GazeEstimatorBase):
                                           quaternion_gaze, msg_stamp, self.tf_prefix + "/world_gaze" + str(subject_id), self.headpose_frame + str(subject_id))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
-        rospy.init_node('estimate_gaze')
+        rospy.init_node("estimate_gaze")
         gaze_estimator = GazeEstimatorROS(rospy.get_param("~device_id_gazeestimation", default="/gpu:0"),
-                                          [os.path.join(rospkg.RosPack().get_path('rt_gene'), model_file) for model_file in rospy.get_param("~model_files")])
+                                          [os.path.join(rospkg.RosPack().get_path("rt_gene"), model_file) for model_file in rospy.get_param("~model_files")])
         rospy.spin()
     except rospy.exceptions.ROSInterruptException:
         print("See ya")

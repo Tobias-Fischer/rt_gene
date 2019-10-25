@@ -5,7 +5,7 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
-from rt_gene.gaze_tools import accuracy_angle, angle_loss, get_endpoint
+from rt_gene.gaze_tools import get_endpoint
 from tqdm import tqdm
 
 
@@ -47,8 +47,7 @@ class GazeEstimatorBase(object):
 
         for model_file in model_files:
             tqdm.write('Load model ' + model_file)
-            models.append(tf.keras.models.load_model(model_file,
-                                                     custom_objects={'accuracy_angle': accuracy_angle, 'angle_loss': angle_loss}))
+            models.append(tf.keras.models.load_model(model_file, compile=False))
             # noinspection PyProtectedMember
             models[-1]._name = "model_{}".format(len(models))
 
