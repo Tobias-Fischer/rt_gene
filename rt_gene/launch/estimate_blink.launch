@@ -1,0 +1,14 @@
+<launch>
+    <arg name="threshold" default="0.425" />
+    <arg name="viz_topic" default="/subjects/blinks" />
+    <arg name="viz" default="True" />
+    <arg name="device_id_blinkestimation"  default="/gpu:0" /> <!-- tensorflow format, e.g. /gpu:0 or /cpu:0 -->
+
+    <node pkg="rt_gene" type="estimate_blink.py" name="estimate_blink" output="screen">
+        <rosparam param="model_files">['model_nets/blink_model_1.h5', 'model_nets/blink_model_2.h5']</rosparam>
+        <param name="threshold"  value="$(arg threshold)" />
+        <param name="viz_topic"  value="$(arg viz_topic)" />
+        <param name="viz"  value="$(arg viz)" />
+        <param name="device_id_blinkestimation"  value="$(arg device_id_blinkestimation)" />
+    </node>
+</launch>

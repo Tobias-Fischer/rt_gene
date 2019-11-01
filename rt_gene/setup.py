@@ -4,7 +4,7 @@ import distutils.log
 distutils.log.set_verbosity(distutils.log.DEBUG)  # Set DEBUG level
 
 d = generate_distutils_setup(
-    packages=['rt_gene'],
+    packages=['rt_gene', 'rt_bene'],
     package_dir={'': 'src'}
 )
 

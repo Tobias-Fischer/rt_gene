@@ -18,6 +18,8 @@ rt_gene/model_nets/all_subjects_mpii_prl_utmv_0_02.h5
 rt_gene/model_nets/all_subjects_mpii_prl_utmv_1_02.h5
 rt_gene/model_nets/all_subjects_mpii_prl_utmv_2_02.h5
 rt_gene/model_nets/all_subjects_mpii_prl_utmv_3_02.h5
+rt_gene/model_nets/blink_model_1.h5
+rt_gene/model_nets/blink_model_2.h5
 rt_gene/samples/out
 
 *~
