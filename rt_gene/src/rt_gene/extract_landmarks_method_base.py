@@ -66,8 +66,6 @@ class LandmarkMethodBase(object):
                 raw_value.append(line)
         model_points = np.array(raw_value, dtype=np.float32)
         model_points = np.reshape(model_points, (3, -1)).T
-        # model_points *= 4
-        model_points[:, -1] *= -1
 
         # index the expansion of the model based.
         model_points = model_points * (self.interpupillary_distance * self.model_size_rescale)

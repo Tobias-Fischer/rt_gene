@@ -7,6 +7,6 @@
     </include>
     <!-- publish nonrotated link for Kinect -->
     <node pkg="tf2_ros" type="static_transform_publisher" name="kinect2_link_broadcaster"
-          args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 /kinect2_nonrotated_link /kinect2_link" />
+          args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 /kinect2_ros_frame /kinect2_link" />
 </launch>
 

@@ -39,7 +39,7 @@ class GazeEstimatorROS(GazeEstimatorBase):
 
         self.tf_prefix = rospy.get_param("~tf_prefix", "gaze")
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
-        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_nonrotated_link")
+        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_ros_frame")
 
         self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
         self.subjects_gaze_img = rospy.Publisher("/subjects/gazeimages", Image, queue_size=3)

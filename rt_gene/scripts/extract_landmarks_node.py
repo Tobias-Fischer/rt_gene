@@ -39,7 +39,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
 
-        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_nonrotated_link")
+        self.camera_frame = rospy.get_param("~camera_frame", "/kinect2_link")
 
         self.tf_broadcaster = TransformBroadcaster()
         self.tf_prefix = rospy.get_param("~tf_prefix", default="gaze")
@@ -145,10 +145,11 @@ class LandmarkMethodROS(LandmarkMethodBase):
         dist_coeffs = self.img_proc.distortionCoeffs()
 
         try:
-            success, rotation_vector_unstable, translation_vector_unstable = cv2.solvePnP(self.model_points,
-                                                                                          landmarks.reshape(len(self.model_points), 1, 2),
-                                                                                          cameraMatrix=camera_matrix,
-                                                                                          distCoeffs=dist_coeffs, flags=cv2.SOLVEPNP_DLS)
+            success, rodrigues_rotation, translation_vector, _ = cv2.solvePnPRansac(self.model_points,
+                                                                                    landmarks.reshape(len(self.model_points), 1, 2),
+                                                                                    cameraMatrix=camera_matrix,
+                                                                                    distCoeffs=dist_coeffs, flags=cv2.SOLVEPNP_DLS)
+
         except cv2.error as e:
             print('Could not estimate head pose', e)
             return False, None, None
@@ -157,12 +158,17 @@ class LandmarkMethodROS(LandmarkMethodBase):
             print('Could not estimate head pose')
             return False, None, None
 
-        rotation_vector, translation_vector = self.apply_kalman_filter_head_pose(subject_id, rotation_vector_unstable, translation_vector_unstable)
+        # this is generic point stabiliser, the underlying representation doesn't matter
+        rotation_vector, translation_vector = self.apply_kalman_filter_head_pose(subject_id, rodrigues_rotation, translation_vector / 1000.0)
 
-        translation_vector = np.array([translation_vector[2], -translation_vector[0], -translation_vector[1]]) / 1000.0
-        rotation_vector_swapped = [-rotation_vector[2], -rotation_vector[0] + self.head_pitch, rotation_vector[1] + np.pi]
+        _rotation_matrix, _ = cv2.Rodrigues(rotation_vector)
+        _rotation_matrix = np.matmul(_rotation_matrix, np.array([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
+        _m = np.zeros((4, 4))
+        _m[:3, :3] = _rotation_matrix
+        _m[3, 3] = 1
+        _rpy_rotation = np.array(transformations.euler_from_matrix(_m)).reshape(rodrigues_rotation.shape)
 
-        return success, rotation_vector_swapped, translation_vector
+        return success, _rpy_rotation, translation_vector
 
     def apply_kalman_filter_head_pose(self, subject_id, rotation_vector_unstable, translation_vector_unstable):
         stable_pose = []
@@ -185,7 +191,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
     def publish_pose(self, timestamp, nose_center_3d_tf, head_rpy, subject_id):
         self.tf_broadcaster.sendTransform(nose_center_3d_tf, transformations.quaternion_from_euler(*head_rpy), timestamp,
                                           self.tf_prefix + "/head_pose_estimated" + str(subject_id),
-                                          self.ros_tf_frame)
+                                          self.camera_frame)
 
     def update_subject_tracker(self, color_img):
         faceboxes = self.get_face_bb(color_img)
