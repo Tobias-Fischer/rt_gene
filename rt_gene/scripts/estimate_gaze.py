@@ -106,10 +106,11 @@ class GazeEstimatorROS(GazeEstimatorBase):
         _now = rospy.Time().now()
         _freq = 1.0 / (_now - self._last_time).to_sec()
         self._last_time = _now
-        tqdm.write('Time now: {:.2f} message color: {:.2f} diff: {:.2f}s for {} subjects {:.0f}Hz'.format((_now.to_sec()), timestamp.to_sec(),
-                                                                                                          _now.to_sec() - timestamp.to_sec(),
-                                                                                                          len(valid_subject_list),
-                                                                                                          _freq), end="\r")
+        tqdm.write(
+            '\033[2K\033[1;32mTime now: {:.2f} message color: {:.2f} diff: {:.2f}s for {} subjects {:.0f}Hz\033[0m'.format((_now.to_sec()), timestamp.to_sec(),
+                                                                                                                          _now.to_sec() - timestamp.to_sec(),
+                                                                                                                          len(valid_subject_list),
+                                                                                                                          _freq), end="\r")
 
     def publish_gaze(self, est_gaze, msg_stamp, subject_id):
         """Publish the gaze vector as a PointStamped."""

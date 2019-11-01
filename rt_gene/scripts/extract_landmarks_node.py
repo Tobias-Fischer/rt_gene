@@ -89,7 +89,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.update_subject_tracker(color_img)
 
         if not self.subject_tracker.get_tracked_elements():
-            tqdm.write("No face found")
+            tqdm.write("\033[2K\033[1;31mNo face found\033[0m", end="\r")
             return
 
         self.subject_tracker.update_eye_images(self.eye_image_size)
@@ -111,9 +111,8 @@ class LandmarkMethodROS(LandmarkMethodBase):
                     roll_pitch_yaw = gaze_tools.limit_yaw(head_rpy)
                     face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
-                    final_head_pose_images.append(LandmarkMethodROS.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw)))
-            else:
-                tqdm.write("Could not get head pose properly")
+                    final_head_pose_images.append(
+                        LandmarkMethodROS.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw)))
 
         if len(self.subject_tracker.get_tracked_elements().items()) > 0:
             self.publish_subject_list(timestamp, self.subject_tracker.get_tracked_elements())
@@ -148,22 +147,24 @@ class LandmarkMethodROS(LandmarkMethodBase):
                                                                                     distCoeffs=dist_coeffs, flags=cv2.SOLVEPNP_DLS)
 
         except cv2.error as e:
-            print('Could not estimate head pose', e)
+            tqdm.write('\033[2K\033[1;31mCould not estimate head pose: {}\033[0m'.format(e), end="\r")
             return False, None, None
 
         if not success:
-            print('Could not estimate head pose')
+            tqdm.write('\033[2K\033[1;31mUnsuccessful in solvingPnPRanscan\033[0m', end="\r")
             return False, None, None
 
         # this is generic point stabiliser, the underlying representation doesn't matter
         rotation_vector, translation_vector = self.apply_kalman_filter_head_pose(subject_id, rodrigues_rotation, translation_vector / 1000.0)
+
+        rotation_vector[0] += self.head_pitch
 
         _rotation_matrix, _ = cv2.Rodrigues(rotation_vector)
         _rotation_matrix = np.matmul(_rotation_matrix, np.array([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
         _m = np.zeros((4, 4))
         _m[:3, :3] = _rotation_matrix
         _m[3, 3] = 1
-        _rpy_rotation = np.array(transformations.euler_from_matrix(_m)).reshape(rodrigues_rotation.shape)
+        _rpy_rotation = np.array(transformations.euler_from_matrix(_m))
 
         return success, _rpy_rotation, translation_vector
 

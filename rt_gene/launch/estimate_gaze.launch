@@ -1,7 +1,7 @@
 <launch>
     <arg name="pytorch_num_threads" default="8" />
     <arg name="use_face_encoding_tracker" default="True" />
-    <arg name="face_encoding_threshold" default="0.6" />
+    <arg name="face_encoding_threshold" default="0.8" />
     <arg name="start_rviz" default="False" />
     <arg name="visualise_headpose" default="True" />
     <arg name="visualise_eyepose" default="True" />
