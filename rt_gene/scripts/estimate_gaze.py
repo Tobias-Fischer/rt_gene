@@ -12,19 +12,18 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import numpy as np
+from tqdm import tqdm
 
 import rospkg
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-
-import rt_gene.gaze_tools as gaze_tools
 from tf import TransformBroadcaster, TransformListener
 import tf.transformations
 
+import rt_gene.gaze_tools as gaze_tools
 from rt_gene.subject_ros_bridge import SubjectListBridge
 from rt_gene.msg import MSG_SubjectImagesList
-
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
 
 
@@ -41,10 +40,12 @@ class GazeEstimatorROS(GazeEstimatorBase):
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
         self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "/kinect2_ros_frame")
 
-        self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
+        self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2 ** 24)
         self.subjects_gaze_img = rospy.Publisher("/subjects/gazeimages", Image, queue_size=3)
 
         self.visualise_eyepose = rospy.get_param("~visualise_eyepose", default=True)
+
+        self._last_time = rospy.Time().now()
 
     def publish_image(self, image, image_publisher, timestamp):
         """This image publishes the `image` to the `image_publisher` with the given `timestamp`."""
@@ -101,6 +102,14 @@ class GazeEstimatorROS(GazeEstimatorBase):
             gaze_img_msg = self.bridge.cv2_to_imgmsg(np.hstack(subjects_gaze_img_list).astype(np.uint8), "bgr8")
             gaze_img_msg.header.stamp = timestamp
             self.subjects_gaze_img.publish(gaze_img_msg)
+
+        _now = rospy.Time().now()
+        _freq = 1.0 / (_now - self._last_time).to_sec()
+        self._last_time = _now
+        tqdm.write('Time now: {:.2f} message color: {:.2f} diff: {:.2f}s for {} subjects {:.0f}Hz'.format((_now.to_sec()), timestamp.to_sec(),
+                                                                                                          _now.to_sec() - timestamp.to_sec(),
+                                                                                                          len(valid_subject_list),
+                                                                                                          _freq), end="\r")
 
     def publish_gaze(self, est_gaze, msg_stamp, subject_id):
         """Publish the gaze vector as a PointStamped."""

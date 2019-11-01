@@ -83,9 +83,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
         return config
 
     def process_image(self, color_msg):
-        tqdm.write('Time now: {} message color: {} diff: {:.2f}s'.format((rospy.Time.now().to_sec()), color_msg.header.stamp.to_sec(),
-                                                                         rospy.Time.now().to_sec() - color_msg.header.stamp.to_sec()))
-
         color_img = gaze_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 

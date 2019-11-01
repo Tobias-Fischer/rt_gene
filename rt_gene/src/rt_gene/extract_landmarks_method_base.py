@@ -78,7 +78,6 @@ class LandmarkMethodBase(object):
         fraction = 4.0
         image = cv2.resize(image, (0, 0), fx=1.0 / fraction, fy=1.0 / fraction)
         detections = self.face_net.detect_from_image(image)
-        tqdm.write("Face Detector Frequency: {:.2f}Hz for {} Faces".format(1 / (time.time() - start_time), len(detections)))
 
         for result in detections:
             # scale back up to image size
@@ -140,5 +139,4 @@ class LandmarkMethodBase(object):
             np_landmarks = np.array((pts68[0], pts68[1])).T
             transformed_landmarks = self.transform_landmarks(np_landmarks, facebox)
             subjects.append(TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks))
-        tqdm.write('Extracted landmarks for {} subject(s)'.format(len(subjects)))
         return subjects
