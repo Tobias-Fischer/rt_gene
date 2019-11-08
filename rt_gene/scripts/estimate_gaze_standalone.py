@@ -23,7 +23,7 @@ script_path = os.path.dirname(os.path.realpath(__file__))
 def load_camera_calibration(calibration_file):
     import yaml
     with open(calibration_file, 'r') as f:
-        cal = yaml.load(f)
+        cal = yaml.safe_load(f)
 
     dist_coefficients = np.array(cal['distortion_coefficients']['data'], dtype='float32').reshape(1, 5)
     camera_matrix = np.array(cal['camera_matrix']['data'], dtype='float32').reshape(3, 3)
@@ -110,7 +110,13 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
 
         if args.save_gaze:
             cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_gaze.jpg'), s_gaze_img)
+            # cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_left.jpg'), subject.left_eye_color)
+            # cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_right.jpg'), subject.right_eye_color)
 
+        if args.save_estimate:
+            with open(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_output.txt'), 'w+') as f:
+                f.write(os.path.splitext(base_name)[0] + ', [' + str(headpose[1]) + ', ' + str(headpose[0]) + ']' +
+                        ', [' + str(gaze[1]) + ', ' + str(gaze[0]) + ']' + '\n')
 
 
 if __name__ == '__main__':
@@ -125,6 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--vis-gaze', dest='vis_gaze', action='store_true', help='Display the gaze images')
     parser.add_argument('--no-vis-gaze', dest='vis_gaze', action='store_false', help='Do not display the gaze images')
     parser.add_argument('--save-gaze', dest='save_gaze', action='store_true', help='Save the gaze images')
+    parser.add_argument('--save-estimate', dest='save_estimate', action='store_true', help='Save the predictions in a text file')
     parser.add_argument('--no-save-gaze', dest='save_gaze', action='store_false', help='Do not save the gaze images')
     parser.add_argument('--output_path', type=str, default=os.path.join(script_path, '../samples/out'), help='Output directory for head pose and gaze images')
     parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')],
@@ -134,6 +141,7 @@ if __name__ == '__main__':
     parser.set_defaults(save_gaze=True)
     parser.set_defaults(vis_headpose=False)
     parser.set_defaults(save_headpose=True)
+    parser.set_defaults(save_estimate=False)
 
     args = parser.parse_args()
 
@@ -144,7 +152,7 @@ if __name__ == '__main__':
     elif os.path.isdir(args.im_path):
         for image_file_name in os.listdir(args.im_path):
             if image_file_name.endswith('.jpg') or image_file_name.endswith('.png'):
-                if 'gaze' not in image_file_name and 'headpose' not in image_file_name:
+                if '_gaze' not in image_file_name and '_headpose' not in image_file_name:
                     image_path_list.append(image_file_name)
     else:
         tqdm.write('Provide either a path to an image or a path to a directory containing images')
