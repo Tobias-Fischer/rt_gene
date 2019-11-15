@@ -13,9 +13,11 @@ import cv2
 from cv_bridge import CvBridge
 from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from sensor_msgs.msg import Image, CameraInfo
+from geometry_msgs.msg import TransformStamped
 from tqdm import tqdm
 from image_geometry import PinholeCameraModel
-from tf import TransformBroadcaster, transformations
+from tf2_ros import TransformBroadcaster, TransformListener, Buffer
+from tf import transformations
 from dynamic_reconfigure.server import Server
 import rospy
 
@@ -39,9 +41,12 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
 
-        self.camera_frame = rospy.get_param("~camera_frame", "/kinect2_link")
+        self.camera_frame = rospy.get_param("~camera_frame", "kinect2_link")
+        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "kinect2_ros_frame")
 
-        self.tf_broadcaster = TransformBroadcaster()
+        self.tf2_broadcaster = TransformBroadcaster()
+        self.tf2_buffer = Buffer()
+        self.tf2_listener = TransformListener(self.tf2_buffer)
         self.tf_prefix = rospy.get_param("~tf_prefix", default="gaze")
         self.visualise_headpose = rospy.get_param("~visualise_headpose", default=True)
 
@@ -108,11 +113,16 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 self.publish_pose(timestamp, translation_vector, head_rpy, subject_id)
 
                 if self.visualise_headpose:
-                    roll_pitch_yaw = gaze_tools.limit_yaw(head_rpy)
+                    # pitch roll yaw
+                    trans_msg = self.tf2_buffer.lookup_transform(self.ros_tf_frame, self.tf_prefix + "/head_pose_estimated" + str(subject_id), timestamp)
+                    rotation = trans_msg.transform.rotation
+                    euler_angles_head = list(transformations.euler_from_quaternion([rotation.x, rotation.y, rotation.z, rotation.w]))
+                    euler_angles_head = gaze_tools.limit_yaw(euler_angles_head)
+
                     face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
                     final_head_pose_images.append(
-                        LandmarkMethodROS.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw)))
+                        LandmarkMethodROS.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(euler_angles_head)))
 
         if len(self.subject_tracker.get_tracked_elements().items()) > 0:
             self.publish_subject_list(timestamp, self.subject_tracker.get_tracked_elements())
@@ -187,9 +197,29 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.subject_pub.publish(subject_list_message)
 
     def publish_pose(self, timestamp, nose_center_3d_tf, head_rpy, subject_id):
-        self.tf_broadcaster.sendTransform(nose_center_3d_tf, transformations.quaternion_from_euler(*head_rpy), timestamp,
-                                          self.tf_prefix + "/head_pose_estimated" + str(subject_id),
-                                          self.camera_frame)
+        t = TransformStamped()
+        t.header.frame_id = self.camera_frame
+        t.header.stamp = timestamp
+        t.child_frame_id = self.tf_prefix + "/head_pose_estimated" + str(subject_id)
+        t.transform.translation.x = nose_center_3d_tf[0]
+        t.transform.translation.y = nose_center_3d_tf[1]
+        t.transform.translation.z = nose_center_3d_tf[2]
+
+        rotation = transformations.quaternion_from_euler(*head_rpy)
+        t.transform.rotation.x = rotation[0]
+        t.transform.rotation.y = rotation[1]
+        t.transform.rotation.z = rotation[2]
+        t.transform.rotation.w = rotation[3]
+
+        try:
+            self.tf2_broadcaster.sendTransform([t])
+        except rospy.ROSException as exc:
+            if str(exc) == "publish() to a closed topic":
+                pass
+            else:
+                raise exc
+
+        self.tf2_buffer.set_transform(t, 'extract_landmarks')
 
     def update_subject_tracker(self, color_img):
         faceboxes = self.get_face_bb(color_img)

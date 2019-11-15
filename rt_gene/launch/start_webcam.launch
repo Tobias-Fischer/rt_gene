@@ -3,7 +3,7 @@
   <arg name="camera_info_name" default="webcam_blue_26010230.yaml" />
 
   <arg name="video_namespace" default="/kinect2/hd"/>
-  <arg name="video_image_topic" default="image_color_rect"/>
+  <arg name="video_image_topic" default="image_color"/>
   <arg name="video_info_topic" default="camera_info"/>
 
   <arg name="rgb_frame_id" default="/kinect2_link"/>

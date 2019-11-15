@@ -37,7 +37,7 @@
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
   <depend>tf</depend>
-  <depend>tf_conversions</depend>
+  <depend>tf2_ros</depend>
   <!--depend>camera_info_manager_py</depend-->
   <depend>uvc_camera</depend>
   <depend>dynamic_reconfigure</depend>

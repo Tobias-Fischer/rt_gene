@@ -1,6 +1,6 @@
 <launch>
     <arg name="video_namespace" default="/kinect2/hd"/>
-    <arg name="video_image_topic" default="image_color_rect"/>
+    <arg name="video_image_topic" default="image_color"/>
     <arg name="video_info_topic" default="camera_info"/>
     <arg name="camera_name" default="kinect2"/>
     <arg name="video_file" default="/home/tobias/video.mov"/>
