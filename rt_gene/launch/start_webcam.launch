@@ -2,13 +2,13 @@
   <arg name="camera_port" default="/dev/video0" />
   <arg name="camera_info_name" default="webcam_blue_26010230.yaml" />
 
-  <arg name="video_namespace" default="/kinect2/hd"/>
-  <arg name="video_image_topic" default="image_color"/>
-  <arg name="video_info_topic" default="camera_info"/>
+  <arg name="video_namespace" default="/kinect2/hd" />
+  <arg name="video_image_topic" default="image_color" />
+  <arg name="video_info_topic" default="camera_info" />
 
-  <arg name="rgb_frame_id" default="/kinect2_link"/>
-  <arg name="rgb_frame_id_ros" default="/kinect2_ros_frame"/>
-  <arg name="publish_ros_static_frame" default="True"/>
+  <arg name="rgb_frame_id" default="/kinect2_link" />
+  <arg name="rgb_frame_id_ros" default="/kinect2_ros_frame" />
+  <arg name="publish_ros_static_frame" default="True" />
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="ros_static_transform_publisher"
             args="0.0 0.0 0.0 -0.5 0.5 -0.5 0.5 $(arg rgb_frame_id_ros) $(arg rgb_frame_id)" if="$(arg publish_ros_static_frame)" />

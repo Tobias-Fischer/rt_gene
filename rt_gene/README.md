@@ -71,9 +71,8 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 
 ### Estimate gaze from ROSBag
 1) `roscore`
-1) `rosbag play --clock /path/to/rosbag.bag`
-1) `rosrun image_transport republish compressed in:=/kinect2/hd/image_color_rect raw out:=/kinect2/hd/image_color_rect`
-1) `roslaunch rt_gene estimate_gaze.launch`
+1) `roslaunch rt_gene start_rosbag.launch rosbag_file:=/path/to/rosbag.bag` (this assumes a recording with the Kinect v2 and might need adjustments)
+1) `roslaunch rt_gene estimate_gaze.launch ros_frame:=kinect2_nonrotated_link`
 
 ## List of libraries
 - ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)

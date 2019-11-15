@@ -1,0 +1,7 @@
+<launch>
+  <arg name="rosbag_file" />
+  <node name="republish_rgb" type="republish" pkg="image_transport" args="compressed in:=/kinect2/hd/image_color_rect raw out:=/kinect2/hd/image_color" />
+
+  <node pkg="rosbag" type="play" name="player" args="--clock $(arg rosbag_file)" output="screen" />
+</launch>
+

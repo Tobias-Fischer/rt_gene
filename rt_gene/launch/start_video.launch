@@ -1,10 +1,10 @@
 <launch>
-    <arg name="video_namespace" default="/kinect2/hd"/>
-    <arg name="video_image_topic" default="image_color"/>
-    <arg name="video_info_topic" default="camera_info"/>
-    <arg name="camera_name" default="kinect2"/>
-    <arg name="video_file" default="/home/tobias/video.mov"/>
-    <arg name="camera_info_url" default="file:///home/tobias/kinect2.yaml"/>
+    <arg name="video_namespace" default="/kinect2/hd" />
+    <arg name="video_image_topic" default="image_color" />
+    <arg name="video_info_topic" default="camera_info" />
+    <arg name="camera_name" default="kinect2" />
+    <arg name="video_file" default="/home/tobias/video.mov" />
+    <arg name="camera_info_url" default="file:///home/tobias/kinect2.yaml" />
 
     <node pkg="video_stream_opencv" type="video_stream" name="$(arg camera_name)_stream" output="screen">
         <remap from="camera" to="$(arg video_namespace)/$(arg video_image_topic)" />
