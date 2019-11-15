@@ -22,6 +22,8 @@ from cv_bridge import CvBridge
 import cv2
 
 import numpy as np
+import collections
+from tqdm import tqdm
 
 
 class BlinkEstimatorNode(BlinkEstimatorBase):
@@ -31,6 +33,10 @@ class BlinkEstimatorNode(BlinkEstimatorBase):
         self.cv_bridge = CvBridge()
         self.bridge = SubjectListBridge()
         self.viz = rospy.get_param("~viz", True)
+
+        self._last_time = rospy.Time().now()
+        self._freq_deque = collections.deque(maxlen=30)  # average frequency statistic over roughly one second
+        self._latency_deque = collections.deque(maxlen=30)
 
         if self.viz:
             self.viz_pub = rospy.Publisher(rospy.get_param("~viz_topic", "/subjects/blinks"), Image, queue_size=1)
@@ -61,6 +67,16 @@ class BlinkEstimatorNode(BlinkEstimatorBase):
                 blink_viz_img = self.cv_bridge.cv2_to_imgmsg(np.hstack(blink_image_list))
                 blink_viz_img.header.stamp = msg.header.stamp
                 self.viz_pub.publish(blink_viz_img)
+
+        _now = rospy.Time().now()
+        timestamp = msg.header.stamp
+        _freq = 1.0 / (_now - self._last_time).to_sec()
+        self._freq_deque.append(_freq)
+        self._latency_deque.append(_now.to_sec() - timestamp.to_sec())
+        self._last_time = _now
+        tqdm.write(
+            '\033[2K\033[1;32mTime now: {:.2f} message color: {:.2f} latency: {:.2f}s for {} subject(s) {:.0f}Hz\033[0m'.format(
+                (_now.to_sec()), timestamp.to_sec(), np.mean(self._latency_deque), len(subjects), np.mean(self._freq_deque)), end="\r")
 
 
 if __name__ == "__main__":
