@@ -58,3 +58,9 @@ if __name__ == '__main__':
     download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/SFD/s3fd_facedetector.pth'),
                           "https://imperialcollegelondon.box.com/shared/static/wgfkq3pyzzuewiiwq0pzj0xiebolvlju.pth",
                           "3b5a9888bf0beb93c177db5a18375a6c")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/blink_model_1.h5'),
+                          "https://imperialcollegelondon.box.com/shared/static/lke3k5f86qnfchzfh6lpon3isniqvkpz.h5",
+                          "75aab57645faed3beaba5dedfd0f3d36")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/blink_model_2.h5'),
+                          "https://imperialcollegelondon.box.com/shared/static/x4u8c5mr468r6wzki93v45jemf3sz0r5.h5",
+                          "ed994ea8384a7894dac04926601d06ff")

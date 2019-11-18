@@ -72,7 +72,23 @@ catkin_download(
     REQUIRED
 )
 
+catkin_download(
+    blink_model_1.h5
+    https://imperialcollegelondon.box.com/shared/static/lke3k5f86qnfchzfh6lpon3isniqvkpz.h5
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets
+    FILENAME blink_model_1.h5
+    MD5 75aab57645faed3beaba5dedfd0f3d36
+    REQUIRED
+)
 
+catkin_download(
+    blink_model_2.h5
+    https://imperialcollegelondon.box.com/shared/static/x4u8c5mr468r6wzki93v45jemf3sz0r5.h5
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/model_nets
+    FILENAME blink_model_2.h5
+    MD5 ed994ea8384a7894dac04926601d06ff
+    REQUIRED
+)
 
 add_custom_target(download ALL DEPENDS download_extra_data)
 
