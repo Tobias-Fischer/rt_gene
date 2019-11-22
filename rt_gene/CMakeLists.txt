@@ -120,8 +120,6 @@ catkin_package(
 ## Install ##
 #############
 
-catkin_install_python(PROGRAMS scripts/estimate_blink.py
-                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 catkin_install_python(PROGRAMS scripts/estimate_gaze.py
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 catkin_install_python(PROGRAMS scripts/extract_landmarks_node.py
