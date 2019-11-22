@@ -29,7 +29,7 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 1. Download, install, and configure ROS (full installation; we recommend the Kinectic or Melodic distributions of ROS depending on your Ubuntu version): http://wiki.ros.org/kinetic/Installation or http://wiki.ros.org/melodic/Installation
 1. Install additional packages for ROS:
     - For kinetic: `sudo apt-get install python-catkin-tools ros-kinetic-ros-numpy ros-kinetic-camera-info-manager-py ros-kinetic-uvc-camera libcamera-info-manager-dev`
-    - For melodic: `sudo apt-get install python-catkin-tools ros-melodic-uvc-camera libcamera-info-manager-dev`
+    - For melodic: `sudo apt-get install python-catkin-tools python-catkin-pkg ros-melodic-uvc-camera libcamera-info-manager-dev`
 1. Install required Python packages:
     - For `conda` users (recommended): `conda install tensorflow-gpu numpy scipy tqdm pytorch torchvision pillow && conda install -c conda-forge dlib && pip install empy rospkg`
     - For `pip` users: `pip install tensorflow-gpu numpy scipy tqdm torch torchvision Pillow dlib opencv-python`
