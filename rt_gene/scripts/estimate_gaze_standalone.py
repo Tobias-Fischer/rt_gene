@@ -16,6 +16,7 @@ from tqdm import tqdm
 from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
+from rt_gene.gaze_tools_standalone import euler_from_matrix
 
 script_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -68,8 +69,18 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
             tqdm.write('Not able to extract head pose for subject {}'.format(idx))
             continue
 
-        roll_pitch_yaw = [-rotation_vector[2], -rotation_vector[0], rotation_vector[1] + np.pi]
-        roll_pitch_yaw = limit_yaw(np.array(roll_pitch_yaw).flatten().tolist())
+        _rotation_matrix, _ = cv2.Rodrigues(rotation_vector)
+        _rotation_matrix = np.matmul(_rotation_matrix, np.array([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
+        _m = np.zeros((4, 4))
+        _m[:3, :3] = _rotation_matrix
+        _m[3, 3] = 1
+        # Go from camera space to ROS space
+        _camera_to_ros = [[0.0, 0.0, 1.0, 0.0],
+                          [-1.0, 0.0, 0.0, 0.0],
+                          [0.0, -1.0, 0.0, 0.0],
+                          [0.0, 0.0, 0.0, 1.0]]
+        roll_pitch_yaw = list(euler_from_matrix(np.dot(_camera_to_ros, _m)))
+        roll_pitch_yaw = limit_yaw(roll_pitch_yaw)
 
         phi_head, theta_head = get_phi_theta_from_euler(roll_pitch_yaw)
 
