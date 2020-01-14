@@ -76,12 +76,15 @@ if __name__ == "__main__":
 
     # 3 folds
     for subjects_train, subjects_test, fold_name in fold_infos:
-        if args.random_subset:
-            train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False, random_subset=args.random_subset)
+        if args.dataset_name == 'rt-bene':
+            train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[subjects_train[0]], folds[subjects_train[1]]], [folds[subjects_test[0]]])
         else:
-            train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False)
-        val_x, val_y, _ = dataset.load_pairs((input_size, input_size), subjects=subjects_test, undersample=False)
-        #train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[train_idx[0]], folds[train_idx[1]]], [folds[subjects_test[0]]])
+            if args.random_subset:
+                train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False, random_subset=args.random_subset)
+            else:
+                train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False)
+            val_x, val_y, _ = dataset.load_pairs((input_size, input_size), subjects=subjects_test, undersample=False)
+        
 
         print('Number of positive samples in training data: {} ({:.2f}% of total)'.format(counts[1], 100 * float(counts[1]) / len(train_y)))
 
