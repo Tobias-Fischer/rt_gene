@@ -71,8 +71,8 @@ if __name__ == '__main__':
     parser.add_argument('mode', type=str, default='image-pair', help='the input mode', choices=['image-pair', 'folder', 'video'])
     parser.add_argument('--left', type=str, default=os.path.join(script_path, '../samples/'), nargs='?', help='Path to an image or a directory containing images')
     parser.add_argument('--right', type=str, default=os.path.join(script_path, '../samples/'), nargs='?', help='Path to an image or a directory containing images')
-    parser.add_argument('--model', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')],
-                        help='List of blink estimators')
+    parser.add_argument('--model', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')], help='List of blink estimators')
+    parser.add_argument('--threshold', default=0.5, help='List of blink estimators')
     '''
     parser.add_argument('input_path', type=str, default=os.path.join(script_path, '../samples/'), nargs='?', help='Path to an image or a directory containing images')
     parser.add_argument('--calib-file', type=str, dest='calib_file', default=None, help='Camera calibration file')
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     #TODO arg parser
     viz = True
     model_path = args.model
-    threshold = 0.5
+    threshold = args.threshold
     input_size = (96, 96)
     mode = args.mode
     right_eye_path = args.right
