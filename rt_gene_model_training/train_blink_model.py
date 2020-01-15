@@ -40,6 +40,7 @@ if __name__ == "__main__":
     parser.add_argument("dataset_json", help="")
     parser.add_argument("dataset_imgs", help="")
     parser.add_argument("--use_weights", help="whether to use weights")
+    parser.add_argument("--random_subset", type=restricted_float, help="whether to use weights")
     parser.add_argument("--batch_size", help="", default=64)
     parser.add_argument("--epochs", help="", default=8)
     parser.add_argument("--input_size", help="", default=96)
