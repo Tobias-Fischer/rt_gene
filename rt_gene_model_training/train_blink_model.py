@@ -35,23 +35,21 @@ def restricted_float(x):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("model_base", choices=['densenet121', 'resnet50', 'mobilenetv2'])
-    parser.add_argument("ensemble_num")
-    parser.add_argument("dataset_name", choices=['rt-bene', 'eyeblinking8'])
-    parser.add_argument("model_path", help="path to the folder containing the trained models")
-    parser.add_argument("eval_path", help="path to the folder containing the evaluation file")
-    parser.add_argument("dataset_json", help="path to the dataset json file")
-    parser.add_argument("dataset_imgs", help="path to the folder containing dataset images")
+    parser.add_argument("dataset_name", choices=['rt-bene', 'eyeblinking8', 'researcher-night', 'talking'])
+    parser.add_argument("model_path", help="target folder to save the models (auto-saved)")
+    parser.add_argument("dataset_json", help="")
+    parser.add_argument("dataset_imgs", help="")
     parser.add_argument("--use_weights", help="whether to use weights")
-    parser.add_argument("--random_subset", type=restricted_float, help="whether to use weights")
+    parser.add_argument("--batch_size", help="", default=64)
+    parser.add_argument("--epochs", help="", default=8)
+    parser.add_argument("--input_size", help="", default=96)
 
     args = parser.parse_args()
     model_base = args.model_base
-    training = True
-    testing = True
-    batch_size = 64
-    epochs = 8
+    batch_size = args.batch_size
+    epochs = args.epochs
 
-    input_size = 96
+    input_size = args.input_size
 
     if args.use_weights:
         weight_factor = 'use_weight'
@@ -70,14 +68,23 @@ if __name__ == "__main__":
             ([2, 3, 10, 8, 9], [1, 4, 11], 'fold2'),
             ([1, 3, 9, 4, 11], [2, 10, 8], 'fold3')]
 
+    elif args.dataset_name == 'researcher-night':
+        pass
+
+    elif args.dataset_name == 'talking':
+        pass
+
     folds, validations = dataset.load_folds()
 
-    json_dict = {'model_name': model_base, 'dataset_name': args.dataset_name}
+    #json_dict = {'model_name': model_base, 'dataset_name': args.dataset_name}
 
-    # 3 folds
+    # 3 folds training
     for subjects_train, subjects_test, fold_name in fold_infos:
         if args.dataset_name == 'rt-bene':
-            train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[subjects_train[0]], folds[subjects_train[1]]], [folds[subjects_test[0]]])
+            if args.random_subset:
+                train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[subjects_train[0]], folds[subjects_train[1]]], [folds[subjects_test[0]]], random_subset=args.random_subset)
+            else:
+                train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[subjects_train[0]], folds[subjects_train[1]]], [folds[subjects_test[0]]])
         else:
             if args.random_subset:
                 train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False, random_subset=args.random_subset)
@@ -108,6 +115,8 @@ if __name__ == "__main__":
         model, train_x, train_y = None, None, None
         del model, train_x, train_y
 
+        # disable testing for now
+        '''
         if testing:
             metrics = {'binary_f1_score': keras_metrics.binary_f1_score(),
                'binary_recall': keras_metrics.binary_recall(),
@@ -124,11 +133,14 @@ if __name__ == "__main__":
             inference_time = (time.time() - start) / len(val_y)
             json_dict[fold_name] = {'prediction_time': inference_time, 'predictions': predictions, 'ground_truth': ground_truth}
         model, val_x, val_y = None, None, None
-        del model, val_x, val_y
+        '''
+        #del model, 
+        del val_x, val_y
         gc.collect()
-
+    '''
     json_name = args.eval_path + 'eval_' + model_base + '_' + args.model_base
     json_name = json_name + '.json'
 
     with open(json_name, 'w') as jsonfile:
         json.dump(json_dict, jsonfile)
+    '''
