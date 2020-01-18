@@ -50,13 +50,13 @@ def create_model_base(backbone, input_shape):
     assert backbone in ['mobilenetv2', 'densenet121', 'resnet50'], 'Wrong model_name: ' + backbone
 
     if backbone == 'mobilenetv2':
-        base = tensorflow.keras.applications.MobileNetV2(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tf.keras.applications.MobileNetV2(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
 
     elif backbone == 'densenet121':
-        base = tensorflow.keras.applications.DenseNet121(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tf.keras.applications.DenseNet121(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
 
     elif backbone == 'resnet50':
-        base = tensorflow.keras.applications.ResNet50(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tf.keras.applications.ResNet50(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
     else:
         raise Exception('Wrong backbone')
 
