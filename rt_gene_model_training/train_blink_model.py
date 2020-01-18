@@ -35,15 +35,14 @@ def restricted_float(x):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("model_base", choices=['densenet121', 'resnet50', 'mobilenetv2'])
-    parser.add_argument("dataset_name", choices=['rt-bene', 'eyeblinking8', 'researcher-night', 'talking'])
     parser.add_argument("model_path", help="target folder to save the models (auto-saved)")
     parser.add_argument("dataset_json", help="")
     parser.add_argument("dataset_imgs", help="")
     parser.add_argument("--use_weights", help="whether to use weights")
     parser.add_argument("--random_subset", type=restricted_float, help="whether to use weights")
-    parser.add_argument("--batch_size", help="", default=64)
-    parser.add_argument("--epochs", help="", default=8)
-    parser.add_argument("--input_size", help="", default=96)
+    parser.add_argument("--batch_size", type=int, help="", default=64)
+    parser.add_argument("--epochs", type=int, help="", default=8)
+    parser.add_argument("--input_size", type=int, help="", default=96)
 
     args = parser.parse_args()
     model_base = args.model_base
