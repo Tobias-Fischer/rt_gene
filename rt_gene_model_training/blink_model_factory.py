@@ -6,9 +6,9 @@ from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from tensorflow.keras.optimizers import Adam
 
 
-from tensorflow.keras.applications.mobilenetv2 import MobileNetV2
-from tensorflow.keras.applications.densenet import DenseNet121
-from tensorflow.keras.applications.resnet50 import ResNet50
+import tensorflow.keras.applications.MobileNetV2
+import tensorflow.keras.applications.DenseNet121
+import tensorflow.keras.applications.ResNet50
 
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Input, Dropout, Flatten, BatchNormalization, Add, Average, Maximum, Concatenate, Multiply, Activation, ReLU
