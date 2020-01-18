@@ -56,23 +56,10 @@ if __name__ == "__main__":
     else:
         weight_factor = 'no_weight'
 
-    if args.dataset_name == 'rt-bene':
-        dataset = RT_BENE(args.dataset_json, args.dataset_imgs)
-        fold_infos = [([0, 1], [2], 'fold1'),
-                 ([0, 2], [1], 'fold2'),
-                 ([1, 2], [0], 'fold3')]
-
-    elif args.dataset_name == 'eyeblinking8':
-        dataset = EyeBlinking8(args.dataset_folder)
-        fold_infos = [([1, 2, 10, 8, 4, 11], [3, 9], 'fold1'),
-            ([2, 3, 10, 8, 9], [1, 4, 11], 'fold2'),
-            ([1, 3, 9, 4, 11], [2, 10, 8], 'fold3')]
-
-    elif args.dataset_name == 'researcher-night':
-        pass
-
-    elif args.dataset_name == 'talking':
-        pass
+    dataset = RT_BENE(args.dataset_json, args.dataset_imgs)
+    fold_infos = [([0, 1], [2], 'fold1'),
+             ([0, 2], [1], 'fold2'),
+             ([1, 2], [0], 'fold3')]
 
     folds, validations = dataset.load_folds()
 
@@ -80,17 +67,19 @@ if __name__ == "__main__":
 
     # 3 folds training
     for subjects_train, subjects_test, fold_name in fold_infos:
-        if args.dataset_name == 'rt-bene':
+        if True:
             if args.random_subset:
                 train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[subjects_train[0]], folds[subjects_train[1]]], [folds[subjects_test[0]]], random_subset=args.random_subset)
             else:
                 train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[subjects_train[0]], folds[subjects_train[1]]], [folds[subjects_test[0]]])
+        '''
         else:
             if args.random_subset:
                 train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False, random_subset=args.random_subset)
             else:
                 train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False)
             val_x, val_y, _ = dataset.load_pairs((input_size, input_size), subjects=subjects_test, undersample=False)
+        '''
         
 
         print('Number of positive samples in training data: {} ({:.2f}% of total)'.format(counts[1], 100 * float(counts[1]) / len(train_y)))
