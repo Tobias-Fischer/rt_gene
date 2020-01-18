@@ -5,7 +5,7 @@
 from dataset_manager import RT_BENE
 
 from blink_model_factory import create_model, load_existing_model
-from keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 from tqdm import tqdm
 
@@ -15,7 +15,6 @@ import argparse
 
 import numpy as np
 
-import keras_metrics
 import time
 import json
 
@@ -39,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument("dataset_json", help="")
     parser.add_argument("dataset_imgs", help="")
     parser.add_argument("--use_weights", help="whether to use weights")
-    parser.add_argument("--random_subset", type=restricted_float, help="whether to use weights")
+    parser.add_argument("--random_subset", type=restricted_float, help="")
     parser.add_argument("--batch_size", type=int, help="", default=64)
     parser.add_argument("--epochs", type=int, help="", default=8)
     parser.add_argument("--input_size", type=int, help="", default=96)
@@ -84,7 +83,7 @@ if __name__ == "__main__":
 
         print('Number of positive samples in training data: {} ({:.2f}% of total)'.format(counts[1], 100 * float(counts[1]) / len(train_y)))
 
-        metrics = ['accuracy', keras_metrics.binary_recall(), keras_metrics.binary_precision(), keras_metrics.binary_f1_score()]
+        metrics = [tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.Recall(), tf.keras.metrics.Precision()]
         model, name = create_model(args.model_base, [input_size, input_size, 3], 1e-4, metrics)
         name = 'rt-bene_' + name + '_' + fold_name
 

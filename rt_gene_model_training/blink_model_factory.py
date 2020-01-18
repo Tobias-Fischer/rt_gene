@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 
-from keras.applications.mobilenetv2 import MobileNetV2
-from keras.applications.densenet import DenseNet121
-from keras.applications.nasnet import NASNetMobile
-from keras.applications.resnet50 import ResNet50
-
-from keras.models import Model, load_model
-from keras.layers import Conv2D, MaxPooling2D, Dense, Input, Dropout, Flatten, BatchNormalization, Add, Average, Maximum, Concatenate, Multiply, Activation, ReLU
-from keras.optimizers import SGD, Adam
-from keras.regularizers import l2
-
-from keras import backend as K
 import tensorflow as tf
+from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
+from tensorflow.keras.optimizers import Adam
+
+
+from tensorflow.keras.applications.mobilenetv2 import MobileNetV2
+from tensorflow.keras.applications.densenet import DenseNet121
+from tensorflow.keras.applications.resnet50 import ResNet50
+
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Input, Dropout, Flatten, BatchNormalization, Add, Average, Maximum, Concatenate, Multiply, Activation, ReLU
+from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.regularizers import l2
 
 
 # https://towardsdatascience.com/handling-imbalanced-datasets-in-deep-learning-f48407a0e758
