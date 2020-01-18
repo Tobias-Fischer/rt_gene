@@ -38,37 +38,6 @@ def f1_loss(y_true, y_pred):
     return 1 - K.mean(f1)
 
 
-# https://www.scitepress.org/Papers/2017/61727/61727.pdf
-def paper_cnn(input_shape, loss, lr, metrics, num_output_units=2):
-    img_input = Input(shape=input_shape)
-    c1 = Conv2D(4, (15, 15), strides=(2, 2), padding='same', activation='relu')(img_input)
-    c2 = Conv2D(16, (11, 11), strides=(2, 2), activation='relu')(c1)
-    pool1 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2))(c2)
-
-    c3 = Conv2D(32, (7, 7), strides=(2, 2), padding='same', activation='relu')(pool1)
-    pool2 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2))(c3)
-
-    c4 = Conv2D(16, (3, 3), strides=(2, 2), padding='same', activation='relu')(pool2)
-    pool3 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2))(c4)
-
-    flat = Flatten()(pool3)
-
-    fc1 = Dense(32, activation='relu')(flat)
-    fc2 = Dense(512, activation='relu')(fc1)
-
-    if num_output_units == 1:
-        output = Dense(num_output_units, activation='sigmoid')(fc2)
-    else:
-        output = Dense(num_output_units, activation='softmax')(fc2)
-
-    cnn = Model(inputs=img_input, outputs=output)
-    name = 'other_cnn'
-
-    cnn.compile(loss=loss, optimizer=Adam(lr=lr), metrics=metrics)
-    cnn.summary()
-    return cnn, name
-
-
 def load_existing_model(model_path, metrics=None):
     if metrics is None:
         metrics = {}

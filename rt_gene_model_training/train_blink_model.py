@@ -2,7 +2,7 @@
 
 # from https://hackernoon.com/tf-serving-keras-mobilenetv2-632b8d92983c
 
-from dataset_manager import EyeBlinking8, RT_BENE, CEW, Talking, ResearcherNight
+from dataset_manager import RT_BENE
 
 from blink_model_factory import create_model, load_existing_model
 from keras.callbacks import ModelCheckpoint
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
         metrics = ['accuracy', keras_metrics.binary_recall(), keras_metrics.binary_precision(), keras_metrics.binary_f1_score()]
         model, name = create_model(args.model_base, [input_size, input_size, 3], 1e-4, metrics)
-        name = args.dataset_name + '_' + name + '_' + fold_name
+        name = 'rt-bene_' + name + '_' + fold_name
 
         if args.use_weights:
             weight_for_0 = 1. / counts[0] * (counts[0] + counts[1])
