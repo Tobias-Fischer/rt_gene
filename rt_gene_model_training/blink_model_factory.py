@@ -5,11 +5,6 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from tensorflow.keras.optimizers import Adam
 
-
-import tensorflow.keras.applications.MobileNetV2
-import tensorflow.keras.applications.DenseNet121
-import tensorflow.keras.applications.ResNet50
-
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Input, Dropout, Flatten, BatchNormalization, Add, Average, Maximum, Concatenate, Multiply, Activation, ReLU
 from tensorflow.keras.optimizers import SGD, Adam
@@ -55,13 +50,13 @@ def create_model_base(backbone, input_shape):
     assert backbone in ['mobilenetv2', 'densenet121', 'resnet50'], 'Wrong model_name: ' + backbone
 
     if backbone == 'mobilenetv2':
-        base = MobileNetV2(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tensorflow.keras.applications.MobileNetV2(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
 
     elif backbone == 'densenet121':
-        base = DenseNet121(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tensorflow.keras.applications.DenseNet121(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
 
     elif backbone == 'resnet50':
-        base = ResNet50(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tensorflow.keras.applications.ResNet50(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
     else:
         raise Exception('Wrong backbone')
 
