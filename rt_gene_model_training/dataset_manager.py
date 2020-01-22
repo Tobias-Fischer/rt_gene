@@ -5,6 +5,7 @@ import numpy as np
 from os import listdir
 
 import json
+import csv
 from tqdm import tqdm
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -57,12 +58,82 @@ def augment_dataset(X, Y, batch_size):
     new_X = [np.array(in_r), np.array(in_l)]
     return new_X, new_Y
 
-
 class RT_BENE(object):
-    def __init__(self, json_path, image_path):
-        self.path = json_path
-        self.image_path = image_path
-        self.dataset_name = 'rt_bene'
+    def __init__(self, csv_subjects, input_size, random_subset):
+        self.csv_subjects = csv_subjects
+        self.input_size = input_size
+        self.random_subset = random_subset
+        self.subjects = {}
+        self.folds = {} 
+
+    '''
+    |- root folder
+        |- rt-bene_subjects.csv
+        |- s000
+            |- labels.csv
+            |- img_0001.png
+        |- s001
+            |- labels.csv
+        |- s002
+            |- labels.csv
+    '''
+
+    def load_one_subject(self, csv_labels, root_folder):
+        subject = {}
+        subject['y'] = []
+
+        left_inputs = []
+        right_inputs = []
+
+        with open(csv_labels, newline='') as csvfile:
+            csv_rows = csv.reader(csvfile)
+            for row in tqdm(csv_rows):
+                left_img_path = ...
+                right_img_path = ...
+                label = ...
+                try:
+                    left_img, right_img = load_one_flipped_pair(left_img_path, right_img_path, self.input_size)
+                    left_inputs.append(left_img)
+                    right_inputs.append(right_img)
+                    subject['y'].append(label)
+                except:
+                    print('Failure loading image')
+
+            if self.random_subset:
+                np.random.seed(42)
+                num_samples = int(len(subject['y']) * self.random_subset)
+                indices = np.random.choice(len(subject['y']), num_samples, False)
+                subject['x'] = [np.array(right_inputs)[indices], np.array(left_inputs)[indices]]
+                subject['y'] = np.array(subject['y'])[indices].tolist()
+            else:
+                subject['x'] = [np.array(right_inputs), np.array(left_inputs)]
+        return subject
+
+    def load(self):
+        self.folds = {}
+        self.subjects = {}
+
+        with open(self.csv_subjects, newline='') as csvfile:
+            csv_rows = csv.reader(csvfile)
+            for row in tqdm(csv_rows):
+                subject_id = row[0]
+                folder_name = row[1]
+                csv_labels = row[2]
+                fold_type = row[3]
+                fold_id = row[4]
+
+                if fold_type == 'training':
+                    self.subjects[subject_id] = self.load_one_subject(csv_labels, folder_name)
+                    self.folds.get(fold_id, []).append(subject_id)
+
+    def get_folds(self, fold_ids):
+        fold = {}
+        for fold_id in fold_ids:
+            for subject_id in self.folds[fold_id]:
+                # TODO: concat each subject x and y
+                fold['x'] = ...
+                fold['y'] = ...
+        return fold
 
     def load_one_fold(self, fold_data):
         one_fold = {}

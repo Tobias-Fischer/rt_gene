@@ -35,8 +35,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("model_base", choices=['densenet121', 'resnet50', 'mobilenetv2'])
     parser.add_argument("model_path", help="target folder to save the models (auto-saved)")
-    parser.add_argument("dataset_json", help="")
-    parser.add_argument("dataset_imgs", help="")
+    parser.add_argument("csv_subjects", help="")
+    #parser.add_argument("dataset_imgs", help="")
     parser.add_argument("--use_weights", help="whether to use weights")
     parser.add_argument("--random_subset", type=restricted_float, help="")
     parser.add_argument("--batch_size", type=int, help="", default=64)
@@ -55,41 +55,27 @@ if __name__ == "__main__":
     else:
         weight_factor = 'no_weight'
 
-    dataset = RT_BENE(args.dataset_json, args.dataset_imgs)
-    fold_infos = [([0, 1], [2], 'fold1'),
-             ([0, 2], [1], 'fold2'),
-             ([1, 2], [0], 'fold3')]
-
-    folds, validations = dataset.load_folds()
-
-    #json_dict = {'model_name': model_base, 'dataset_name': args.dataset_name}
+    dataset = RT_BENE(args.csv_subjects, input_size, args.random_subset)
+    dataset.load()
+    fold_infos = [([0, 1], [2], 'fold1'), ([0, 2], [1], 'fold2'), ([1, 2], [0], 'fold3')]
 
     # 3 folds training
     for subjects_train, subjects_test, fold_name in fold_infos:
-        if True:
-            if args.random_subset:
-                train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[subjects_train[0]], folds[subjects_train[1]]], [folds[subjects_test[0]]], random_subset=args.random_subset)
-            else:
-                train_x, train_y, val_x, val_y, counts = dataset.load_pairs((input_size, input_size), [folds[subjects_train[0]], folds[subjects_train[1]]], [folds[subjects_test[0]]])
-        '''
-        else:
-            if args.random_subset:
-                train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False, random_subset=args.random_subset)
-            else:
-                train_x, train_y, counts = dataset.load_pairs((input_size, input_size), subjects=subjects_train, undersample=False)
-            val_x, val_y, _ = dataset.load_pairs((input_size, input_size), subjects=subjects_test, undersample=False)
-        '''
-        
+        training_fold = dataset.get_folds(subjects_train)
+        validation_fold = dataset.get_folds(subjects_test)
 
-        print('Number of positive samples in training data: {} ({:.2f}% of total)'.format(counts[1], 100 * float(counts[1]) / len(train_y)))
+        positive = training_fold['positive']
+        negative = training_fold['negative']
+
+        print('Number of positive samples in training data: {} ({:.2f}% of total)'.format(positive, 100 * float(positive) / len(training_fold['y'])))
 
         metrics = [tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.Recall(), tf.keras.metrics.Precision()]
         model, name = create_model(args.model_base, [input_size, input_size, 3], 1e-4, metrics)
         name = 'rt-bene_' + name + '_' + fold_name
 
         if args.use_weights:
-            weight_for_0 = 1. / counts[0] * (counts[0] + counts[1])
-            weight_for_1 = 1. / counts[1] * (counts[0] + counts[1])
+            weight_for_0 = 1. / negative * (negative + positive)
+            weight_for_1 = 1. / positive * (negative + positive)
             class_weight = {0: weight_for_0, 1: weight_for_1}
         else:
             class_weight = None
@@ -99,36 +85,7 @@ if __name__ == "__main__":
         auto_save = ModelCheckpoint(args.model_path + name + '_auto_{epoch:02d}.h5', verbose=1, save_best_only=False, save_weights_only=False, period=1)
 
         # train the model
-        model.fit(x=train_x, y=train_y, batch_size=batch_size, epochs=epochs, verbose=1, validation_data=(val_x, val_y), callbacks=[save_best, auto_save], class_weight=class_weight)
-        model, train_x, train_y = None, None, None
-        del model, train_x, train_y
-
-        # disable testing for now
-        '''
-        if testing:
-            metrics = {'binary_f1_score': keras_metrics.binary_f1_score(),
-               'binary_recall': keras_metrics.binary_recall(),
-               'binary_precision': keras_metrics.binary_precision()}
-            model = load_existing_model(best_name, metrics)
-            predictions = []
-            ground_truth = []
-            start = time.time()
-            preds = model.predict(val_x, verbose=1)
-
-            for i in range(len(preds)):
-                predictions.append(float(preds[i]))
-                ground_truth.append(float(val_y[i]))
-            inference_time = (time.time() - start) / len(val_y)
-            json_dict[fold_name] = {'prediction_time': inference_time, 'predictions': predictions, 'ground_truth': ground_truth}
-        model, val_x, val_y = None, None, None
-        '''
-        #del model, 
-        del val_x, val_y
+        model.fit(x=training_fold['x'], y=training_fold['y'], batch_size=batch_size, epochs=epochs, verbose=1, validation_data=(validation_fold['x'], validation_fold['y']), callbacks=[save_best, auto_save], class_weight=class_weight)
+        model, training_fold, validation_fold = None, None, None
+        del model, training_fold, validation_fold
         gc.collect()
-    '''
-    json_name = args.eval_path + 'eval_' + model_base + '_' + args.model_base
-    json_name = json_name + '.json'
-
-    with open(json_name, 'w') as jsonfile:
-        json.dump(json_dict, jsonfile)
-    '''
