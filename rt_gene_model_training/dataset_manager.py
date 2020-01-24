@@ -7,7 +7,7 @@ from os import listdir
 import json
 import csv
 from tqdm import tqdm
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
 # size must be a tuple, (96, 96) for instance
@@ -78,26 +78,29 @@ class RT_BENE(object):
             |- labels.csv
     '''
 
-    def load_one_subject(self, csv_labels, root_folder):
+    def load_one_subject(self, csv_labels, left_folder, right_folder):
         subject = {}
         subject['y'] = []
 
         left_inputs = []
         right_inputs = []
 
-        with open(csv_labels, newline='') as csvfile:
+        with open(csv_labels) as csvfile:
             csv_rows = csv.reader(csvfile)
             for row in tqdm(csv_rows):
-                left_img_path = ...
-                right_img_path = ...
-                label = ...
+                img_name = row[0]
+                img_lbl = float(row[1])
+                if img_lbl == 0.5:
+                    continue
+                left_img_path = left_folder + img_name
+                right_img_path = right_folder + img_name.replace("left", "right")
                 try:
                     left_img, right_img = load_one_flipped_pair(left_img_path, right_img_path, self.input_size)
                     left_inputs.append(left_img)
                     right_inputs.append(right_img)
-                    subject['y'].append(label)
+                    subject['y'].append(img_lbl)
                 except:
-                    print('Failure loading image')
+                    print('Failure loading pair!')
 
             if self.random_subset:
                 np.random.seed(42)
@@ -113,26 +116,43 @@ class RT_BENE(object):
         self.folds = {}
         self.subjects = {}
 
-        with open(self.csv_subjects, newline='') as csvfile:
+        with open(self.csv_subjects) as csvfile:
             csv_rows = csv.reader(csvfile)
             for row in tqdm(csv_rows):
-                subject_id = row[0]
-                folder_name = row[1]
-                csv_labels = row[2]
-                fold_type = row[3]
-                fold_id = row[4]
+                subject_id = int(row[0])
+                csv_labels = row[1]
+                left_folder = row[2]
+                right_folder = row[3]
+                fold_type = row[4]
+                fold_id = int(row[5])
 
                 if fold_type == 'training':
-                    self.subjects[subject_id] = self.load_one_subject(csv_labels, folder_name)
-                    self.folds.get(fold_id, []).append(subject_id)
+                    print('\nsubject ' + str(subject_id) + ' is loading...')
+                    csv_filename = self.csv_subjects.split('/')[-1]
+                    csv_labels = self.csv_subjects.replace(csv_filename, csv_labels)
+                    left_folder = self.csv_subjects.replace(csv_filename, left_folder)
+                    right_folder = self.csv_subjects.replace(csv_filename, right_folder)
+                    self.subjects[subject_id] = self.load_one_subject(csv_labels, left_folder, right_folder)
+                    if fold_id not in self.folds.keys():
+                        self.folds[fold_id] = []
+                    self.folds[fold_id].append(subject_id)
+                    
+                elif fold_type == 'discarded':
+                    print('\nsubject ' + str(subject_id) + ' is discarded.')
+                    
+                elif fold_type == 'validation':
+                    print('\nsubject ' + str(subject_id) + ' is ignored (validation fold).')
+                    
+        print(self.folds)
+        print(self.subjects.keys())
 
     def get_folds(self, fold_ids):
         fold = {}
         for fold_id in fold_ids:
             for subject_id in self.folds[fold_id]:
                 # TODO: concat each subject x and y
-                fold['x'] = ...
-                fold['y'] = ...
+                fold['x'] = 0
+                fold['y'] = 0
         return fold
 
     def load_one_fold(self, fold_data):
@@ -273,3 +293,14 @@ class RT_BENE(object):
                     print('Failed to load image')
 
         return np.array(train_x), np.array(train_y), np.array(val_x), np.array(val_y), counts
+        
+        
+if __name__ == '__main__':
+    csv_subjects = '/home/icub/Kevin/RT-GENE_dataset_eyes/subjects.csv'
+    input_size = (96, 96)
+    random_subset = None
+    dataset = RT_BENE(csv_subjects, input_size, random_subset)
+    
+    dataset.load()
+    
+    
