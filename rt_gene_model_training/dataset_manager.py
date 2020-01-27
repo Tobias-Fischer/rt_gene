@@ -7,6 +7,7 @@ from os import listdir
 import json
 import csv
 from tqdm import tqdm
+import itertools
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
@@ -65,18 +66,6 @@ class RT_BENE(object):
         self.random_subset = random_subset
         self.subjects = {}
         self.folds = {} 
-
-    '''
-    |- root folder
-        |- rt-bene_subjects.csv
-        |- s000
-            |- labels.csv
-            |- img_0001.png
-        |- s001
-            |- labels.csv
-        |- s002
-            |- labels.csv
-    '''
 
     def load_one_subject(self, csv_labels, left_folder, right_folder):
         subject = {}
@@ -148,153 +137,20 @@ class RT_BENE(object):
 
     def get_folds(self, fold_ids):
         fold = {}
-        for fold_id in fold_ids:
-            for subject_id in self.folds[fold_id]:
-                # TODO: concat each subject x and y
-                fold['x'] = 0
-                fold['y'] = 0
+        subject_list = list(itertools.chain(*[self.folds[fold_id] for fold_id in fold_ids]))
+        all_x_left = [self.subjects[subject_id]['x'][0] for subject_id in subject_list]
+        all_x_right = [self.subjects[subject_id]['x'][1] for subject_id in subject_list]
+        all_y = [np.array(self.subjects[subject_id]['y']) for subject_id in subject_list]
+        fold['x'] = [np.concatenate(all_x_left), np.concatenate(all_x_right)]
+        fold['y'] = np.concatenate(all_y).tolist()
+        
+        fold['positive'] = 1 #TODO
+        fold['negative'] = 1 #TODO
         return fold
 
-    def load_one_fold(self, fold_data):
-        one_fold = {}
-        for s in fold_data['subjects'].values():
-            images = s['images']
-            closed = [img for img, label in images.items() if label == 1.0]
-            opened = [img for img, label in images.items() if label == 0.0]
 
-            for im in closed:
-                # TODO: remove name from json
-                one_fold[s['path_left'].replace('/home/icub/Kevin/RT-GENE_dataset_eyes',
-                                                self.image_path) + '/' + im] = 1.0
 
-            for im in opened:
-                # TODO: remove name from json
-                one_fold[s['path_left'].replace('/home/icub/Kevin/RT-GENE_dataset_eyes',
-                                                self.image_path) + '/' + im] = 0.0
-        return one_fold
-
-    def load_folds(self):
-        folds = []
-        validations = []
-        with open(self.path) as json_file:  
-            data = json.load(json_file)
-            for f in data['kfold']:
-                one_fold = self.load_one_fold(f)
-                folds.append(one_fold)
-
-            validation = self.load_one_fold(data['validation'])
-            validations.append(validation)
-        return folds, validations
-
-    def load_pairs(self, input_size, training_folds, testing_folds, random_subset=False):
-        train_y = []
-        val_y = []
-        counts = [0, 0]
-
-        in_r = []
-        in_l = []
-
-        for f in tqdm(training_folds):
-            for path, label in f.items():
-                try:
-                    l_img, r_img = load_one_flipped_pair(path, path.replace('left', 'right'), input_size)
-                    in_l.append(l_img)
-                    in_r.append(r_img)
-                    train_y.append(label)
-                except:
-                    print('Failure loading image')
-
-        if random_subset == False:
-            train_x = [np.array(in_r), np.array(in_l)]
-        else:
-            np.random.seed(42)
-            num_samples = int(len(train_y) * random_subset)
-            indx = np.random.choice(len(train_y), num_samples, False)
-            train_x = [np.array(in_r)[indx], np.array(in_l)[indx]]
-            train_y = np.array(train_y)[indx].tolist()
-
-        for train_label in train_y:
-            if train_label == 1.0:
-                counts[1] += 1
-            else:
-                counts[0] += 1
-
-        in_r = []
-        in_l = []
-
-        for f in tqdm(testing_folds):
-            for path, label in f.items():
-                try:
-                    l_img, r_img = load_one_flipped_pair(path, path.replace('left', 'right'), input_size)
-                    in_l.append(l_img)
-                    in_r.append(r_img)
-                    val_y.append(label)
-                except:
-                    print('Failure loading image')
-
-        val_x = [np.array(in_r), np.array(in_l)]
-
-        return train_x, train_y, val_x, val_y, counts
-
-    def load_simple_two_classes(self, input_size, training_folds, testing_folds, single_label=False):
-        train_x = []
-        train_y = []
-        val_x = []
-        val_y = []
-        counts = [0, 0]
-
-        for f in training_folds:
-            for path, label in f.items():
-                try:
-                    l_img, r_img = load_one_flipped_pair(path, path.replace('left', 'right'), input_size)
-                    train_x.append(l_img)
-                    train_x.append(r_img)
-
-                    if label == 1.0:
-                        counts[1] += 1
-                        if single_label:
-                            train_y.append(1.0)
-                            train_y.append(1.0)
-                        else:
-                            train_y.append([label, 0.0])
-                            train_y.append([label, 0.0])
-                    else:
-                        counts[0] += 1
-                        if single_label:
-                            train_y.append(0.0)
-                            train_y.append(0.0)
-                        else:
-                            train_y.append([label, 1.0])
-                            train_y.append([label, 1.0])
-                except:
-                    print('Failed to load image')
-
-        for f in testing_folds:
-            for path, label in f.items():
-                try:
-                    l_img, r_img = load_one_flipped_pair(path, path.replace('left', 'right'), input_size)
-                    val_x.append(l_img)
-                    val_x.append(r_img)
-                    if label == 1.0:
-                        if single_label:
-                            val_y.append(1.0)
-                            val_y.append(1.0)
-                        else:
-                            val_y.append([label, 0.0])
-                            val_y.append([label, 0.0])
-                    else:
-                        if single_label:
-                            val_y.append(0.0)
-                            val_y.append(0.0)
-                        else:
-                            val_y.append([label, 1.0])
-                            val_y.append([label, 1.0])
-                except:
-                    print('Failed to load image')
-
-        return np.array(train_x), np.array(train_y), np.array(val_x), np.array(val_y), counts
-        
-        
+    
 if __name__ == '__main__':
     csv_subjects = '/home/icub/Kevin/RT-GENE_dataset_eyes/subjects.csv'
     input_size = (96, 96)
@@ -302,5 +158,7 @@ if __name__ == '__main__':
     dataset = RT_BENE(csv_subjects, input_size, random_subset)
     
     dataset.load()
+    
+    dataset.get_folds([0, 1])
     
     
