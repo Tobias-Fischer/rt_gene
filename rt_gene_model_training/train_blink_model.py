@@ -4,7 +4,7 @@
 
 from dataset_manager import RT_BENE
 
-from blink_model_factory import create_model, load_existing_model
+from blink_model_factory import create_model
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 from tqdm import tqdm
