@@ -11,15 +11,14 @@ import itertools
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
-# size must be a tuple, (96, 96) for instance
 def read_rgb_image(img_path, size, flip):
+    assert type(size) is tuple, "size parameter must be a tuple, (96, 96) for instance"
     img = cv2.imread(img_path, cv2.IMREAD_COLOR)
     if img is None:
         print("ERROR: can't read " + img_path)
     if flip:
         img = cv2.flip(img, 1)
     img = cv2.resize(img, size, cv2.INTER_CUBIC)
-#    img = img * 1./255 # normalize input
     return img
 
 
