@@ -81,7 +81,6 @@ class RT_BENE(object):
                 if img_lbl == 0.5:
                     continue
                 left_img_path = left_folder + img_name
-                print(left_img_path)
                 right_img_path = right_folder + img_name.replace("left", "right")
                 try:
                     left_img, right_img = load_one_flipped_pair(left_img_path, right_img_path, self.input_size)
@@ -90,7 +89,6 @@ class RT_BENE(object):
                     subject['y'].append(img_lbl)
                 except:
                     print('Failure loading pair!')
-                    break
 
             if self.random_subset:
                 np.random.seed(42)
