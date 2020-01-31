@@ -70,7 +70,7 @@ if __name__ == "__main__":
         print('Number of positive samples in training data: {} ({:.2f}% of total)'.format(positive, 100 * float(positive) / len(training_fold['y'])))
 
         metrics = [tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.Recall(), tf.keras.metrics.Precision()]
-        model, name = create_model(args.model_base, [input_size, input_size, 3], 1e-4, metrics)
+        model, name = create_model(args.model_base, [input_size[0], input_size[1], 3], 1e-4, metrics)
         name = 'rt-bene_' + name + '_' + fold_name
 
         if args.use_weights:
