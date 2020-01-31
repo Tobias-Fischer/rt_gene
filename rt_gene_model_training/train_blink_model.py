@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument("--random_subset", type=restricted_float, help="")
     parser.add_argument("--batch_size", type=int, help="", default=64)
     parser.add_argument("--epochs", type=int, help="", default=8)
-    parser.add_argument("--input_size", type=int, help="", default=96)
+    parser.add_argument("--input_size", type=tuple, help="", default=(96,96))
 
     args = parser.parse_args()
     model_base = args.model_base
