@@ -28,11 +28,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("model_base", choices=['densenet121', 'resnet50', 'mobilenetv2'])
     parser.add_argument("model_path", help="target folder to save the models (auto-saved)")
-    parser.add_argument("csv_subjects", help="")
+    parser.add_argument("csv_subjects", help="path to the dataset csv file")
     parser.add_argument("--use_weight_balancing", help="whether to use weights")
-    parser.add_argument("--batch_size", type=int, help="", default=64)
-    parser.add_argument("--epochs", type=int, help="", default=8)
-    parser.add_argument("--input_size", type=tuple, help="", default=(96,96))
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--epochs", type=int, default=8)
+    parser.add_argument("--input_size", type=tuple, help="input size of images", default=(96,96))
 
     args = parser.parse_args()
     model_base = args.model_base
