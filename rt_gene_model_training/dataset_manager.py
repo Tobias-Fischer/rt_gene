@@ -58,11 +58,10 @@ def augment_dataset(X, Y, batch_size):
     new_X = [np.array(in_r), np.array(in_l)]
     return new_X, new_Y
 
-class RT_BENE(object):
-    def __init__(self, csv_subjects, input_size, random_subset):
+class RTBeneDataset(object):
+    def __init__(self, csv_subjects, input_size):
         self.csv_subjects = csv_subjects
         self.input_size = input_size
-        self.random_subset = random_subset
         self.subjects = {}
         self.folds = {} 
 
@@ -89,15 +88,7 @@ class RT_BENE(object):
                     subject['y'].append(img_lbl)
                 except:
                     print('Failure loading pair!')
-
-            if self.random_subset:
-                np.random.seed(42)
-                num_samples = int(len(subject['y']) * self.random_subset)
-                indices = np.random.choice(len(subject['y']), num_samples, False)
-                subject['x'] = [np.array(right_inputs)[indices], np.array(left_inputs)[indices]]
-                subject['y'] = np.array(subject['y'])[indices].tolist()
-            else:
-                subject['x'] = [np.array(right_inputs), np.array(left_inputs)]
+            subject['x'] = [np.array(right_inputs), np.array(left_inputs)]
         return subject
 
     def load(self):
@@ -130,9 +121,6 @@ class RT_BENE(object):
                     
                 elif fold_type == 'validation':
                     print('\nsubject ' + str(subject_id) + ' is ignored (validation fold).')
-                    
-        print(self.folds)
-        print(self.subjects.keys())
 
     def get_folds(self, fold_ids):
         fold = {}
@@ -141,23 +129,8 @@ class RT_BENE(object):
         all_x_right = [self.subjects[subject_id]['x'][1] for subject_id in subject_list]
         all_y = [np.array(self.subjects[subject_id]['y']) for subject_id in subject_list]
         fold['x'] = [np.concatenate(all_x_left), np.concatenate(all_x_right)]
-        fold['y'] = np.concatenate(all_y).tolist()
-        
-        fold['positive'] = 1 #TODO
-        fold['negative'] = 1 #TODO
-        return fold
-
-
-
-    
-if __name__ == '__main__':
-    csv_subjects = '/home/icub/Kevin/RT-GENE_dataset_eyes/subjects.csv'
-    input_size = (96, 96)
-    random_subset = None
-    dataset = RT_BENE(csv_subjects, input_size, random_subset)
-    
-    dataset.load()
-    
-    dataset.get_folds([0, 1])
-    
-    
+        fold['y'] = np.concatenate(all_y)
+        fold['positive'] = np.count_nonzero(fold['y']==1.)
+        fold['negative'] = np.count_nonzero(fold['y']==0.)
+        fold['y'] = fold['y'].tolist()
+        return fold  

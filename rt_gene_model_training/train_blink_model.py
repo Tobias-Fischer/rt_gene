@@ -2,7 +2,7 @@
 
 # from https://hackernoon.com/tf-serving-keras-mobilenetv2-632b8d92983c
 
-from dataset_manager import RT_BENE
+from dataset_manager import RTBeneDataset
 
 from blink_model_factory import create_model
 from tensorflow.keras.callbacks import ModelCheckpoint
@@ -24,38 +24,24 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 tf.keras.backend.set_session(tf.Session(config=config))
 
-# from https://stackoverflow.com/questions/12116685/how-can-i-require-my-python-scripts-argument-to-be-a-float-between-0-0-1-0-usin
-def restricted_float(x):
-    x = float(x)
-    if x < 0.0 or x > 1.0:
-        raise argparse.ArgumentTypeError("%r not in range [0.0, 1.0]"%(x,))
-    return x
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("model_base", choices=['densenet121', 'resnet50', 'mobilenetv2'])
     parser.add_argument("model_path", help="target folder to save the models (auto-saved)")
     parser.add_argument("csv_subjects", help="")
-    #parser.add_argument("dataset_imgs", help="")
-    parser.add_argument("--use_weights", help="whether to use weights")
-    parser.add_argument("--random_subset", type=restricted_float, help="")
+    parser.add_argument("--use_weight_balancing", help="whether to use weights")
     parser.add_argument("--batch_size", type=int, help="", default=64)
     parser.add_argument("--epochs", type=int, help="", default=8)
     parser.add_argument("--input_size", type=tuple, help="", default=(96,96))
 
     args = parser.parse_args()
     model_base = args.model_base
-    batch_size = args.batch_size
     epochs = args.epochs
-
+    batch_size = args.batch_size
     input_size = args.input_size
+    use_weight_balancing = args.use_weight_balancing
 
-    if args.use_weights:
-        weight_factor = 'use_weight'
-    else:
-        weight_factor = 'no_weight'
-
-    dataset = RT_BENE(args.csv_subjects, input_size, args.random_subset)
+    dataset = RTBeneDataset(args.csv_subjects, input_size)
     dataset.load()
     fold_infos = [([0, 1], [2], 'fold1'), ([0, 2], [1], 'fold2'), ([1, 2], [0], 'fold3')]
 
@@ -73,7 +59,7 @@ if __name__ == "__main__":
         model, name = create_model(args.model_base, [input_size[0], input_size[1], 3], 1e-4, metrics)
         name = 'rt-bene_' + name + '_' + fold_name
 
-        if args.use_weights:
+        if use_weight_balancing:
             weight_for_0 = 1. / negative * (negative + positive)
             weight_for_1 = 1. / positive * (negative + positive)
             class_weight = {0: weight_for_0, 1: weight_for_1}
