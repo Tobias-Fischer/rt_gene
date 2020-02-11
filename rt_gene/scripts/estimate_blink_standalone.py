@@ -23,9 +23,9 @@ class BlinkEstimatorImagePair(BlinkEstimatorStandalone):
     def __init__(self, model_path, threshold, input_size, viz):
         super(BlinkEstimatorImagePair, self).__init__(model_path, threshold, input_size, viz)
 
-    def estimate(self, left, right):
-        right_image = [self.load_img(right)]
-        left_image = [self.load_img(left)]
+    def estimate(self, left_image_path, right_image_path):
+        left_image = [self.load_img(left_image_path, False)]
+        right_image = [self.load_img(right_image_path, True)]
         probs, blinks = self.predict(left_image, right_image)
 
         if self.viz:
@@ -39,17 +39,17 @@ class BlinkEstimatorFolderPair(BlinkEstimatorStandalone):
     def __init__(self, model_path, threshold, input_size, viz):
         super(BlinkEstimatorFolderPair, self).__init__(model_path, threshold, input_size, viz)
 
-    def estimate(self, left, right):
+    def estimate(self, left_folder_path, right_folder_path):
         left_images = []
         right_images = []
         
-        for left_image_name in listdir(left):
-            left_image_path = left + '/' + left_image_name
-            left_images.append(self.load_img(left_image_path))
+        for left_image_name in listdir(left_folder_path):
+            left_image_path = left_folder_path + '/' + left_image_name
+            left_images.append(self.load_img(left_image_path, False))
 
-        for right_image_name in listdir(right):
-            right_image_path = right + '/' + right_image_name
-            right_images.append(self.load_img(right_image_path))
+        for right_image_name in listdir(right_folder_path):
+            right_image_path = right_folder_path + '/' + right_image_name
+            right_images.append(self.load_img(right_image_path, True))
             
         probs, blinks = self.predict(left_images, right_images)
         if self.viz:
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Estimate blink from image or folder pair.')
     parser.add_argument('left', type=str, help='Path to an image or a directory containing images')
     parser.add_argument('right', type=str, help='Path to an image or a directory containing images')
-    parser.add_argument('--model', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')], help='List of blink estimators')
+    parser.add_argument('--model', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/blink_model_1.h5')], help='List of blink estimators')
     parser.add_argument('--threshold', type=float, default=0.5, help='Threshold to determine weither the prediction is positive or negative')
     parser.add_argument('--vis_blink', type=bool, default=True, help='Show the overlayed result on original image or not')             
     

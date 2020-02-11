@@ -8,7 +8,6 @@ import json
 import csv
 from tqdm import tqdm
 import itertools
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
 def read_rgb_image(img_path, size, flip):
@@ -26,37 +25,6 @@ def load_one_flipped_pair(l_path, r_path, size):
     l_img = read_rgb_image(l_path, size, False)
     r_img = read_rgb_image(r_path, size, True)
     return l_img, r_img
-
-def augment_dataset(X, Y, batch_size):
-    new_X = []
-    new_Y = []
-    in_l = []
-    in_r = []
-    # create data generator
-    datagen = ImageDataGenerator(
-		rotation_range=10,
-		zoom_range=0.1,
-		width_shift_range=0.05,
-		height_shift_range=0.05,
-		shear_range=0.1,
-		horizontal_flip=True,
-		fill_mode="nearest")
-
-    for i in range (len(Y)):
-        # create iterator
-        it = datagen.flow([np.array([X[0][i]]), np.array([X[1][i]])], batch_size=1)
-        # generate samples
-        in_r.append(X[0][i])
-        in_l.append(X[1][i])
-        new_Y.append(Y[i])
-        for _ in range(batch_size):
-            # generate batch of images
-            batch = it.next()
-            in_r.append(batch[0][0])
-            in_l.append(batch[1][0])
-            new_Y.append(Y[i])
-    new_X = [np.array(in_r), np.array(in_l)]
-    return new_X, new_Y
 
 class RTBeneDataset(object):
     def __init__(self, csv_subjects, input_size):
@@ -88,7 +56,7 @@ class RTBeneDataset(object):
                     subject['y'].append(img_lbl)
                 except:
                     print('Failure loading pair!')
-            subject['x'] = [np.array(right_inputs), np.array(left_inputs)]
+            subject['x'] = [np.array(left_inputs), np.array(right_inputs)]
         return subject
 
     def load(self):
@@ -97,7 +65,7 @@ class RTBeneDataset(object):
 
         with open(self.csv_subjects) as csvfile:
             csv_rows = csv.reader(csvfile)
-            for row in tqdm(csv_rows):
+            for row in csv_rows:
                 subject_id = int(row[0])
                 csv_labels = row[1]
                 left_folder = row[2]

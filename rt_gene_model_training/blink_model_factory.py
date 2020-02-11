@@ -46,17 +46,18 @@ def create_model_base(backbone, input_shape):
 def create_model(backbone, input_shape, lr, metrics):
     base, name = create_model_base(backbone, input_shape)
 
-    # define the 2 inputs (right and left eyes)
-    right_input = Input(shape=input_shape)
+    # define the 2 inputs (left and right eyes)
     left_input = Input(shape=input_shape)
+    right_input = Input(shape=input_shape)
+    
 
     # get the 2 outputs using shared layers
-    out_right = base(right_input)
     out_left = base(left_input)
-
+    out_right = base(right_input)
+    
     # average
-    merged = Average()([out_right, out_left])
-    model = Model(inputs=[right_input, left_input], outputs=merged)
+    merged = Average()([out_left, out_right])
+    model = Model(inputs=[left_input, right_input], outputs=merged)
 
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=lr), metrics=metrics)
     model.summary()
