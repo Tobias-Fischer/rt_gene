@@ -61,7 +61,8 @@ class RTBeneDataset(object):
 
     def load(self):
         self.folds = {}
-        self.subjects = {}
+        self.training_set = {}
+        self.validation_set = {}
 
         with open(self.csv_subjects) as csvfile:
             csv_rows = csv.reader(csvfile)
@@ -73,32 +74,44 @@ class RTBeneDataset(object):
                 fold_type = row[4]
                 fold_id = int(row[5])
 
-                if fold_type == 'training':
+                if fold_type == 'discarded':
+                    print('\nsubject ' + str(subject_id) + ' is discarded.')
+                else:
                     print('\nsubject ' + str(subject_id) + ' is loading...')
                     csv_filename = self.csv_subjects.split('/')[-1]
                     csv_labels = self.csv_subjects.replace(csv_filename, csv_labels)
                     left_folder = self.csv_subjects.replace(csv_filename, left_folder)
                     right_folder = self.csv_subjects.replace(csv_filename, right_folder)
-                    self.subjects[subject_id] = self.load_one_subject(csv_labels, left_folder, right_folder)
-                    if fold_id not in self.folds.keys():
-                        self.folds[fold_id] = []
-                    self.folds[fold_id].append(subject_id)
-                    
-                elif fold_type == 'discarded':
-                    print('\nsubject ' + str(subject_id) + ' is discarded.')
-                    
-                elif fold_type == 'validation':
-                    print('\nsubject ' + str(subject_id) + ' is ignored (validation fold).')
 
+                    if fold_type == 'training':
+                        self.training_set[subject_id] = self.load_one_subject(csv_labels, left_folder, right_folder)
+                        if fold_id not in self.folds.keys():
+                            self.folds[fold_id] = []
+                        self.folds[fold_id].append(subject_id)
+                    elif fold_type == 'validation':
+                        self.validation_set[subject_id] = self.load_one_subject(csv_labels, left_folder, right_folder)
+                
     def get_folds(self, fold_ids):
         fold = {}
         subject_list = list(itertools.chain(*[self.folds[fold_id] for fold_id in fold_ids]))
-        all_x_left = [self.subjects[subject_id]['x'][0] for subject_id in subject_list]
-        all_x_right = [self.subjects[subject_id]['x'][1] for subject_id in subject_list]
-        all_y = [np.array(self.subjects[subject_id]['y']) for subject_id in subject_list]
+        all_x_left = [self.training_set[subject_id]['x'][0] for subject_id in subject_list]
+        all_x_right = [self.training_set[subject_id]['x'][1] for subject_id in subject_list]
+        all_y = [np.array(self.training_set[subject_id]['y']) for subject_id in subject_list]
         fold['x'] = [np.concatenate(all_x_left), np.concatenate(all_x_right)]
         fold['y'] = np.concatenate(all_y)
         fold['positive'] = np.count_nonzero(fold['y']==1.)
         fold['negative'] = np.count_nonzero(fold['y']==0.)
         fold['y'] = fold['y'].tolist()
         return fold  
+
+    def get_validation_set(self):
+        validation = {}
+        all_x_left = [self.validation_set[subject_id]['x'][0] for subject_id in self.validation_set.keys()]
+        all_x_right = [self.validation_set[subject_id]['x'][1] for subject_id in self.validation_set.keys()]
+        all_y = [np.array(self.validation_set[subject_id]['y']) for subject_id in self.validation_set.keys()]
+        validation['x'] = [np.concatenate(all_x_left), np.concatenate(all_x_right)]
+        validation['y'] = np.concatenate(all_y)
+        validation['positive'] = np.count_nonzero(validation['y']==1.)
+        validation['negative'] = np.count_nonzero(validation['y']==0.)
+        validation['y'] = validation['y'].tolist()
+        return validation

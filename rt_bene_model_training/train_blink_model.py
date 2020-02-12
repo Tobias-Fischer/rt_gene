@@ -43,13 +43,13 @@ if __name__ == "__main__":
 
     dataset = RTBeneDataset(args.csv_subjects, input_size)
     dataset.load()
-    fold_infos = [([0, 1], [2], 'fold1'), ([0, 2], [1], 'fold2'), ([1, 2], [0], 'fold3')]
+    fold_infos = [([0, 1], 'fold1'), ([0, 2], 'fold2'), ([1, 2], 'fold3')]
+
+    validation_set = dataset.get_validation_set()
 
     # 3 folds training
-    for subjects_train, subjects_test, fold_name in fold_infos:
+    for subjects_train, fold_name in fold_infos:
         training_fold = dataset.get_folds(subjects_train)
-        validation_fold = dataset.get_folds(subjects_test)
-
         positive = training_fold['positive']
         negative = training_fold['negative']
 
@@ -71,7 +71,9 @@ if __name__ == "__main__":
         auto_save = ModelCheckpoint(args.model_path + name + '_auto_{epoch:02d}.h5', verbose=1, save_best_only=False, save_weights_only=False, period=1)
 
         # train the model
-        model.fit(x=training_fold['x'], y=training_fold['y'], batch_size=batch_size, epochs=epochs, verbose=1, validation_data=(validation_fold['x'], validation_fold['y']), callbacks=[save_best, auto_save], class_weight=class_weight)
-        model, training_fold, validation_fold = None, None, None
-        del model, training_fold, validation_fold
+        model.fit(x=training_fold['x'], y=training_fold['y'], batch_size=batch_size, epochs=epochs, verbose=1, validation_data=(validation_set['x'], validation_set['y']), callbacks=[save_best, auto_save], class_weight=class_weight)
+        model, training_fold = None, None
+        del model, training_fold
         gc.collect()
+    validation_set = None
+    del validation_set
