@@ -1,27 +1,23 @@
-
 import tensorflow as tf
-from tensorflow.keras import backend as K
-from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from tensorflow.keras.optimizers import Adam
 
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Input, Dropout, Flatten, BatchNormalization, Add, Average, Maximum, Concatenate, Multiply, Activation, ReLU
-from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, Input, Dropout, BatchNormalization, Average, ReLU
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
 
-def create_model_base(backbone, input_shape):
-    """
-    Get a model from keras.applications
-    """
 
+def create_model_base(backbone, input_shape):
     if backbone == 'mobilenetv2':
-        base = tf.keras.applications.MobileNetV2(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tf.keras.applications.MobileNetV2(include_top=False, weights='imagenet', input_tensor=None,
+                                                 input_shape=input_shape, pooling='avg')
 
     elif backbone == 'densenet121':
-        base = tf.keras.applications.DenseNet121(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tf.keras.applications.DenseNet121(include_top=False, weights='imagenet', input_tensor=None,
+                                                 input_shape=input_shape, pooling='avg')
 
     elif backbone == 'resnet50':
-        base = tf.keras.applications.ResNet50(include_top=False, weights='imagenet', input_tensor=None, input_shape=input_shape, pooling='avg')
+        base = tf.keras.applications.ResNet50(include_top=False, weights='imagenet', input_tensor=None,
+                                              input_shape=input_shape, pooling='avg')
     else:
         raise Exception('Wrong backbone')
 
@@ -39,17 +35,15 @@ def create_model_base(backbone, input_shape):
 
     model = Model(inputs=main_input, outputs=output_tensor)
 
-    model_name_prefix = backbone + '_'
+    return model
 
-    return model, model_name_prefix
 
 def create_model(backbone, input_shape, lr, metrics):
-    base, name = create_model_base(backbone, input_shape)
+    base = create_model_base(backbone, input_shape)
 
     # define the 2 inputs (left and right eyes)
     left_input = Input(shape=input_shape)
     right_input = Input(shape=input_shape)
-    
 
     # get the 2 outputs using shared layers
     out_left = base(left_input)
@@ -62,4 +56,4 @@ def create_model(backbone, input_shape, lr, metrics):
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=lr), metrics=metrics)
     model.summary()
 
-    return model, name
+    return model
