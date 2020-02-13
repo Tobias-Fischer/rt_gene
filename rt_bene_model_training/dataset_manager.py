@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
+import csv
+import itertools
+
 import cv2
 import numpy as np
-from os import listdir
-
-import json
-import csv
 from tqdm import tqdm
-import itertools
 
 
 def read_rgb_image(img_path, size, flip):
@@ -22,20 +20,24 @@ def read_rgb_image(img_path, size, flip):
 
 
 def load_one_flipped_pair(l_path, r_path, size):
-    l_img = read_rgb_image(l_path, size, False)
-    r_img = read_rgb_image(r_path, size, True)
+    l_img = read_rgb_image(l_path, size, flip=False)
+    r_img = read_rgb_image(r_path, size, flip=True)
     return l_img, r_img
 
+
 class RTBeneDataset(object):
-    def __init__(self, csv_subjects, input_size):
-        self.csv_subjects = csv_subjects
+    def __init__(self, csv_subject_list, input_size):
+        self.csv_subject_list = csv_subject_list
         self.input_size = input_size
         self.subjects = {}
-        self.folds = {} 
+        self.training_set = {}
+        self.validation_set = {}
+        self.folds = {}
+
+        self.load()
 
     def load_one_subject(self, csv_labels, left_folder, right_folder):
-        subject = {}
-        subject['y'] = []
+        subject = {'y': []}
 
         left_inputs = []
         right_inputs = []
@@ -45,7 +47,7 @@ class RTBeneDataset(object):
             for row in tqdm(csv_rows):
                 img_name = row[0]
                 img_lbl = float(row[1])
-                if img_lbl == 0.5:
+                if img_lbl == 0.5:  # annotators did not agree whether eye is open or not, so discard this sample
                     continue
                 left_img_path = left_folder + img_name
                 right_img_path = right_folder + img_name.replace("left", "right")
@@ -55,16 +57,12 @@ class RTBeneDataset(object):
                     right_inputs.append(right_img)
                     subject['y'].append(img_lbl)
                 except:
-                    print('Failure loading pair!')
+                    print('Failure loading pair ' + left_img_path + ' ' + right_img_path)
             subject['x'] = [np.array(left_inputs), np.array(right_inputs)]
         return subject
 
     def load(self):
-        self.folds = {}
-        self.training_set = {}
-        self.validation_set = {}
-
-        with open(self.csv_subjects) as csvfile:
+        with open(self.csv_subject_list) as csvfile:
             csv_rows = csv.reader(csvfile)
             for row in csv_rows:
                 subject_id = int(row[0])
@@ -78,10 +76,10 @@ class RTBeneDataset(object):
                     print('\nsubject ' + str(subject_id) + ' is discarded.')
                 else:
                     print('\nsubject ' + str(subject_id) + ' is loading...')
-                    csv_filename = self.csv_subjects.split('/')[-1]
-                    csv_labels = self.csv_subjects.replace(csv_filename, csv_labels)
-                    left_folder = self.csv_subjects.replace(csv_filename, left_folder)
-                    right_folder = self.csv_subjects.replace(csv_filename, right_folder)
+                    csv_filename = self.csv_subject_list.split('/')[-1]
+                    csv_labels = self.csv_subject_list.replace(csv_filename, csv_labels)
+                    left_folder = self.csv_subject_list.replace(csv_filename, left_folder)
+                    right_folder = self.csv_subject_list.replace(csv_filename, right_folder)
 
                     if fold_type == 'training':
                         self.training_set[subject_id] = self.load_one_subject(csv_labels, left_folder, right_folder)
