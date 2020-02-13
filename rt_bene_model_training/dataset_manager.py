@@ -88,28 +88,21 @@ class RTBeneDataset(object):
                         self.folds[fold_id].append(subject_id)
                     elif fold_type == 'validation':
                         self.validation_set[subject_id] = self.load_one_subject(csv_labels, left_folder, right_folder)
-                
-    def get_folds(self, fold_ids):
-        fold = {}
-        subject_list = list(itertools.chain(*[self.folds[fold_id] for fold_id in fold_ids]))
-        all_x_left = [self.training_set[subject_id]['x'][0] for subject_id in subject_list]
-        all_x_right = [self.training_set[subject_id]['x'][1] for subject_id in subject_list]
-        all_y = [np.array(self.training_set[subject_id]['y']) for subject_id in subject_list]
-        fold['x'] = [np.concatenate(all_x_left), np.concatenate(all_x_right)]
-        fold['y'] = np.concatenate(all_y)
-        fold['positive'] = np.count_nonzero(fold['y']==1.)
-        fold['negative'] = np.count_nonzero(fold['y']==0.)
-        fold['y'] = fold['y'].tolist()
-        return fold  
 
-    def get_validation_set(self):
-        validation = {}
-        all_x_left = [self.validation_set[subject_id]['x'][0] for subject_id in self.validation_set.keys()]
-        all_x_right = [self.validation_set[subject_id]['x'][1] for subject_id in self.validation_set.keys()]
-        all_y = [np.array(self.validation_set[subject_id]['y']) for subject_id in self.validation_set.keys()]
-        validation['x'] = [np.concatenate(all_x_left), np.concatenate(all_x_right)]
-        validation['y'] = np.concatenate(all_y)
-        validation['positive'] = np.count_nonzero(validation['y']==1.)
-        validation['negative'] = np.count_nonzero(validation['y']==0.)
-        validation['y'] = validation['y'].tolist()
-        return validation
+    def get_data(self, dataset, subject_list):
+        all_x_left = [dataset[subject_id]['x'][0] for subject_id in subject_list]
+        all_x_right = [dataset[subject_id]['x'][1] for subject_id in subject_list]
+        all_y = [np.array(dataset[subject_id]['y']) for subject_id in subject_list]
+        fold = {'x': [np.concatenate(all_x_left), np.concatenate(all_x_right)], 'y': np.concatenate(all_y)}
+        fold['positive'] = np.count_nonzero(fold['y'] == 1.)
+        fold['negative'] = np.count_nonzero(fold['y'] == 0.)
+        fold['y'] = fold['y'].tolist()
+        return fold
+
+    def get_training_data(self, fold_ids):
+        subject_list = list(itertools.chain(*[self.folds[fold_id] for fold_id in fold_ids]))
+        return self.get_data(self.training_set, subject_list)
+
+    def get_validation_data(self):
+        subject_list = self.validation_set.keys()
+        return self.get_data(self.validation_set, subject_list)
