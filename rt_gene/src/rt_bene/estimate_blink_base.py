@@ -69,7 +69,7 @@ class BlinkEstimatorBase(object):
     def predict(self, left_eyes, right_eyes):
         with self.graph.as_default():
             tf.compat.v1.keras.backend.set_session(self.sess)
-            x = [np.array(left_eyes), np.array(right_eyes)]
+            x = [np.array(right_eyes), np.array(left_eyes)]  # model expects this order!
             p = self.model.predict(x, verbose=0)
             blinks = p >= self.threshold
             return p, blinks

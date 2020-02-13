@@ -54,10 +54,10 @@ def create_model(backbone, input_shape, lr, metrics):
     # get the 2 outputs using shared layers
     out_left = base(left_input)
     out_right = base(right_input)
-    
-    # average
+
+    # average the predictions
     merged = Average()([out_left, out_right])
-    model = Model(inputs=[left_input, right_input], outputs=merged)
+    model = Model(inputs=[right_input, left_input], outputs=merged)
 
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=lr), metrics=metrics)
     model.summary()
