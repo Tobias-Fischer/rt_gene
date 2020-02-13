@@ -93,7 +93,7 @@ class RTBeneDataset(object):
         all_x_left = [dataset[subject_id]['x'][0] for subject_id in subject_list]
         all_x_right = [dataset[subject_id]['x'][1] for subject_id in subject_list]
         all_y = [np.array(dataset[subject_id]['y']) for subject_id in subject_list]
-        fold = {'x': [np.concatenate(all_x_left), np.concatenate(all_x_right)], 'y': np.concatenate(all_y)}
+        fold = {'x': [np.concatenate(all_x_right), np.concatenate(all_x_left)], 'y': np.concatenate(all_y)}
         fold['positive'] = np.count_nonzero(fold['y'] == 1.)
         fold['negative'] = np.count_nonzero(fold['y'] == 0.)
         fold['y'] = fold['y'].tolist()
