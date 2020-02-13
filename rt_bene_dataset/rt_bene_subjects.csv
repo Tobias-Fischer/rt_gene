@@ -1,7 +1,7 @@
 0,s000_blink_labels.csv,s000_noglasses/natural/left/,s000_noglasses/natural/right/,validation,3
 1,s001_blink_labels.csv,s001_noglasses/natural/left/,s001_noglasses/natural/right/,training,0
-2,s002_blink_labels.csv,s003_noglasses/natural/left/,s003_noglasses/natural/right/,training,0
-3,s003_blink_labels.csv,s002_noglasses/natural/left/,s002_noglasses/natural/right/,training,1
+2,s002_blink_labels.csv,s002_noglasses/natural/left/,s002_noglasses/natural/right/,training,0
+3,s003_blink_labels.csv,s003_noglasses/natural/left/,s003_noglasses/natural/right/,training,1
 4,s004_blink_labels.csv,s004_noglasses/natural/left/,s004_noglasses/natural/right/,training,1
 5,s005_blink_labels.csv,s005_noglasses/natural/left/,s005_noglasses/natural/right/,training,2
 6,s006_blink_labels.csv,s006_noglasses/natural/left/,s006_noglasses/natural/right/,discarded,-1
