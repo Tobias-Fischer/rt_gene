@@ -1,4 +1,4 @@
-# RT-BENE: A Dataset and Baselines forReal-Time Blink Estimation in Natural Environments
+# RT-BENE: A Dataset and Baselines for Real-Time Blink Estimation in Natural Environments
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg?style=flat-square)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 ![HitCount](http://hits.dwyl.io/Tobias-Fischer/rt_gene.svg)
 ![stars](https://img.shields.io/github/stars/Tobias-Fischer/rt_gene.svg?style=flat-square)
