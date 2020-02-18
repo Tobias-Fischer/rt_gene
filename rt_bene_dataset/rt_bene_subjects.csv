@@ -1,0 +1,17 @@
+0,s000_blink_labels.csv,s000_noglasses/natural/left/,s000_noglasses/natural/right/,validation,3
+1,s001_blink_labels.csv,s001_noglasses/natural/left/,s001_noglasses/natural/right/,training,0
+2,s002_blink_labels.csv,s002_noglasses/natural/left/,s002_noglasses/natural/right/,training,0
+3,s003_blink_labels.csv,s003_noglasses/natural/left/,s003_noglasses/natural/right/,training,1
+4,s004_blink_labels.csv,s004_noglasses/natural/left/,s004_noglasses/natural/right/,training,1
+5,s005_blink_labels.csv,s005_noglasses/natural/left/,s005_noglasses/natural/right/,training,2
+6,s006_blink_labels.csv,s006_noglasses/natural/left/,s006_noglasses/natural/right/,discarded,-1
+7,s007_blink_labels.csv,s007_noglasses/natural/left/,s007_noglasses/natural/right/,training,1
+8,s008_blink_labels.csv,s008_noglasses/natural/left/,s008_noglasses/natural/right/,training,0
+9,s009_blink_labels.csv,s009_noglasses/natural/left/,s009_noglasses/natural/right/,training,1
+10,s010_blink_labels.csv,s010_noglasses/natural/left/,s010_noglasses/natural/right/,training,0
+11,s011_blink_labels.csv,s011_noglasses/natural/left/,s011_noglasses/natural/right/,validation,3
+12,s012_blink_labels.csv,s012_noglasses/natural/left/,s012_noglasses/natural/right/,training,2
+13,s013_blink_labels.csv,s013_noglasses/natural/left/,s013_noglasses/natural/right/,training,2
+14,s014_blink_labels.csv,s014_noglasses/natural/left/,s014_noglasses/natural/right/,training,2
+15,s015_blink_labels.csv,s015_noglasses/natural/left/,s015_noglasses/natural/right/,validation,3
+16,s016_blink_labels.csv,s016_noglasses/natural/left/,s016_noglasses/natural/right/,validation,3
