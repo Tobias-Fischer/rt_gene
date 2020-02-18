@@ -89,7 +89,8 @@ class RTBeneDataset(object):
                     elif fold_type == 'validation':
                         self.validation_set[subject_id] = self.load_one_subject(csv_labels, left_folder, right_folder)
 
-    def get_data(self, dataset, subject_list):
+    @staticmethod
+    def get_data(dataset, subject_list):
         all_x_left = [dataset[subject_id]['x'][0] for subject_id in subject_list]
         all_x_right = [dataset[subject_id]['x'][1] for subject_id in subject_list]
         all_y = [np.array(dataset[subject_id]['y']) for subject_id in subject_list]
