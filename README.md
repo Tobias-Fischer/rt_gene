@@ -83,5 +83,16 @@ The [rt_bene_model_training](./rt_bene_model_training) directory contains the co
 #### RT-BENE Dataset
 ![RT-BENE labels](./rt_bene_labels.png)
 
-We manually annotated images contained in the "noglasses" part of the RT-GENE dataset. The [rt_bene_dataset](./rt_bene_dataset) directory contains these annotations. In particular, [rt_bene_subjects.csv](./rt_bene_dataset/rt_bene_subjects.csv) is an overview CSV file with the following columns: 1) id, 2) subject csv file, 3) path to left eye images, 4) path to right eye images, 5) training/validation/discarded category, 6) fold-id for the 3-fold evaluation. Each individual "blink_labels" CSV file contains the following columns: 1) image file name, 2) label, where 0.0 is the annotation for open eyes, 1.0 for blinks and 0.5 for annotator disagreement (these images are not used).
+We manually annotated images contained in the "noglasses" part of the RT-GENE dataset. The [rt_bene_dataset](./rt_bene_dataset) directory contains these annotations. 
 
+In particular, [rt_bene_subjects.csv](./rt_bene_dataset/rt_bene_subjects.csv) is an overview CSV file with the following columns: 
+- 1. id
+- 2. subject csv file
+- 3. path to left eye images
+- 4. path to right eye images
+- 5. training/validation/discarded category
+- 6. fold-id for the 3-fold evaluation. 
+
+Each individual "blink_labels" CSV file (s000_blink_labels.csv to s016_blink_labels.csv) contains two columns:
+- 1. image file name
+- 2. label, where 0.0 is the annotation for open eyes, 1.0 for blinks and 0.5 for annotator disagreement (these images are discarded)
