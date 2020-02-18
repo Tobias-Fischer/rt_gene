@@ -40,6 +40,10 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.subject_tracker = FaceEncodingTracker() if rospy.get_param("~use_face_encoding_tracker", default=True) else SequentialTracker()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
+        self.__camera_to_ros = [[0.0, 0.0, 1.0, 0.0],
+                                [-1.0, 0.0, 0.0, 0.0],
+                                [0.0, -1.0, 0.0, 0.0],
+                                [0.0, 0.0, 0.0, 1.0]]
 
         self.camera_frame = rospy.get_param("~camera_frame", "kinect2_link")
         self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "kinect2_ros_frame")
@@ -113,16 +117,13 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 self.publish_pose(timestamp, translation_vector, head_rpy, subject_id)
 
                 if self.visualise_headpose:
-                    # pitch roll yaw
-                    trans_msg = self.tf2_buffer.lookup_transform(self.ros_tf_frame, self.tf_prefix + "/head_pose_estimated" + str(subject_id), timestamp)
-                    rotation = trans_msg.transform.rotation
-                    euler_angles_head = list(transformations.euler_from_quaternion([rotation.x, rotation.y, rotation.z, rotation.w]))
-                    euler_angles_head = gaze_tools.limit_yaw(euler_angles_head)
+                    roll_pitch_yaw = list(transformations.euler_from_matrix(np.dot(self.__camera_to_ros, transformations.euler_matrix(*head_rpy))))
+                    roll_pitch_yaw = gaze_tools.limit_yaw(roll_pitch_yaw)
 
                     face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
                     final_head_pose_images.append(
-                        LandmarkMethodROS.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(euler_angles_head)))
+                        LandmarkMethodROS.visualize_headpose_result(face_image_resized, gaze_tools.get_phi_theta_from_euler(roll_pitch_yaw)))
 
         if len(self.subject_tracker.get_tracked_elements().items()) > 0:
             self.publish_subject_list(timestamp, self.subject_tracker.get_tracked_elements())
@@ -175,6 +176,19 @@ class LandmarkMethodROS(LandmarkMethodBase):
         _m[:3, :3] = _rotation_matrix
         _m[3, 3] = 1
         _rpy_rotation = np.array(transformations.euler_from_matrix(_m))
+
+        # _rotation_matrix, _ = cv2.Rodrigues(rotation_vector)
+        # _rotation_matrix = np.matmul(_rotation_matrix, np.array([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
+        # _m = np.zeros((4, 4))
+        # _m[:3, :3] = _rotation_matrix
+        # _m[3, 3] = 1
+        # # Go from camera space to ROS space
+        # _camera_to_ros = [[0.0, 0.0, 1.0, 0.0],
+        #                   [-1.0, 0.0, 0.0, 0.0],
+        #                   [0.0, -1.0, 0.0, 0.0],
+        #                   [0.0, 0.0, 0.0, 1.0]]
+        # roll_pitch_yaw = list(transformations.euler_from_matrix(np.dot(_camera_to_ros, _m)))
+        # roll_pitch_yaw = gaze_tools.imit_yaw(roll_pitch_yaw)
 
         return success, _rpy_rotation, translation_vector
 
