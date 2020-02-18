@@ -43,19 +43,17 @@ class BlinkEstimatorNode(BlinkEstimatorBase):
 
     def callback(self, msg):
         subjects = self.bridge.msg_to_images(msg)
-        right_eyes = []
         left_eyes = []
+        right_eyes = []
 
         for subject in subjects.values():
-            # right_eyes.append(cv2.flip(cv2.cvtColor(self.resize_img(subject.right), cv2.COLOR_RGB2BGR), 1))
-            # left_eyes.append(cv2.cvtColor(self.resize_img(subject.left), cv2.COLOR_RGB2BGR))
-            right_eyes.append(cv2.flip(self.resize_img(subject.right), 1))
             left_eyes.append(self.resize_img(subject.left))
-
+            right_eyes.append(cv2.flip(self.resize_img(subject.right), 1))
+            
         if len(left_eyes) == 0:
             return
 
-        probs, _ = self.predict(right_eyes, left_eyes)
+        probs, _ = self.predict(left_eyes, right_eyes)
 
         if self.viz:
             blink_image_list = []
