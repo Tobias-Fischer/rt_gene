@@ -34,7 +34,7 @@ def load_camera_calibration(calibration_file):
 
 def extract_eye_image_patches(subjects):
     for subject in subjects:
-        le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject.transformed_landmarks, subject.face_color, landmark_estimator.eye_image_size)
+        le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject.transformed_eye_landmarks, subject.face_color, landmark_estimator.eye_image_size)
         subject.left_eye_color = le_c
         subject.right_eye_color = re_c
         subject.left_eye_bb = le_bb

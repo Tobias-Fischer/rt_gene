@@ -27,7 +27,10 @@ import rt_gene.gaze_tools as gaze_tools
 
 from rt_gene.kalman_stabilizer import Stabilizer
 
-from rt_gene.msg import MSG_SubjectImagesList, MSG_Headpose
+from rt_gene.msg import MSG_SubjectImagesList
+from rt_gene.msg import MSG_Headpose, MSG_HeadposeList
+from rt_gene.msg import MSG_Landmarks, MSG_LandmarksList
+
 from rt_gene.cfg import ModelSizeConfig
 from rt_gene.subject_ros_bridge import SubjectListBridge
 from rt_gene.tracker_face_encoding import FaceEncodingTracker
@@ -56,8 +59,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
 
         self.pose_stabilizers = {}  # Introduce scalar stabilizers for pose.
 
-        self.headpose_publishers = {}
-
         try:
             if img_proc is None:
                 tqdm.write("Wait for camera message")
@@ -77,6 +78,8 @@ class LandmarkMethodROS(LandmarkMethodBase):
 
         # multiple person images publication
         self.subject_pub = rospy.Publisher("/subjects/images", MSG_SubjectImagesList, queue_size=3)
+        self.headpose_publisher = rospy.Publisher("/subjects/headpose", MSG_HeadposeList, queue_size=3)
+        self.landmark_publisher = rospy.Publisher("/subjects/landmarks", MSG_LandmarksList, queue_size=3)
         # multiple person faces publication for visualisation
         self.subject_faces_pub = rospy.Publisher("/subjects/faces", Image, queue_size=3)
 
@@ -112,10 +115,12 @@ class LandmarkMethodROS(LandmarkMethodBase):
             if subject_id not in self.pose_stabilizers:
                 self.pose_stabilizers[subject_id] = [Stabilizer(state_num=2, measure_num=1, cov_process=0.1, cov_measure=0.1) for _ in range(6)]
 
-            success, head_rpy, translation_vector = self.get_head_pose(subject.marks, subject_id)
+            success, head_rpy, translation_vector = self.get_head_pose(subject.landmarks, subject_id)
 
             if success:
                 # Publish all the data
+                subject.head_rotation = head_rpy
+                subject.head_translation = translation_vector
                 self.publish_pose(timestamp, translation_vector, head_rpy, subject_id)
 
                 if self.visualise_headpose:
@@ -194,13 +199,44 @@ class LandmarkMethodROS(LandmarkMethodBase):
 
     def publish_subject_list(self, timestamp, subjects):
         assert (subjects is not None)
-
         subject_list_message = self.__subject_bridge.images_to_msg(subjects, timestamp)
-
         self.subject_pub.publish(subject_list_message)
 
-    def publish_pose(self, timestamp, nose_center_3d_tf, head_rpy, subject_id):
+        landmark_msg_list = MSG_LandmarksList()
+        landmark_msg_list.header.stamp = timestamp
+        landmark_msg_list.header.frame_id = '0'
 
+        headpose_msg_list = MSG_HeadposeList()
+        headpose_msg_list.header.stamp = timestamp
+        headpose_msg_list.header.frame_id = '0'
+
+        for subject_id, s in subjects.items():
+            try:
+                landmark_msg = MSG_Landmarks()
+                landmark_msg.subject_id = str(subject_id)
+                landmark_msg.landmarks = s.landmarks.flatten()
+                landmark_msg_list.subjects.append(landmark_msg)
+            except AttributeError:
+                # we haven't assigned landmarks to the subject "s" yet...ignore this subject for the time being
+                pass
+
+            try:
+                headpose_msg = MSG_Headpose()
+                headpose_msg.roll = s.head_rotation[0]
+                headpose_msg.pitch = s.head_rotation[1]
+                headpose_msg.yaw = s.head_rotation[2]
+                headpose_msg.x = s.head_translation[0]
+                headpose_msg.y = s.head_translation[1]
+                headpose_msg.z = s.head_translation[2]
+                headpose_msg_list.subjects.append(headpose_msg)
+            except AttributeError:
+                # we haven't assigned landmarks to the subject "s" yet...ignore this subject for the time being
+                pass
+
+        self.landmark_publisher.publish(landmark_msg_list)
+        self.headpose_publisher.publish(headpose_msg_list)
+
+    def publish_pose(self, timestamp, nose_center_3d_tf, head_rpy, subject_id):
         t = TransformStamped()
         t.header.frame_id = self.camera_frame
         t.header.stamp = timestamp
@@ -224,16 +260,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 raise exc
 
         self.tf2_buffer.set_transform(t, 'extract_landmarks')
-
-        headpose = MSG_Headpose()
-        headpose.header.stamp = timestamp
-        headpose.header.frame_id = '0'
-        headpose.roll = head_rpy[0]
-        headpose.pitch = head_rpy[1]
-        headpose.yaw = head_rpy[2]
-        if str(subject_id) not in self.headpose_publishers:
-            self.headpose_publishers[str(subject_id)] = rospy.Publisher('/subjects/head_pose'+str(subject_id), MSG_Headpose, queue_size=3)
-        self.headpose_publishers[str(subject_id)].publish(headpose)
 
     def update_subject_tracker(self, color_img):
         faceboxes = self.get_face_bb(color_img)
