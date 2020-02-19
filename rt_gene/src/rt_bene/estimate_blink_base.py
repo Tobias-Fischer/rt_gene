@@ -44,9 +44,9 @@ class BlinkEstimatorBase(object):
         if len(models) == 1:
             self.model = models[0]
         else:
-            tensors = [model([img_input_l, img_input_r]) for model in models]
+            tensors = [model([img_input_r, img_input_l]) for model in models]
             output_layer = tf.keras.layers.average(tensors)
-            self.model = tf.keras.Model(inputs=[img_input_l, img_input_r], outputs=output_layer)
+            self.model = tf.keras.Model(inputs=[img_input_r, img_input_l], outputs=output_layer)
 
         # noinspection PyProtectedMember
         self.model._make_predict_function()
