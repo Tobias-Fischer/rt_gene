@@ -118,9 +118,8 @@ if __name__ == "__main__":
         else:
             class_weight = None
 
-        best_name = args.model_path + name + '_best.h5'
-        save_best = ModelCheckpoint(best_name, monitor='val_loss', verbose=1, save_best_only=True,
-                                    save_weights_only=False, mode='min', period=1)
+        save_best = ModelCheckpoint(args.model_path + name + '_best.h5', monitor='val_loss', verbose=1, 
+                                    save_best_only=True, save_weights_only=False, mode='min', period=1)
         auto_save = ModelCheckpoint(args.model_path + name + '_auto_{epoch:02d}.h5', verbose=1,
                                     save_best_only=False, save_weights_only=False, period=1)
 
