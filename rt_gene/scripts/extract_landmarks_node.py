@@ -177,19 +177,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
         _m[3, 3] = 1
         _rpy_rotation = np.array(transformations.euler_from_matrix(_m))
 
-        # _rotation_matrix, _ = cv2.Rodrigues(rotation_vector)
-        # _rotation_matrix = np.matmul(_rotation_matrix, np.array([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
-        # _m = np.zeros((4, 4))
-        # _m[:3, :3] = _rotation_matrix
-        # _m[3, 3] = 1
-        # # Go from camera space to ROS space
-        # _camera_to_ros = [[0.0, 0.0, 1.0, 0.0],
-        #                   [-1.0, 0.0, 0.0, 0.0],
-        #                   [0.0, -1.0, 0.0, 0.0],
-        #                   [0.0, 0.0, 0.0, 1.0]]
-        # roll_pitch_yaw = list(transformations.euler_from_matrix(np.dot(_camera_to_ros, _m)))
-        # roll_pitch_yaw = gaze_tools.imit_yaw(roll_pitch_yaw)
-
         return success, _rpy_rotation, translation_vector
 
     def apply_kalman_filter_head_pose(self, subject_id, rotation_vector_unstable, translation_vector_unstable):
