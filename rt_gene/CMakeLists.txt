@@ -103,9 +103,11 @@ add_message_files(
    MSG_Gaze.msg
    MSG_Headpose.msg
    MSG_Landmarks.msg
+   MSG_Blink.msg
    MSG_GazeList.msg
    MSG_HeadposeList.msg
    MSG_LandmarksList.msg
+   MSG_BlinkList.msg
 )
 
 # Generate added messages and services with any dependencies listed here

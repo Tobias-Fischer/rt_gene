@@ -58,14 +58,6 @@ class BlinkEstimatorBase(object):
     def resize_img(self, img):
         return cv2.resize(img, dsize=self.input_size, interpolation=cv2.INTER_CUBIC)
 
-    def load_img(self, img_path, flip):
-        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        if img is None:
-            print("ERROR: can't read " + img_path)
-        if flip:
-            img = cv2.flip(img, 1)
-        return self.resize_img(img)
-
     def predict(self, left_eyes, right_eyes):
         with self.graph.as_default():
             tf.compat.v1.keras.backend.set_session(self.sess)
