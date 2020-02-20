@@ -27,8 +27,8 @@ class FaceEncodingTracker(GenericTracker):
     @staticmethod
     def __align_tracked_subject(tracked_subject, desired_left_eye=(0.3, 0.3), desired_face_width=150, desired_face_height=150):
         # extract the left and right eye (x, y)-coordinates
-        right_eye_pts = np.array([tracked_subject.transformed_landmarks[0], tracked_subject.transformed_landmarks[1]])
-        left_eye_pts = np.array([tracked_subject.transformed_landmarks[2], tracked_subject.transformed_landmarks[3]])
+        right_eye_pts = np.array([tracked_subject.transformed_eye_landmarks[0], tracked_subject.transformed_eye_landmarks[1]])
+        left_eye_pts = np.array([tracked_subject.transformed_eye_landmarks[2], tracked_subject.transformed_eye_landmarks[3]])
 
         # compute the center of mass for each eye
         left_eye_centre = left_eye_pts.mean(axis=0).astype("int")
@@ -74,7 +74,7 @@ class FaceEncodingTracker(GenericTracker):
         return output
 
     def __encode_subject(self, tracked_element):
-        # get the face_color and face_chip it using the transformed_landmarks
+        # get the face_color and face_chip it using the transformed_eye_landmarks
         face_chip = self.__align_tracked_subject(tracked_element)
         encoding = self.FACE_ENCODER.compute_face_descriptor(face_chip)
         return encoding

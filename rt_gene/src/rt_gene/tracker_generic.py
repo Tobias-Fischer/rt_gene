@@ -10,11 +10,11 @@ import cv2
 
 
 class TrackedSubject(object):
-    def __init__(self, box, face, landmarks, marks):
+    def __init__(self, box, face, transformed_eye_landmarks, landmarks):
         self.box = box
         self.face_color = face
-        self.transformed_landmarks = landmarks
-        self.marks = marks
+        self.transformed_eye_landmarks = transformed_eye_landmarks
+        self.landmarks = landmarks
 
         self.left_eye_color = None
         self.right_eye_color = None
@@ -25,36 +25,36 @@ class TrackedSubject(object):
         return np.sqrt(np.sum((self.box - other_element.box) ** 2))
 
     @staticmethod
-    def get_eye_image_from_landmarks(transformed_landmarks, face_aligned_color, eye_image_size):
+    def get_eye_image_from_landmarks(transformed_eye_landmarks, face_aligned_color, eye_image_size):
         margin_ratio = 1.0
         desired_ratio = float(eye_image_size[1]) / float(eye_image_size[0]) / 2.0
 
         try:
             # Get the width of the eye, and compute how big the margin should be according to the width
-            lefteye_width = transformed_landmarks[3][0] - transformed_landmarks[2][0]
-            righteye_width = transformed_landmarks[1][0] - transformed_landmarks[0][0]
+            lefteye_width = transformed_eye_landmarks[3][0] - transformed_eye_landmarks[2][0]
+            righteye_width = transformed_eye_landmarks[1][0] - transformed_eye_landmarks[0][0]
             lefteye_margin, righteye_margin = lefteye_width * margin_ratio, righteye_width * margin_ratio
 
             # lefteye_center_x = transformed_landmarks[2][0] + lefteye_width / 2
             # righteye_center_x = transformed_landmarks[0][0] + righteye_width / 2
-            lefteye_center_y = (transformed_landmarks[2][1] + transformed_landmarks[3][1]) / 2.0
-            righteye_center_y = (transformed_landmarks[1][1] + transformed_landmarks[0][1]) / 2.0
+            lefteye_center_y = (transformed_eye_landmarks[2][1] + transformed_eye_landmarks[3][1]) / 2.0
+            righteye_center_y = (transformed_eye_landmarks[1][1] + transformed_eye_landmarks[0][1]) / 2.0
 
             # Now compute the bounding boxes
             # The left / right x-coordinates are computed as the landmark position plus/minus the margin
             # The bottom / top y-coordinates are computed according to the desired ratio, as the width of the image is known
             left_bb = np.zeros(4, dtype=np.int)
-            left_bb[0] = transformed_landmarks[2][0] - lefteye_margin / 2.0
+            left_bb[0] = transformed_eye_landmarks[2][0] - lefteye_margin / 2.0
             left_bb[1] = lefteye_center_y - (lefteye_width + lefteye_margin) * desired_ratio
-            left_bb[2] = transformed_landmarks[3][0] + lefteye_margin / 2.0
+            left_bb[2] = transformed_eye_landmarks[3][0] + lefteye_margin / 2.0
             left_bb[3] = lefteye_center_y + (lefteye_width + lefteye_margin) * desired_ratio
 
             left_bb = list(map(int, left_bb))
 
             right_bb = np.zeros(4, dtype=np.float)
-            right_bb[0] = transformed_landmarks[0][0] - righteye_margin / 2.0
+            right_bb[0] = transformed_eye_landmarks[0][0] - righteye_margin / 2.0
             right_bb[1] = righteye_center_y - (righteye_width + righteye_margin) * desired_ratio
-            right_bb[2] = transformed_landmarks[1][0] + righteye_margin / 2.0
+            right_bb[2] = transformed_eye_landmarks[1][0] + righteye_margin / 2.0
             right_bb[3] = righteye_center_y + (righteye_width + righteye_margin) * desired_ratio
 
             right_bb = list(map(int, right_bb))
@@ -103,7 +103,7 @@ class GenericTracker(object):
 
     def update_eye_images(self, eye_image_size):
         for subject in self.get_tracked_elements().values():
-            le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject.transformed_landmarks, subject.face_color, eye_image_size)
+            le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject.transformed_eye_landmarks, subject.face_color, eye_image_size)
             subject.left_eye_color = le_c
             subject.right_eye_color = re_c
             subject.left_eye_bb = le_bb
