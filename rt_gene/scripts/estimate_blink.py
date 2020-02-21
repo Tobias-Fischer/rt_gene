@@ -88,7 +88,10 @@ class BlinkEstimatorNode(BlinkEstimatorBase):
             blink_msg = MSG_Blink()
             blink_msg.subject_id = str(subject_id)
             blink_msg.blink = p >= self.threshold
+            blink_msg.probability = p
             blink_msg_list.subjects.append(blink_msg)
+            
+        self.blink_publisher.publish(blink_msg_list)
 
 
 if __name__ == "__main__":
