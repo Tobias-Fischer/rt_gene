@@ -61,7 +61,7 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
             continue
 
         success, rotation_vector, _ = cv2.solvePnP(landmark_estimator.model_points,
-                                                   subject.landmarks.reshape(len(subject.marks), 1, 2),
+                                                   subject.landmarks.reshape(len(subject.landmarks), 1, 2),
                                                    cameraMatrix=camera_matrix,
                                                    distCoeffs=dist_coefficients, flags=cv2.SOLVEPNP_DLS)
 
