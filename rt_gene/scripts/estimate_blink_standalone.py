@@ -2,14 +2,13 @@
 
 from __future__ import print_function, division, absolute_import
 
-from os import listdir
-import os
 import argparse
+import os
+import time
+from os import listdir
 
 import cv2
 import numpy as np
-import time
-from tqdm import trange
 
 from rt_bene.estimate_blink_base import BlinkEstimatorBase
 
