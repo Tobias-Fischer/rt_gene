@@ -1,6 +1,6 @@
 <launch>
     <arg name="threshold" default="0.425" />
-    <arg name="viz_topic" default="/subjects/blinks" />
+    <arg name="viz_topic" default="/subjects/blink_images" />
     <arg name="viz" default="True" />
     <arg name="device_id_blinkestimation"  default="/gpu:0" /> <!-- tensorflow format, e.g. /gpu:0 or /cpu:0 -->
 

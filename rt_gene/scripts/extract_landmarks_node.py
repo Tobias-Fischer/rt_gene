@@ -222,6 +222,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
 
             try:
                 headpose_msg = MSG_Headpose()
+                headpose_msg.subject_id = subject_id
                 headpose_msg.roll = s.head_rotation[0]
                 headpose_msg.pitch = s.head_rotation[1]
                 headpose_msg.yaw = s.head_rotation[2]
