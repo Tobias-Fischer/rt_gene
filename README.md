@@ -67,7 +67,7 @@ year = {2019},
 RT-BENE was supported by the EU Horizon 2020 Project PAL (643783-RIA) and a Royal Academy of Engineering Chair in Emerging Technologies to Yiannis Demiris.
 
 ### Overview + Accompanying Dataset
-The code is split into several parts, each having its own README. The repository also contains blink annotation labels for the "noglasses" part of the RT-GENE [dataset](https://zenodo.org/record/2529036) [(alternative link)](https://goo.gl/tfUaDm). For more information, other datasets and more open-source software please visit the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>. Please note that a lot of the code is shared with RT-GENE (see above), hence there are many references to RT-GENE below.
+The code is split into several parts, each having its own README. There is also an associated [RT-BENE dataset](https://zenodo.org/record/3685316). For more information, other datasets and more open-source software please visit the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>. Please note that a lot of the code is shared with RT-GENE (see above), hence there are many references to RT-GENE below.
 
 ![Paper overview](./rt_bene_overview.png)
 
@@ -83,16 +83,4 @@ The [rt_bene_model_training](./rt_bene_model_training) directory contains the co
 #### RT-BENE Dataset
 ![RT-BENE labels](./rt_bene_labels.png)
 
-We manually annotated images contained in the "noglasses" part of the RT-GENE dataset. The [rt_bene_dataset](./rt_bene_dataset) directory contains these annotations. 
-
-In particular, [rt_bene_subjects.csv](./rt_bene_dataset/rt_bene_subjects.csv) is an overview CSV file with the following columns: 
-- 1. id
-- 2. subject csv file
-- 3. path to left eye images
-- 4. path to right eye images
-- 5. training/validation/discarded category
-- 6. fold-id for the 3-fold evaluation. 
-
-Each individual "blink_labels" CSV file (s000_blink_labels.csv to s016_blink_labels.csv) contains two columns:
-- 1. image file name
-- 2. label, where 0.0 is the annotation for open eyes, 1.0 for blinks and 0.5 for annotator disagreement (these images are discarded)
+We manually annotated images contained in the "noglasses" part of the RT-GENE dataset. The [RT-BENE dataset on Zenodo](https://zenodo.org/record/3685316) contains the eye image patches and associated annotations to train the blink models.
