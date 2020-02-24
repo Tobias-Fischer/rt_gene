@@ -15,6 +15,17 @@ from rt_bene.estimate_blink_base import BlinkEstimatorBase
 script_path = os.path.dirname(os.path.realpath(__file__))
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 class BlinkEstimatorStandalone(BlinkEstimatorBase):
     def __init__(self, model_path, threshold, input_size, viz):
         super(BlinkEstimatorStandalone, self).__init__("gpu", model_path, threshold, input_size)
@@ -86,7 +97,7 @@ if __name__ == '__main__':
                         help='List of blink estimators')
     parser.add_argument('--threshold', type=float, default=0.5,
                         help='Threshold to determine weither the prediction is positive or negative')
-    parser.add_argument('--vis_blink', type=bool, default=True,
+    parser.add_argument('--vis_blink', type=str2bool, nargs='?', default=True,
                         help='Show the overlayed result on original image or not')
 
     args = parser.parse_args()
@@ -101,4 +112,7 @@ if __name__ == '__main__':
         raise Exception('Files / folders not found: Check that ' + left_path + ' and ' + right_path + ' exist')
 
     print(blink_estimator.estimate(left_path, right_path))
-    cv2.destroyAllWindows()
+    if args.vis_blink:
+        cv2.destroyAllWindows()
+
+

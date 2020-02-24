@@ -52,6 +52,8 @@ class BlinkEstimatorBase(object):
         self.model._make_predict_function()
         self.graph = tf.compat.v1.get_default_graph()
 
+        self.predict(np.zeros((1,)+input_size+(3,)), np.zeros((1,)+input_size+(3,)))
+
         tqdm.write('Loaded ' + str(len(models)) + ' model(s)')
         tqdm.write('Ready')
 
