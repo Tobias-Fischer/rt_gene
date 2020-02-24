@@ -77,7 +77,6 @@ if __name__ == "__main__":
     parser.add_argument("model_base", choices=['densenet121', 'resnet50', 'mobilenetv2'])
     parser.add_argument("model_path", help="target folder to save the models (auto-saved)")
     parser.add_argument("csv_subject_list", help="path to the dataset csv file")
-    parser.add_argument("--use_weight_balancing", help="whether to use weights")
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--input_size", type=tuple, help="input size of images", default=(96, 96))
@@ -87,7 +86,6 @@ if __name__ == "__main__":
     epochs = args.epochs
     batch_size = args.batch_size
     input_size = args.input_size
-    use_weight_balancing = args.use_weight_balancing
 
     dataset = RTBeneDataset(args.csv_subject_list, input_size)
     fold_infos = [
@@ -111,12 +109,9 @@ if __name__ == "__main__":
         model_instance = create_model(args.model_base, [input_size[0], input_size[1], 3], 1e-4, model_metrics)
         name = 'rt-bene_' + args.model_base + '_' + fold_name
 
-        if use_weight_balancing:
-            weight_for_0 = 1. / negative * (negative + positive)
-            weight_for_1 = 1. / positive * (negative + positive)
-            class_weight = {0: weight_for_0, 1: weight_for_1}
-        else:
-            class_weight = None
+        weight_for_0 = 1. / negative * (negative + positive)
+        weight_for_1 = 1. / positive * (negative + positive)
+        class_weight = {0: weight_for_0, 1: weight_for_1}
 
         save_best = ModelCheckpoint(args.model_path + name + '_best.h5', monitor='val_loss', verbose=1, 
                                     save_best_only=True, save_weights_only=False, mode='min', period=1)
