@@ -74,13 +74,11 @@ if __name__ == "__main__":
                     gaze_phi = float(split[3].strip()[1:])
                     gaze_theta = float(split[4].strip()[:-1])
                     labels = [(head_phi, head_theta), (gaze_phi, gaze_theta)]
-                    left_image_grp = image_grp.create_group("left")
-                    right_image_grp = image_grp.create_group("right")
 
                     left_data = load_and_augment(left_img_path)
                     right_data = load_and_augment(right_img_path)
-                    left_image_grp.create_dataset("data", data=left_data, compression="gzip")
-                    right_image_grp.create_dataset("data", data=right_data, compression="gzip")
+                    image_grp.create_dataset("left", data=left_data, compression="lzf")
+                    image_grp.create_dataset("right", data=right_data, compression="lzf")
                     image_grp.create_dataset("label", data=labels)
 
     hdf_file.flush()

@@ -1,17 +1,15 @@
 import os
-import random
 from argparse import ArgumentParser
 
+import h5py
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from PIL import ImageFilter
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
-from torchvision import transforms
 
 from GazeAngleAccuracy import GazeAngleAccuracy
-from RTGENEFileDataset import RTGENEDataset
+from RTGENEH5Dataset import RTGENEDataset
 from RTGENEModel_Mobilenetv2 import RTGENEModelMobileNetV2
 from RTGENEModel_Resnet import RTGENEModelResnet18, RTGENEModelResnet50
 from RTGENEModel_VGG16 import RTGENEModelVGG
@@ -79,19 +77,12 @@ class TrainRTGENE(pl.LightningModule):
 
     @pl.data_loader
     def train_dataloader(self):
-        _transform = transforms.Compose([transforms.RandomResizedCrop(size=(224, 224), scale=(0.5, 1.0)),  # don't crop too much as our eyes are already bounded
-                                         transforms.RandomGrayscale(),
-                                         # transforms.RandomRotation(10, resample=Image.BILINEAR),
-                                         transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-                                         lambda x: x.filter(ImageFilter.GaussianBlur(radius=5 if random.random() >= 0.5 else 0)),
-                                         transforms.ToTensor(),
-                                         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-        _data_train = RTGENEDataset(root_path=self.hparams.data_root, subject_list=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], transform=_transform)
+        _data_train = RTGENEDataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
         return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True)
 
     @pl.data_loader
     def val_dataloader(self):
-        _data_validate = RTGENEDataset(root_path=self.hparams.data_root, subject_list=[15, 16])
+        _data_validate = RTGENEDataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[15, 16])
         return DataLoader(_data_validate, batch_size=self.hparams.batch_size, shuffle=True)
 
 
@@ -106,7 +97,7 @@ if __name__ == "__main__":
     _root_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
     _root_parser.add_argument('--learning_rate', default=0.001, type=float)
     _root_parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
-    _root_parser.add_argument('--data_root', default=os.path.abspath("/home/ahmed/Documents/RT_GENE/"), type=str)
+    _root_parser.add_argument('--hdf5_file', default=os.path.abspath("/home/ahmed/Documents/RT_GENE/dataset.hdf5"), type=str)
     _root_parser.add_argument('--save_dir', default=os.path.abspath(os.path.join(root_dir, '..', 'model_nets', 'rt_gene_pytorch_checkpoints')))
     _root_parser.add_argument('--batch_size', default=128, type=int)
 
@@ -115,10 +106,13 @@ if __name__ == "__main__":
 
     _model = TrainRTGENE(hparams=_hyperparams)
 
-    checkpoint_callback = ModelCheckpoint(filepath=_hyperparams.save_dir, monitor='val_loss', mode='min', verbose=True, save_top_k=2)  # save all the models
+    checkpoint_callback = ModelCheckpoint(filepath=_hyperparams.save_dir, monitor='val_loss', mode='min', verbose=True, save_top_k=-1)  # save all the models
 
-    earlystopping_callback = EarlyStopping(monitor="val_loss", patience=10, mode="min", verbose=True)
+    # earlystopping_callback = EarlyStopping(monitor="val_loss", patience=10, mode="min", verbose=True)
 
     # most basic trainer, uses good defaults
-    trainer = Trainer(gpus=_hyperparams.gpus, early_stop_callback=earlystopping_callback, checkpoint_callback=checkpoint_callback, progress_bar_refresh_rate=1)
+    trainer = Trainer(gpus=_hyperparams.gpus,
+                      early_stop_callback=False,
+                      checkpoint_callback=checkpoint_callback,
+                      progress_bar_refresh_rate=1)
     trainer.fit(_model)

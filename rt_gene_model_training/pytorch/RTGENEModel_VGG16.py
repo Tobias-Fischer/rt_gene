@@ -8,8 +8,8 @@ class RTGENEModelVGG(nn.Module):
 
     def __init__(self, num_out=2):  # phi, theta
         super(RTGENEModelVGG, self).__init__()
-        _left_model = models.vgg16(pretrained=True)
-        _right_model = models.vgg16(pretrained=True)
+        _left_model = models.vgg16_bn(pretrained=True)
+        _right_model = models.vgg16_bn(pretrained=True)
 
         # remove the last ConvBRelu layer
         _left_modules = [module for module in _left_model.features]
@@ -87,7 +87,6 @@ if __name__ == "__main__":
     model = model.cuda()
     model.eval()
     start_time = time.time()
-    outputs = []
-    for _ in trange(100):
-        outputs.append(model(trans_left_img, trans_right_img, head_pose_gen))
-    print("Evaluation Frequency: {:.3f}Hz".format(1.0 / ((time.time() - start_time) / 100.0)))
+    for _ in trange(5000):
+        model(trans_left_img, trans_right_img, head_pose_gen)
+    print("Evaluation Frequency: {:.3f}Hz".format(1.0 / ((time.time() - start_time) / 5000.0)))

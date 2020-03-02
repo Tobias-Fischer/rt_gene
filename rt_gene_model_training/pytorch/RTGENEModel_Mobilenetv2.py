@@ -28,7 +28,6 @@ class RTGENEModelMobileNetV2(nn.Module):
 
         # hourglass fc network as per original paper
         self.classifier = nn.Sequential(
-            nn.Dropout(0.2),
             nn.Linear(_num_ftrs, 1024),
             nn.BatchNorm1d(1024),
             nn.ReLU(),
