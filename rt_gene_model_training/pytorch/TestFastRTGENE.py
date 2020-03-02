@@ -8,7 +8,7 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from RTGENEModel_VGG16 import RTGENEModelVGG
+from RTGENEModel_Mobilenetv2 import RTGENEModelMobileNetV2
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
 from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
@@ -16,17 +16,17 @@ from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 __script_path = os.path.dirname(os.path.realpath(__file__))
 
 _landmark_estimator = LandmarkMethodBase(device_id_facedetection="cuda:0",
-                                         checkpoint_path_face=os.path.join(__script_path, "../model_nets/SFD/s3fd_facedetector.pth"),
-                                         checkpoint_path_landmark=os.path.join(__script_path, "../model_nets/phase1_wpdc_vdc.pth.tar"),
-                                         model_points_file=os.path.join(__script_path, "../model_nets/face_model_68.txt"))
+                                         checkpoint_path_face=os.path.abspath(os.path.join(__script_path, "../../rt_gene/model_nets/SFD/s3fd_facedetector.pth")),
+                                         checkpoint_path_landmark=os.path.abspath(os.path.join(__script_path, "../../rt_gene/model_nets/phase1_wpdc_vdc.pth.tar")),
+                                         model_points_file=os.path.abspath(os.path.join(__script_path, "../../rt_gene/model_nets/face_model_68.txt")))
 _transform = transforms.Compose([transforms.CenterCrop(224),
                                  transforms.ToTensor(),
                                  transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                       std=[0.229, 0.224, 0.225])])
 
 device_id_gazeestimation = "cuda:0"
-_model = RTGENEModelVGG()
-_torch_load = torch.load(os.path.join(__script_path, "../model_nets/rt_gene_pytorch_checkpoints/_ckpt_epoch_30.ckpt"))['state_dict']
+_model = RTGENEModelMobileNetV2()
+_torch_load = torch.load(os.path.join(__script_path, "../model_nets/rt_gene_pytorch_checkpoints/_ckpt_epoch_43w.ckpt"))['state_dict']
 # for some reason, the state_dict appends _model infront of the states, remove it:
 _state_dict = {k[7:]: v for k, v in _torch_load.items()}
 _model.load_state_dict(_state_dict)
@@ -34,9 +34,6 @@ _model.to(device_id_gazeestimation)
 _model.eval()
 
 _img_list = glob.glob(os.path.join(__script_path, "data/", "*.png"))
-print(__script_path)
-print(_img_list)
-print("")
 
 
 def extract_eye_image_patches(subject):
@@ -49,12 +46,12 @@ def extract_eye_image_patches(subject):
 
 
 try:
-    # for file in _img_list:
-    _cap = cv2.VideoCapture(2)
-    while True:
-        # frame = cv2.imread(file)
-        # ret = True
-        ret, frame = _cap.read()
+    for file in _img_list:
+    #_cap = cv2.VideoCapture(2)
+    #while True:
+        frame = cv2.imread(file)
+        ret = True
+        # ret, frame = _cap.read()
         if ret:
             cv2.imshow("frame", frame)
             stime = time.time()
@@ -90,7 +87,7 @@ try:
                 _transformed_right = _transform(Image.fromarray(subject.right_eye_color.astype('uint8'), 'RGB')).to(device_id_gazeestimation).unsqueeze(0)
                 _head_pose = torch.from_numpy(np.array([*head_pose])).to(device_id_gazeestimation).unsqueeze(0).float()
 
-                gaze = _model(_transformed_left, _transformed_right)
+                gaze = _model(_transformed_left, _transformed_right, _head_pose)
 
                 gaze = gaze.detach().cpu().numpy().tolist()
                 l_gaze_img = GazeEstimatorBase.visualize_eye_result(subject.left_eye_color, gaze[0])
@@ -98,7 +95,7 @@ try:
                 s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
 
                 cv2.imshow("patches", s_gaze_img)
-                cv2.waitKey(1)
+                cv2.waitKey(0)
 
 except KeyboardInterrupt:
     cv2.destroyAllWindows()
