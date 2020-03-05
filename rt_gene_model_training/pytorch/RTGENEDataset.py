@@ -1,20 +1,56 @@
 import os
 
-import cv2
+import h5py
 import numpy as np
 from PIL import Image
 from torch.utils import data
 from torchvision import transforms
+from tqdm import tqdm
 
-from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
+
+class RTGENEH5Dataset(data.Dataset):
+
+    def __init__(self, h5_file, subject_list=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16), transform=None):
+        self._h5_file = h5_file
+        self._transform = transform
+        self._subject_labels = []
+
+        if self._transform is None:
+            self._transform = transforms.Compose([transforms.Resize((224, 224), Image.BICUBIC),
+                                                  transforms.ToTensor(),
+                                                  transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+        _wanted_subjects = ["s{:03d}".format(_i) for _i in subject_list]
+
+        for grp_s_n in tqdm(_wanted_subjects, desc="Loading subject metadata..."):  # subjects
+            for grp_i_n, grp_i in h5_file[grp_s_n].items():  # images
+                if "left" in grp_i.keys() and "right" in grp_i.keys() and "label" in grp_i.keys():
+                    left_dataset = grp_i["left"]
+                    right_datset = grp_i['right']
+
+                    assert len(left_dataset) == len(right_datset), "Dataset left/right images aren't equal length"
+                    for _i in range(len(left_dataset)):
+                        self._subject_labels.append([grp_i.name, _i])
+
+    def __len__(self):
+        return len(self._subject_labels)
+
+    def __getitem__(self, index):
+        _sample = self._subject_labels[index]
+        _left_img = self._h5_file[_sample[0] + "/left"][_sample[1]][()]
+        _right_img = self._h5_file[_sample[0] + "/right"][_sample[1]][()]
+        label_data = self._h5_file[_sample[0]+"/label"][()]
+        _groud_truth_headpose = label_data[0][()].astype(np.float32)
+        _ground_truth_gaze = label_data[1][()].astype(np.float32)
+
+        # Load data and get label
+        _transformed_left = self._transform(Image.fromarray(_left_img, 'RGB'))
+        _transformed_right = self._transform(Image.fromarray(_right_img, 'RGB'))
+
+        return _transformed_left, _transformed_right, _groud_truth_headpose, _ground_truth_gaze
 
 
-class RTGENEDataset(data.Dataset):
-    __script_path = os.path.dirname(os.path.realpath(__file__))
-    __landmark_estimator = LandmarkMethodBase(device_id_facedetection="cuda:0",
-                                              checkpoint_path_face=os.path.join(__script_path, "../model_nets/SFD/s3fd_facedetector.pth"),
-                                              checkpoint_path_landmark=os.path.join(__script_path, "../model_nets/phase1_wpdc_vdc.pth.tar"),
-                                              model_points_file=os.path.join(__script_path, "../model_nets/face_model_68.txt"))
+class RTGENEFileDataset(data.Dataset):
 
     def __init__(self, root_path, subject_list=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16), transform=None):
         self._root_path = root_path
@@ -26,101 +62,47 @@ class RTGENEDataset(data.Dataset):
                                                   transforms.ToTensor(),
                                                   transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-        subject_path = [os.path.join(root_path, "s{:03d}_glasses/".format(i)) for i in subject_list]
+        subject_path = [os.path.join(root_path, "s{:03d}_glasses/".format(_i)) for _i in subject_list]
 
         for subject_data in subject_path:
             with open(os.path.join(subject_data, "label_combined.txt"), "r") as f:
                 _lines = f.readlines()
-                for l in _lines:
-                    split = l.split(",")
-                    img_name = os.path.join(subject_data, "inpainted/face_after_inpainting/", "{:0=6d}.png".format(int(split[0])))
-                    gaze_phi = float(split[3].strip()[1:])
-                    gaze_theta = float(split[4].strip()[:-1])
-                    self._subject_labels.append([img_name, gaze_phi, gaze_theta])
+                for line in _lines:
+                    split = line.split(",")
+                    left_img_path = os.path.join(subject_data, "inpainted/left_new/", "left_{:0=6d}_rgb.png".format(int(split[0])))
+                    right_img_path = os.path.join(subject_data, "inpainted/right_new/", "right_{:0=6d}_rgb.png".format(int(split[0])))
+                    if os.path.exists(left_img_path) and os.path.exists(right_img_path):
+                        head_phi = float(split[1].strip()[1:])
+                        head_theta = float(split[2].strip()[:-1])
+                        gaze_phi = float(split[3].strip()[1:])
+                        gaze_theta = float(split[4].strip()[:-1])
+                        self._subject_labels.append([left_img_path, right_img_path, head_phi, head_theta, gaze_phi, gaze_theta])
 
         print("=> Loaded metadata for {} images".format(len(self._subject_labels)))
-
-    @staticmethod
-    def _extract_eye_image_patches(subject):
-        le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject.transformed_landmarks, subject.face_color,
-                                                                        RTGENEDataset.__landmark_estimator.eye_image_size)
-        subject.left_eye_color = le_c
-        subject.right_eye_color = re_c
-        subject.left_eye_bb = le_bb
-        subject.right_eye_bb = re_bb
-
-    def _visualise_eye_patches(self, subject, pose, index):
-        if not hasattr(self, "_test_transform"):
-            self._test_transform = transforms.Compose([transforms.Resize((224, 224), Image.BICUBIC)])
-
-        _transformed_left = self._test_transform(Image.fromarray(subject.left_eye_color.astype('uint8'), 'RGB'))
-        _transformed_right = self._test_transform(Image.fromarray(subject.right_eye_color.astype('uint8'), 'RGB'))
-        s_gaze_img = np.concatenate((_transformed_right, _transformed_left), axis=1)
-
-        s_gaze_img = cv2.putText(s_gaze_img, 'Theta: {:+.2f}, Phi: {:+.2f}, Index: {:07d}'.format(pose[0], pose[1], index), (10, 200), cv2.FONT_HERSHEY_SIMPLEX,
-                                 0.6, (255, 255, 255), 1)
-        cv2.imshow("face", subject.face_color)
-        cv2.imshow("patches", s_gaze_img)
-        cv2.waitKey(1)
 
     def __len__(self):
         return len(self._subject_labels)
 
     def __getitem__(self, index):
-        try:
-            # Select sample
-            _sample = self._subject_labels[index]
-            _ground_truth_gaze = [_sample[1], _sample[2]]
+        _sample = self._subject_labels[index]
+        _groud_truth_headpose = [_sample[2], _sample[3]]
+        _ground_truth_gaze = [_sample[4], _sample[5]]
 
-            # Load data and get label
-            _img = np.array(Image.open(os.path.join(self._root_path, _sample[0])).convert('RGB'))
-            _img = cv2.cvtColor(_img, cv2.COLOR_BGR2RGB)
-            im_width, im_height = _img.shape[1], _img.shape[0]
-            _dist_coefficients, _camera_matrix = np.zeros((1, 5)), np.array(
-                [[im_height, 0.0, im_width / 2.0], [0.0, im_height, im_height / 2.0], [0.0, 0.0, 1.0]])
+        # Load data and get label
+        _left_img = np.array(Image.open(os.path.join(self._root_path, _sample[0])).convert('RGB'))
+        _right_img = np.array(Image.open(os.path.join(self._root_path, _sample[1])).convert('RGB'))
 
-            faceboxes = RTGENEDataset.__landmark_estimator.get_face_bb(_img)
+        _transformed_left = self._transform(Image.fromarray(_left_img, 'RGB'))
+        _transformed_right = self._transform(Image.fromarray(_right_img, 'RGB'))
 
-            if len(faceboxes) > 0:
-                subjects = RTGENEDataset.__landmark_estimator.get_subjects_from_faceboxes(_img, faceboxes)
-                subject = subjects[0]
-                self._extract_eye_image_patches(subject)
-
-                if subject.left_eye_color is None or subject.right_eye_color is None:
-                    raise ValueError("Unable to find eye patches for img: {}".format(os.path.join(self._root_path, _sample[0])))
-
-                success, rotation_vector, _ = cv2.solvePnP(RTGENEDataset.__landmark_estimator.model_points,
-                                                           subject.marks.reshape(len(subject.marks), 1, 2),
-                                                           cameraMatrix=_camera_matrix,
-                                                           distCoeffs=_dist_coefficients,
-                                                           flags=cv2.SOLVEPNP_DLS)
-
-                if not success:
-                    raise ValueError("SolvPnP Not successful for for img: {}".format(os.path.join(self._root_path, _sample[0])))
-
-                # TODO: change to whatever the latest in the standalone is
-                roll_pitch_yaw = np.array([-rotation_vector[2], -rotation_vector[0], rotation_vector[1] + np.pi]).flatten()
-                # roll_pitch_yaw = limit_yaw(np.array(roll_pitch_yaw).flatten().tolist())
-                # head_pose = get_phi_theta_psi_from_euler(roll_pitch_yaw)
-
-                _transformed_left = self._transform(Image.fromarray(subject.left_eye_color.astype('uint8'), 'RGB'))
-                _transformed_right = self._transform(Image.fromarray(subject.right_eye_color.astype('uint8'), 'RGB'))
-                # self._visualise_eye_patches(subject, _ground_truth_gaze, index)
-
-                return _transformed_left, _transformed_right, np.array(_ground_truth_gaze, dtype=np.float32), roll_pitch_yaw
-            else:
-                raise ValueError("No Face found for img: {}".format(os.path.join(self._root_path, _sample[0])))
-        except ValueError:
-            return None
+        return _transformed_left, _transformed_right, np.array(_groud_truth_headpose, dtype=np.float32), np.array(_ground_truth_gaze, dtype=np.float32)
 
 
 if __name__ == "__main__":
-    import nonechucks as nc
     from tqdm import trange
 
-    _ds = RTGENEDataset(root_path="../../data", subject_list=list(range(0, 17)))
-    _data_loader = nc.SafeDataLoader(nc.SafeDataset(_ds), batch_size=1, shuffle=False)
+    h5file = os.path.abspath("../..RT_GENE/dataset.hdf5")
+    _ds = RTGENEH5Dataset(h5_file=h5py.File(h5file, 'r'), subject_list=[0])
 
-    _data_loader_iter = iter(_data_loader)
-    for i in trange(100):
-        batch = next(_data_loader_iter)
+    for i in trange(1000):
+        left, right, head_pose, gaze_pose = _ds[i]
