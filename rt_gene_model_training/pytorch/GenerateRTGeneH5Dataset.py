@@ -26,26 +26,27 @@ _transforms_list = [transforms.RandomResizedCrop(size=_required_size, scale=(0.8
                     transforms.RandomResizedCrop(size=_required_size, scale=(0.85, 1.0)),
                     transforms.RandomResizedCrop(size=_required_size, scale=(0.85, 1.0)),
                     transforms.Grayscale(num_output_channels=3),
-                    lambda x: x.filter(ImageFilter.GaussianBlur(radius=1)).resize(_required_size),
-                    lambda x: x.filter(ImageFilter.GaussianBlur(radius=3)).resize(_required_size),
-                    lambda x: ImageOps.equalize(x).resize(_required_size)]  # histogram equalisation
+                    lambda x: x.filter(ImageFilter.GaussianBlur(radius=1)),
+                    lambda x: x.filter(ImageFilter.GaussianBlur(radius=3)),
+                    lambda x: ImageOps.equalize(x)]  # histogram equalisation
 
 
-def load_and_augment(file_path):
+def load_and_augment(file_path, augment=False):
     image = Image.open(file_path).resize(_required_size)
-    augmented_images = [np.array(trans(image)) for trans in _transforms_list]
-    augmented_images.append(np.array(image))
+    augmented_images = [np.array(trans(image)) for trans in _transforms_list if augment is True]
+    augmented_images.append(image)
 
     return np.array(augmented_images)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Estimate gaze from images')
-    parser.add_argument('--rt_gene_root', type=str, required=True,
-                        nargs='?', help='Path to the base directory of RT_GENE')
+    parser.add_argument('--rt_gene_root', type=str, required=True, nargs='?', help='Path to the base directory of RT_GENE')
+    parser.add_argument('--augment_dataset', type=bool, required=False, default=False, help="Whether to augment the dataset with predefined transforms")
 
     landmark_estimator = LandmarkMethodBase(device_id_facedetection="cuda:0",
-                                            checkpoint_path_face=os.path.abspath(os.path.join(script_path, "../../rt_gene/model_nets/SFD/s3fd_facedetector.pth")),
+                                            checkpoint_path_face=os.path.abspath(
+                                                os.path.join(script_path, "../../rt_gene/model_nets/SFD/s3fd_facedetector.pth")),
                                             checkpoint_path_landmark=os.path.abspath(
                                                 os.path.join(script_path, "../../rt_gene/model_nets/phase1_wpdc_vdc.pth.tar")),
                                             model_points_file=os.path.abspath(os.path.join(script_path, "../../rt_gene/model_nets/face_model_68.txt")))
@@ -73,10 +74,10 @@ if __name__ == "__main__":
                     head_theta = float(split[2].strip()[:-1])
                     gaze_phi = float(split[3].strip()[1:])
                     gaze_theta = float(split[4].strip()[:-1])
-                    labels = [(head_phi, head_theta), (gaze_phi, gaze_theta)]
+                    labels = [(head_theta, head_phi), (gaze_theta, gaze_phi)]
 
-                    left_data = load_and_augment(left_img_path)
-                    right_data = load_and_augment(right_img_path)
+                    left_data = load_and_augment(left_img_path, augment=args.augment_dataset)
+                    right_data = load_and_augment(right_img_path, augment=args.augment_dataset)
                     image_grp.create_dataset("left", data=left_data, compression="lzf")
                     image_grp.create_dataset("right", data=right_data, compression="lzf")
                     image_grp.create_dataset("label", data=labels)

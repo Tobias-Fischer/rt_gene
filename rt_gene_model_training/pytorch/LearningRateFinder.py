@@ -1,15 +1,14 @@
 import math
 
+import h5py
 import matplotlib.pyplot as plt
-import nonechucks as nc
 import torch
+from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import trange
 
-from RTGENEDataset import RTGENEDataset
-from RTGENEModel_Resnet import RTGENEModelResnet18
-
-print("PyTorch Version: ", torch.__version__)
+from RTGENEDataset import RTGENEH5Dataset
+from RTGENEModels import RTGENEModelResnet18
 
 
 class RTGENELearningRateFinder(object):
@@ -18,13 +17,12 @@ class RTGENELearningRateFinder(object):
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.writer = SummaryWriter()
 
-        data_train = RTGENEDataset(root_path="../../data", train=True)
-        epoch_length = 16000  # 0.97 * len(data_train)
+        data_train = RTGENEH5Dataset(h5_file=h5py.File("../../RT_GENE/dataset.h5", mode="r"), subject_list=[15, 16])
 
-        dataloader = nc.SafeDataLoader(nc.SafeDataset(data_train), batch_size=batch_size)
+        dataloader = DataLoader(data_train, batch_size=batch_size, shuffle=True, num_workers=4)
 
         # Train and evaluate
-        logs, losses = self.find_lr(model=model, dataloader=dataloader, criterion=loss, optimiser=optimiser, batch_size=batch_size, epoch_length=epoch_length)
+        logs, losses = self.find_lr(model=model, dataloader=dataloader, criterion=loss, optimiser=optimiser, batch_size=batch_size, epoch_length=len(data_train))
         plt.plot(logs[10:-5], losses[10:-5])
         plt.xscale('log')
         plt.show()
