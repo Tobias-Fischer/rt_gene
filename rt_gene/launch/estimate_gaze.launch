@@ -5,19 +5,17 @@
     <arg name="start_rviz" default="False" />
     <arg name="visualise_headpose" default="True" />
     <arg name="visualise_eyepose" default="True" />
-    <arg name="gaze_backend" default="tensorflow" />
 
     <arg name="video_namespace" default="/kinect2/hd" />
     <arg name="video_image_topic" default="image_color" />
     <arg name="video_info_topic" default="camera_info" />
 
     <arg name="camera_frame" default="kinect2_link" />
-    <arg name="ros_frame" default="kinect2_ros_frame" />
 
     <arg name="group_name" default="gaze" />
     <arg name="tf_prefix" default="$(arg group_name)" />
     <arg name="device_id_facedetection"  default="cuda:0" /> <!-- pyTorch format, e.g. cuda:0 or cpu:0 -->
-    <arg name="device_id_gazeestimation"  default="/gpu:0" /> <!-- tensorflow or pytorch formats, e.g. /gpu:0 or /cpu:0 or cuda:0 or cpu:0-->
+    <arg name="device_id_gazeestimation"  default="/gpu:0" /> <!-- tensorflow format, e.g. /gpu:0 or /cpu:0 -->
 
     <env name="OMP_NUM_THREADS" value="$(arg pytorch_num_threads)" />
     <env name="KMP_SETTING" value="KMP_AFFINITY=granularity=fine,compact,1,0" />
@@ -29,7 +27,6 @@
           <param name="use_face_encoding_tracker" value="$(arg use_face_encoding_tracker)" />
           <param name="face_encoding_threshold" value="$(arg face_encoding_threshold)" />
           <param name="camera_frame" value="$(arg camera_frame)" />
-          <param name="ros_tf_frame" value="$(arg ros_frame)" />
           <param name="tf_prefix" value="$(arg tf_prefix)" />
           <param name="visualise_headpose" value="$(arg visualise_headpose)" />
 
@@ -38,11 +35,10 @@
       </node>
 
       <node pkg="rt_gene" type="estimate_gaze.py" name="$(arg group_name)_estimate_gaze_twoeyes" output="screen">
-          <rosparam param="model_files">['model_nets/resnet_18_ckpt/_ckpt_epoch_1.ckpt', 'model_nets/resnet_18_ckpt/_ckpt_epoch_3.ckpt', 'model_nets/resnet_18_ckpt/_ckpt_epoch_5.ckpt']</rosparam>
+          <rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>
           <!-- rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_1_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_2_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_3_02.h5']</rosparam -->
           <param name="tf_prefix" value="$(arg tf_prefix)" />/
-          <param name="gaze_backend" value="$(arg gaze_backend)" />
-          <param name="ros_tf_frame" value="$(arg ros_frame)" />
+          <param name="camera_frame" value="$(arg camera_frame)" />
           <param name="device_id_gazeestimation"  value="$(arg device_id_gazeestimation)" />
           <param name="visualise_eyepose" value="$(arg visualise_eyepose)" />
       </node>
