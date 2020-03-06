@@ -74,7 +74,6 @@ class LandmarkMethodBase(object):
 
     def get_face_bb(self, image):
         faceboxes = []
-        start_time = time.time()
         fraction = 4.0
         image = cv2.resize(image, (0, 0), fx=1.0 / fraction, fy=1.0 / fraction)
         detections = self.face_net.detect_from_image(image)
