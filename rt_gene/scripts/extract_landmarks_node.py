@@ -10,25 +10,29 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 from __future__ import print_function, division, absolute_import
 
 import cv2
-import numpy as np
-import rospy
 from cv_bridge import CvBridge
-from dynamic_reconfigure.server import Server
-from geometry_msgs.msg import TransformStamped
-from image_geometry import PinholeCameraModel
-from rt_gene.cfg import ModelSizeConfig
-from rt_gene.msg import MSG_Headpose, MSG_HeadposeList
-from rt_gene.msg import MSG_Landmarks, MSG_LandmarksList
-from rt_gene.msg import MSG_SubjectImagesList
+from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from sensor_msgs.msg import Image, CameraInfo
-from tf import transformations
-from tf2_ros import TransformBroadcaster, TransformListener, Buffer
+from geometry_msgs.msg import TransformStamped
 from tqdm import tqdm
+from image_geometry import PinholeCameraModel
+from tf2_ros import TransformBroadcaster, TransformListener, Buffer
+from tf import transformations
+from dynamic_reconfigure.server import Server
+import rospy
+
+import numpy as np
 
 import rt_gene.gaze_tools as gaze_tools
 import rt_gene.ros_tools as ros_tools
-from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
+
 from rt_gene.kalman_stabilizer import Stabilizer
+
+from rt_gene.msg import MSG_SubjectImagesList
+from rt_gene.msg import MSG_Headpose, MSG_HeadposeList
+from rt_gene.msg import MSG_Landmarks, MSG_LandmarksList
+
+from rt_gene.cfg import ModelSizeConfig
 from rt_gene.subject_ros_bridge import SubjectListBridge
 from rt_gene.tracker_face_encoding import FaceEncodingTracker
 from rt_gene.tracker_sequential import SequentialTracker
