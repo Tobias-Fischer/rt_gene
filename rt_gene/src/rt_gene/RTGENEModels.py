@@ -150,7 +150,7 @@ class RTGENEModelResnet101(nn.Module):
 
 class RTGENEModelResnet18(nn.Module):
 
-    def __init__(self, num_out=2):  # phi, theta
+    def __init__(self, num_out=3):
         super(RTGENEModelResnet18, self).__init__()
         _left_model = models.resnet18(pretrained=True)
         _right_model = models.resnet18(pretrained=True)
@@ -352,8 +352,8 @@ if __name__ == "__main__":
 
     torch.backends.cudnn.benchmark = True
 
-    left_img = Image.open(os.path.abspath(os.path.join("../../RT_GENE/s001_glasses/", "inpainted/left/", "left_000004_rgb.png")))
-    right_img = Image.open(os.path.abspath(os.path.join("../../RT_GENE/s001_glasses/", "inpainted/right/", "right_000004_rgb.png")))
+    left_img = Image.open(os.path.abspath(os.path.join("../../../RT_GENE/s001_glasses/", "inpainted/left/", "left_000004_rgb.png")))
+    right_img = Image.open(os.path.abspath(os.path.join("../../../RT_GENE/s001_glasses/", "inpainted/right/", "right_000004_rgb.png")))
     head_pose_gen = torch.from_numpy(np.random.random(2)).unsqueeze(0).float().cuda()
 
     trans = transforms.Compose([transforms.Resize((224, 224), Image.BICUBIC),

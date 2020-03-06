@@ -5,11 +5,12 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
-from rt_gene.gaze_tools import get_endpoint
 from tqdm import tqdm
 
+from rt_gene.gaze_tools import get_endpoint
 
-class GazeEstimatorBase(object):
+
+class GazeEstimator(object):
     """This class encapsulates a deep neural network for gaze estimation.
 
     It retrieves two image streams, one containing the left eye and another containing the right eye.

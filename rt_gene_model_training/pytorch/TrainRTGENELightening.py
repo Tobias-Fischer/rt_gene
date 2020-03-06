@@ -1,5 +1,6 @@
 import os
 from argparse import ArgumentParser
+from functools import partial
 
 import h5py
 import numpy as np
@@ -11,6 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
 from GazeAngleAccuracy import GazeAngleAccuracy
+from PinballLoss import PinballLoss
 from RTGENEDataset import RTGENEH5Dataset
 from RTGENEModels import RTGENEModelMobileNetV2, RTGENEModelResnet18, RTGENEModelResnet50, RTGENEModelVGG
 
@@ -19,14 +21,22 @@ class TrainRTGENE(pl.LightningModule):
 
     def __init__(self, hparams):
         super(TrainRTGENE, self).__init__()
+        _loss_fn = {
+            "mse": partial(torch.nn.MSELoss, reduction="sum"),
+            "pinball": PinballLoss
+        }
+        _param_num = {
+            "mse": 2,
+            "pinball": 3
+        }
         _models = {
-            "vgg": RTGENEModelVGG,
-            "mobilenet": RTGENEModelMobileNetV2,
-            "resnet18": RTGENEModelResnet18,
-            "resnet50": RTGENEModelResnet50
+            "vgg": partial(RTGENEModelVGG, num_out=_param_num.get(hparams.loss_fn)),
+            "mobilenet": partial(RTGENEModelMobileNetV2, num_out=_param_num.get(hparams.loss_fn)),
+            "resnet18": partial(RTGENEModelResnet18, num_out=_param_num.get(hparams.loss_fn)),
+            "resnet50": partial(RTGENEModelResnet50, num_out=_param_num.get(hparams.loss_fn))
         }
         self._model = _models.get(hparams.model_base)()
-        self._criterion = torch.nn.MSELoss(reduction="sum")
+        self._criterion = _loss_fn.get(hparams.loss_fn)()
         self._angle_acc = GazeAngleAccuracy()
         self.hparams = hparams
 
@@ -38,8 +48,8 @@ class TrainRTGENE(pl.LightningModule):
 
         angular_out = self.forward(_left_patch, _right_patch, _headpose_label)
         loss = self._criterion(angular_out, _gaze_labels)
-        angle_acc = self._angle_acc(angular_out, _gaze_labels)
-        tensorboard_logs = {'train_loss': loss, 'train_angle_acc': angle_acc}
+        angle_acc = self._angle_acc(angular_out[:, :2], _gaze_labels)
+        tensorboard_logs = {'train_loss': loss, 'train_angle': angle_acc}
         return {'loss': loss, 'log': tensorboard_logs}
 
     def validation_step(self, batch, batch_idx):
@@ -47,14 +57,14 @@ class TrainRTGENE(pl.LightningModule):
 
         angular_out = self.forward(_left_patch, _right_patch, _headpose_label)
         loss = self._criterion(angular_out, _gaze_labels)
-        angle_acc = self._angle_acc(angular_out, _gaze_labels)
+        angle_acc = self._angle_acc(angular_out[:, :2], _gaze_labels)
 
-        return {'val_loss': loss, 'angle_acc': angle_acc}
+        return {'val_loss': loss, "angle_acc": angle_acc}
 
     def validation_end(self, outputs):
         _losses = torch.stack([x['val_loss'] for x in outputs])
         _angles = np.array([x['angle_acc'] for x in outputs])
-        tensorboard_logs = {'val_loss': _losses.mean(), 'val_angle_acc': np.mean(_angles), 'val_angle_std': np.std(_angles)}
+        tensorboard_logs = {'val_loss': _losses.mean(), 'val_angle': np.mean(_angles)}
         return {'val_loss': _losses.mean(), 'log': tensorboard_logs}
 
     def configure_optimizers(self):
@@ -74,18 +84,19 @@ class TrainRTGENE(pl.LightningModule):
     @pl.data_loader
     def train_dataloader(self):
         _train_transforms = transforms.Compose([transforms.RandomResizedCrop(size=(224, 224), scale=(0.85, 1.0)),
+                                                transforms.RandomRotation(degrees=10),
                                                 transforms.Resize((224, 224), Image.BICUBIC),
                                                 transforms.RandomGrayscale(p=0.08),
                                                 lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=2)),
-                                                lambda x: x if np.random.random_sample() > 0.0064 else x.filter(ImageFilter.GaussianBlur(radius=2)),
+                                                lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=2)),
                                                 transforms.ToTensor(),
                                                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-        _data_train = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        _data_train = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
         return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True, num_workers=4)
 
     @pl.data_loader
     def val_dataloader(self):
-        _data_validate = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[15, 16])
+        _data_validate = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[16])
         return DataLoader(_data_validate, batch_size=self.hparams.batch_size, shuffle=True, num_workers=4)
 
 
@@ -100,8 +111,9 @@ if __name__ == "__main__":
     _root_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
     _root_parser.add_argument('--learning_rate', default=0.00075, type=float)
     _root_parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
-    _root_parser.add_argument('--hdf5_file', default=os.path.abspath("/home/ahmed/Documents/RT_GENE/dataset.hdf5"), type=str)
-    _root_parser.add_argument('--save_dir', default=os.path.abspath(os.path.join(root_dir, '..', 'model_nets', 'rt_gene_pytorch_checkpoints')))
+    _root_parser.add_argument('--hdf5_file', default=os.path.abspath("../../RT_GENE/dataset.hdf5"), type=str)
+    _root_parser.add_argument('--save_dir', default=os.path.abspath(os.path.join(root_dir, '..', '..', 'rt_gene', 'model_nets', 'rt_gene_pytorch_checkpoints')))
+    _root_parser.add_argument('--loss_fn', choices=["mse", "pinball"], default="mse")
     _root_parser.add_argument('--batch_size', default=128, type=int)
 
     _model_parser = TrainRTGENE.add_model_specific_args(_root_parser, root_dir)
@@ -109,7 +121,7 @@ if __name__ == "__main__":
 
     _model = TrainRTGENE(hparams=_hyperparams)
 
-    checkpoint_callback = ModelCheckpoint(filepath=_hyperparams.save_dir, monitor='val_loss', mode='min', verbose=True, save_top_k=3)  # save the best models
+    checkpoint_callback = ModelCheckpoint(filepath=_hyperparams.save_dir, monitor='val_loss', mode='min', verbose=True, save_top_k=1)  # save the best models
 
     # earlystopping_callback = EarlyStopping(monitor="val_loss", patience=10, mode="min", verbose=True)
 
