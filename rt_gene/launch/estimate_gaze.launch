@@ -11,7 +11,6 @@
     <arg name="video_info_topic" default="camera_info" />
 
     <arg name="camera_frame" default="kinect2_link" />
-    <arg name="ros_frame" default="kinect2_ros_frame" />
 
     <arg name="group_name" default="gaze" />
     <arg name="tf_prefix" default="$(arg group_name)" />
@@ -28,7 +27,6 @@
           <param name="use_face_encoding_tracker" value="$(arg use_face_encoding_tracker)" />
           <param name="face_encoding_threshold" value="$(arg face_encoding_threshold)" />
           <param name="camera_frame" value="$(arg camera_frame)" />
-          <param name="ros_tf_frame" value="$(arg ros_frame)" />
           <param name="tf_prefix" value="$(arg tf_prefix)" />
           <param name="visualise_headpose" value="$(arg visualise_headpose)" />
 
@@ -40,7 +38,7 @@
           <rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>
           <!-- rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_1_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_2_02.h5', 'model_nets/all_subjects_mpii_prl_utmv_3_02.h5']</rosparam -->
           <param name="tf_prefix" value="$(arg tf_prefix)" />/
-          <param name="ros_tf_frame" value="$(arg ros_frame)" />
+          <param name="camera_frame" value="$(arg camera_frame)" />
           <param name="device_id_gazeestimation"  value="$(arg device_id_gazeestimation)" />
           <param name="visualise_eyepose" value="$(arg visualise_eyepose)" />
       </node>

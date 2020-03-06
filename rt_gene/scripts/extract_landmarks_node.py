@@ -46,7 +46,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.__subject_bridge = SubjectListBridge()
 
         self.camera_frame = rospy.get_param("~camera_frame", "kinect2_link")
-        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "kinect2_ros_frame")
 
         self.tf2_broadcaster = TransformBroadcaster()
         self.tf2_buffer = Buffer()
