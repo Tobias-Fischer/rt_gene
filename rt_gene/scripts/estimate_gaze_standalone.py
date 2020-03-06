@@ -4,18 +4,17 @@
 
 from __future__ import print_function, division, absolute_import
 
-import sys
-import os
 import argparse
+import os
+import sys
 
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from tqdm import tqdm
 
-from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
-from rt_gene.estimate_gaze_base import GazeEstimatorBase
+from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 from rt_gene.gaze_tools_standalone import euler_from_matrix
 
 script_path = os.path.dirname(os.path.realpath(__file__))
@@ -144,6 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('--save-gaze', dest='save_gaze', action='store_true', help='Save the gaze images')
     parser.add_argument('--save-estimate', dest='save_estimate', action='store_true', help='Save the predictions in a text file')
     parser.add_argument('--no-save-gaze', dest='save_gaze', action='store_false', help='Do not save the gaze images')
+    parser.add_argument('--gaze_backend', choices=['tensorflow', 'pytorch'], default='tensorflow')
     parser.add_argument('--output_path', type=str, default=os.path.join(script_path, '../samples/out'), help='Output directory for head pose and gaze images')
     parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')],
                         help='List of gaze estimators')
@@ -174,7 +174,15 @@ if __name__ == '__main__':
                                             checkpoint_path_face=os.path.join(script_path, "../model_nets/SFD/s3fd_facedetector.pth"),
                                             checkpoint_path_landmark=os.path.join(script_path, "../model_nets/phase1_wpdc_vdc.pth.tar"),
                                             model_points_file=os.path.join(script_path, "../model_nets/face_model_68.txt"))
-    gaze_estimator = GazeEstimatorBase(device_id_gaze="/gpu:0", model_files=args.models)
+
+    if args.gaze_backend == "tensorflow":
+        from rt_gene.estimate_gaze_base_tensorflow import GazeEstimator
+        gaze_estimator = GazeEstimator("/gpu:0", args.models)
+    elif args.gaze_backend == "pytorch":
+        from rt_gene.estimate_gaze_base_pytorch import GazeEstimator
+        gaze_estimator = GazeEstimator("cuda:0", args.models)
+    else:
+        raise ValueError("Incorrect gaze_base backend, choices are: tensorflow or pytorch")
 
     if not os.path.isdir(args.output_path):
         os.makedirs(args.output_path)
