@@ -24,6 +24,7 @@ import rospy
 import numpy as np
 
 import rt_gene.gaze_tools as gaze_tools
+import rt_gene.ros_tools as ros_tools
 
 from rt_gene.kalman_stabilizer import Stabilizer
 
@@ -43,10 +44,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.subject_tracker = FaceEncodingTracker() if rospy.get_param("~use_face_encoding_tracker", default=True) else SequentialTracker()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
-        self.__camera_to_ros = [[0.0, 0.0, 1.0, 0.0],
-                                [-1.0, 0.0, 0.0, 0.0],
-                                [0.0, -1.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 1.0]]
 
         self.camera_frame = rospy.get_param("~camera_frame", "kinect2_link")
         self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "kinect2_ros_frame")
@@ -97,7 +94,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
         return config
 
     def process_image(self, color_msg):
-        color_img = gaze_tools.convert_image(color_msg, "bgr8")
+        color_img = ros_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 
         self.update_subject_tracker(color_img)
@@ -124,7 +121,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 self.publish_pose(timestamp, translation_vector, head_rpy, subject_id)
 
                 if self.visualise_headpose:
-                    roll_pitch_yaw = list(transformations.euler_from_matrix(np.dot(self.__camera_to_ros, transformations.euler_matrix(*head_rpy))))
+                    roll_pitch_yaw = list(transformations.euler_from_matrix(np.dot(ros_tools.camera_to_ros, transformations.euler_matrix(*head_rpy))))
                     roll_pitch_yaw = gaze_tools.limit_yaw(roll_pitch_yaw)
 
                     face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
