@@ -93,7 +93,7 @@ if __name__ == '__main__':
     parser.add_argument('--left', type=str, help='Path to a left eye image or a directory containing left eye images', required=True)
     parser.add_argument('--right', type=str, help='Path to a right eye image or a directory containing images right eye images', required=True)
     parser.add_argument('--model', nargs='+', type=str,
-                        default=[os.path.join(script_path, '../model_nets/blink_model_1.h5')],
+                        default=[os.path.join(script_path, '../rt_gene/model_nets/blink_model_1.h5')],
                         help='List of blink estimators')
     parser.add_argument('--threshold', type=float, default=0.5,
                         help='Threshold to determine weither the prediction is positive or negative')
