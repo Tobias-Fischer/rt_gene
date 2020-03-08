@@ -33,10 +33,10 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     1. `export PYTHONPATH=$HOME/rt_gene/rt_gene/src`
 
 ## Basic usage
-- Run `$HOME/rt_gene/rt_gene/scripts/estimate_gaze_standalone.py`. For supported arguments, run `$HOME/rt_gene/rt_gene/scripts/estimate_gaze_standalone.py --help`
+- Run `$HOME/rt_gene/rt_gene_standalone/estimate_gaze_standalone.py`. For supported arguments, run `$HOME/rt_gene/rt_gene_standalone/estimate_gaze_standalone.py --help`
 
 ### Optional ensemble model files
-- To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, simply use the `--models` argument, e.g `cd $HOME/rt_gene/ && ./rt_gene/scripts/estimate_gaze_standalone.py --models './rt_gene/model_nets/all_subjects_mpii_prl_utmv_0_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_1_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_2_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_3_02.h5'`
+- To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, simply use the `--models` argument, e.g `cd $HOME/rt_gene/ && ./rt_gene_standalone/estimate_gaze_standalone.py --models './rt_gene/model_nets/all_subjects_mpii_prl_utmv_0_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_1_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_2_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_3_02.h5'`
 
 ## List of libraries
 See [main README.md](../rt_gene/README.md)
@@ -62,10 +62,10 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 Please follow the steps given for RT-GENE above.
 
 ## Basic usage
-- Run `$HOME/rt_gene/rt_gene/scripts/estimate_blink_standalone.py`. For supported arguments, run `$HOME/rt_gene/rt_gene/scripts/estimate_blink_standalone.py --help`
+- Run `$HOME/rt_gene/rt_gene_standalone/estimate_blink_standalone.py`. For supported arguments, run `$HOME/rt_gene_standalone/scripts/estimate_blink_standalone.py --help`
 
 ### Optional ensemble model files
-- To use an ensemble scheme using multiple models, simply use the `--model` argument, e.g `cd $HOME/rt_gene/ && ./rt_gene/scripts/estimate_blink_standalone.py --models './rt_gene/model_nets/blink_model_1.h5' './rt_gene/model_nets/blink_model_2.h5'`
+- To use an ensemble scheme using multiple models, simply use the `--model` argument, e.g `cd $HOME/rt_gene/ && ./rt_gene_standalone/estimate_blink_standalone.py --models './rt_gene/model_nets/blink_model_1.h5' './rt_gene/model_nets/blink_model_2.h5'`
 
 ## List of libraries
 See [main README.md](../rt_gene/README.md)
