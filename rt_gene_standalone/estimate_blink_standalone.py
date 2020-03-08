@@ -17,7 +17,7 @@ script_path = os.path.dirname(os.path.realpath(__file__))
 
 def str2bool(v):
     if isinstance(v, bool):
-       return v
+        return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
@@ -68,11 +68,11 @@ class BlinkEstimatorFolderPair(BlinkEstimatorStandalone):
         left_images = []
         right_images = []
 
-        for left_image_name in listdir(left_folder_path):
+        for left_image_name in sorted(listdir(left_folder_path)):
             left_image_path = left_folder_path + '/' + left_image_name
             left_images.append(self.load_img(left_image_path, False))
 
-        for right_image_name in listdir(right_folder_path):
+        for right_image_name in sorted(listdir(right_folder_path)):
             right_image_path = right_folder_path + '/' + right_image_name
             right_images.append(self.load_img(right_image_path, True))
 
