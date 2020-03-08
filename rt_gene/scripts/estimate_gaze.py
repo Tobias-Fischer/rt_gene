@@ -44,7 +44,6 @@ class GazeEstimatorROS(GazeEstimatorBase):
 
         self.tf_prefix = rospy.get_param("~tf_prefix", "gaze")
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
-        self.camera_frame = rospy.get_param("~camera_frame", "kinect2_link")
 
         self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
         self.subjects_gaze_img = rospy.Publisher("/subjects/gazeimages", Image, queue_size=3)
@@ -69,6 +68,7 @@ class GazeEstimatorROS(GazeEstimatorBase):
         and this image is published along with the estimated gaze vector (see :meth:`publish_image` and
         :func:`publish_gaze`)"""
         timestamp = subject_image_list.header.stamp
+        camera_frame = subject_image_list.header.frame_id
 
         subjects_dict = self.subjects_bridge.msg_to_images(subject_image_list)
         input_r_list = []
@@ -77,7 +77,7 @@ class GazeEstimatorROS(GazeEstimatorBase):
         valid_subject_list = []
         for subject_id, s in subjects_dict.items():
             try:
-                transform_msg = self.tf2_buffer.lookup_transform(self.camera_frame, self.headpose_frame + str(subject_id), timestamp)
+                transform_msg = self.tf2_buffer.lookup_transform(camera_frame, self.headpose_frame + str(subject_id), timestamp)
                 rot_head = transform_msg.transform.rotation
                 _m = transformations.quaternion_matrix([rot_head.x, rot_head.y, rot_head.z, rot_head.w])
                 euler_angles_head = list(transformations.euler_from_matrix(np.dot(ros_tools.camera_to_ros, _m)))

@@ -45,8 +45,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
 
-        self.camera_frame = rospy.get_param("~camera_frame", "kinect2_link")
-
         self.tf2_broadcaster = TransformBroadcaster()
         self.tf2_buffer = Buffer()
         self.tf2_listener = TransformListener(self.tf2_buffer)
@@ -62,6 +60,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 self.img_proc = PinholeCameraModel()
                 # noinspection PyTypeChecker
                 self.img_proc.fromCameraInfo(cam_info)
+                self.camera_frame = cam_info.header.frame_id
             else:
                 self.img_proc = img_proc
 
@@ -196,6 +195,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
     def publish_subject_list(self, timestamp, subjects):
         assert (subjects is not None)
         subject_list_message = self.__subject_bridge.images_to_msg(subjects, timestamp)
+        subject_list_message.header.frame_id = self.camera_frame
         self.subject_pub.publish(subject_list_message)
 
         landmark_msg_list = MSG_LandmarksList()
