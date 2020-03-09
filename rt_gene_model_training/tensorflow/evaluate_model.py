@@ -8,20 +8,15 @@ VGG-16/VGG-19 architecture applied to RT-GENE Dataset
 from __future__ import print_function, division, absolute_import
 
 import argparse
-import os, os.path
-import numpy as np
-import h5py
-import math
 import gc
-import glob
-from sklearn.model_selection import KFold
+import os.path
 
+import h5py
+import numpy as np
 import tensorflow as tf
-from tensorflow.keras.models import Model, load_model
 from tensorflow.keras import backend as K
-
+from tensorflow.keras.models import load_model
 from train_tools import *
-
 
 tf.compat.v1.disable_eager_execution()
 

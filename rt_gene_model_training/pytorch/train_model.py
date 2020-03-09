@@ -7,14 +7,14 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 from PIL import Image, ImageFilter
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
-from GazeAngleAccuracy import GazeAngleAccuracy
-from PinballLoss import PinballLoss
-from RTGENEDataset import RTGENEH5Dataset
-from RTGENEModels import RTGENEModelMobileNetV2, RTGENEModelResnet18, RTGENEModelResnet50, RTGENEModelVGG
+from gaze_estimation_models_pytorch import GazeEstimationModelMobileNetV2, GazeEstimationmodelResnet18, GazeEstimationModelResnet50, GazeEstimationModelVGG
+from rtgene_dataset import RTGENEH5Dataset
+from utils.GazeAngleAccuracy import GazeAngleAccuracy
+from utils.PinballLoss import PinballLoss
 
 
 class TrainRTGENE(pl.LightningModule):
@@ -30,10 +30,10 @@ class TrainRTGENE(pl.LightningModule):
             "pinball": 3
         }
         _models = {
-            "vgg": partial(RTGENEModelVGG, num_out=_param_num.get(hparams.loss_fn)),
-            "mobilenet": partial(RTGENEModelMobileNetV2, num_out=_param_num.get(hparams.loss_fn)),
-            "resnet18": partial(RTGENEModelResnet18, num_out=_param_num.get(hparams.loss_fn)),
-            "resnet50": partial(RTGENEModelResnet50, num_out=_param_num.get(hparams.loss_fn))
+            "vgg": partial(GazeEstimationModelVGG, num_out=_param_num.get(hparams.loss_fn)),
+            "mobilenet": partial(GazeEstimationModelMobileNetV2, num_out=_param_num.get(hparams.loss_fn)),
+            "resnet18": partial(GazeEstimationmodelResnet18, num_out=_param_num.get(hparams.loss_fn)),
+            "resnet50": partial(GazeEstimationModelResnet50, num_out=_param_num.get(hparams.loss_fn))
         }
         self._model = _models.get(hparams.model_base)()
         self._criterion = _loss_fn.get(hparams.loss_fn)()
@@ -84,14 +84,16 @@ class TrainRTGENE(pl.LightningModule):
     @pl.data_loader
     def train_dataloader(self):
         _train_transforms = transforms.Compose([transforms.RandomResizedCrop(size=(224, 224), scale=(0.85, 1.0)),
-                                                transforms.RandomRotation(degrees=10),
+                                                transforms.RandomRotation(degrees=5),
                                                 transforms.Resize((224, 224), Image.BICUBIC),
                                                 transforms.RandomGrayscale(p=0.08),
-                                                lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=2)),
-                                                lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=2)),
+                                                lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=5)),
+                                                lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=8)),
                                                 transforms.ToTensor(),
                                                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-        _data_train = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+        _data_train = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"),
+                                      subject_list=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                                      transform=None)
         return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True, num_workers=4)
 
     @pl.data_loader
@@ -109,7 +111,7 @@ if __name__ == "__main__":
 
     # gpu args
     _root_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
-    _root_parser.add_argument('--learning_rate', default=0.00075, type=float)
+    _root_parser.add_argument('--learning_rate', default=0.000325, type=float)
     _root_parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
     _root_parser.add_argument('--hdf5_file', default=os.path.abspath("../../RT_GENE/dataset.hdf5"), type=str)
     _root_parser.add_argument('--save_dir', default=os.path.abspath(os.path.join(root_dir, '..', '..', 'rt_gene', 'model_nets', 'rt_gene_pytorch_checkpoints')))
@@ -123,9 +125,8 @@ if __name__ == "__main__":
 
     checkpoint_callback = ModelCheckpoint(filepath=_hyperparams.save_dir, monitor='val_loss', mode='min', verbose=True, save_top_k=1)  # save the best models
 
-    # earlystopping_callback = EarlyStopping(monitor="val_loss", patience=10, mode="min", verbose=True)
+    earlystopping_callback = EarlyStopping(monitor="val_loss", patience=5, mode="min", verbose=True)
 
-    # most basic trainer, uses good defaults
     trainer = Trainer(gpus=_hyperparams.gpus,
                       early_stop_callback=False,
                       checkpoint_callback=checkpoint_callback,

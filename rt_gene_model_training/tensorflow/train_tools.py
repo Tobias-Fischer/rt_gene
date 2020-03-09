@@ -1,18 +1,17 @@
 from __future__ import print_function, division
 
 import math
-import numpy as np
 
+import numpy as np
+from tensorflow.keras import initializers
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.applications.vgg19 import VGG19
-from tensorflow.keras.applications.mobilenet import MobileNet
-from tensorflow.keras.applications.densenet import DenseNet121, DenseNet169, DenseNet201
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Input, concatenate, \
-    BatchNormalization, Activation, Conv2D, MaxPooling2D, Flatten
-from tensorflow.keras import initializers
+    BatchNormalization, Activation
 from tensorflow.keras.models import Model
-
 from tqdm import tqdm
+
+
 # from tqdm import tqdm_notebook as tqdm
 
 

@@ -9,8 +9,6 @@ from PIL import Image, ImageFilter, ImageOps
 from torchvision import transforms
 from tqdm import tqdm
 
-from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
-
 script_path = os.path.dirname(os.path.realpath(__file__))
 
 # Tobias randomly crops and resizes the image 10 times in the `prepare_dataset.m` along side two blurring stages, grayscaling and histogram normalisation
@@ -34,22 +32,15 @@ _transforms_list = [transforms.RandomResizedCrop(size=_required_size, scale=(0.8
 def load_and_augment(file_path, augment=False):
     image = Image.open(file_path).resize(_required_size)
     augmented_images = [np.array(trans(image)) for trans in _transforms_list if augment is True]
-    augmented_images.append(image)
+    augmented_images.append(np.array(image))
 
-    return np.array(augmented_images)
+    return np.array(augmented_images, dtype=np.uint8)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Estimate gaze from images')
     parser.add_argument('--rt_gene_root', type=str, required=True, nargs='?', help='Path to the base directory of RT_GENE')
     parser.add_argument('--augment_dataset', type=bool, required=False, default=False, help="Whether to augment the dataset with predefined transforms")
-
-    landmark_estimator = LandmarkMethodBase(device_id_facedetection="cuda:0",
-                                            checkpoint_path_face=os.path.abspath(
-                                                os.path.join(script_path, "../../rt_gene/model_nets/SFD/s3fd_facedetector.pth")),
-                                            checkpoint_path_landmark=os.path.abspath(
-                                                os.path.join(script_path, "../../rt_gene/model_nets/phase1_wpdc_vdc.pth.tar")),
-                                            model_points_file=os.path.abspath(os.path.join(script_path, "../../rt_gene/model_nets/face_model_68.txt")))
 
     args = parser.parse_args()
 

@@ -8,16 +8,14 @@ VGG-16/VGG-19 architecture applied to RT-GENE Dataset
 from __future__ import print_function, division, absolute_import
 
 import argparse
+import gc
 import os
 
 import h5py
-import gc
-
 import tensorflow as tf
 from tensorflow.keras import backend as K
-from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
+from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
-
 from train_tools import *
 
 tf.compat.v1.disable_eager_execution()
