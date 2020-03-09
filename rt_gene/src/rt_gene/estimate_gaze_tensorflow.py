@@ -1,16 +1,13 @@
 # Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 
-import os
-
-import cv2
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from rt_gene.gaze_tools import get_endpoint
+from estimate_gaze_base import GazeEstimatorBase
 
 
-class GazeEstimator(object):
+class GazeEstimator(GazeEstimatorBase):
     """This class encapsulates a deep neural network for gaze estimation.
 
     It retrieves two image streams, one containing the left eye and another containing the right eye.
@@ -19,11 +16,8 @@ class GazeEstimator(object):
     results in the estimated gaze for this frame. The estimated gaze is then published in the (theta, phi) notation."""
 
     def __init__(self, device_id_gaze, model_files):
-        if "OMP_NUM_THREADS" not in os.environ:
-            os.environ["OMP_NUM_THREADS"] = "8"
-        tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
+        super(GazeEstimator, self).__init__(device_id_gaze, model_files)
 
-        self.device_id_gazeestimation = device_id_gaze
         tf.compat.v1.disable_eager_execution()
         if 'output_all_intermediates' in dir(tf.compat.v1.experimental):
             tf.compat.v1.experimental.output_all_intermediates(True)
@@ -43,10 +37,7 @@ class GazeEstimator(object):
         img_input_r = tf.keras.Input(shape=(36, 60, 3), name='img_input_R')
         headpose_input = tf.keras.Input(shape=(2,), name='headpose_input')
 
-        if not isinstance(model_files, list):
-            model_files = [model_files]
-
-        for model_file in model_files:
+        for model_file in self.model_files:
             tqdm.write('Load model ' + model_file)
             models.append(tf.keras.models.load_model(model_file, compile=False))
             # noinspection PyProtectedMember
@@ -82,21 +73,7 @@ class GazeEstimator(object):
             mean_prediction[:, 1] += self._gaze_offset
             return mean_prediction  # returns [subject : [gaze_pose]]
 
-    @staticmethod
-    def visualize_eye_result(eye_image, est_gaze):
-        """Here, we take the original eye eye_image and overlay the estimated gaze."""
-        output_image = np.copy(eye_image)
-
-        center_x = output_image.shape[1] / 2
-        center_y = output_image.shape[0] / 2
-
-        endpoint_x, endpoint_y = get_endpoint(est_gaze[0], est_gaze[1], center_x, center_y, 50)
-
-        cv2.line(output_image, (int(center_x), int(center_y)), (int(endpoint_x), int(endpoint_y)), (255, 0, 0))
-        return output_image
-
-    @staticmethod
-    def input_from_image(cv_image):
+    def input_from_image(self, cv_image):
         """This method converts an eye_img_msg provided by the landmark estimator, and converts it to a format
         suitable for the gaze network."""
         currimg = cv_image.reshape(36, 60, 3, order='F')

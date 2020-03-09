@@ -29,7 +29,7 @@ import rt_gene.gaze_tools as gaze_tools
 from rt_gene.subject_ros_bridge import SubjectListBridge
 
 
-class GazeEstimatorROS:
+class GazeEstimatorROS(object):
     def __init__(self, device_id_gaze, model_files):
         self.bridge = CvBridge()
         self.subjects_bridge = SubjectListBridge()
@@ -44,10 +44,10 @@ class GazeEstimatorROS:
         self.gaze_backend = rospy.get_param("~gaze_backend", "tensorflow")
 
         if self.gaze_backend == "tensorflow":
-            from rt_gene.estimate_gaze_base_tensorflow import GazeEstimator
+            from rt_gene.estimate_gaze_tensorflow import GazeEstimator
             self._gaze_estimator = GazeEstimator(device_id_gaze, model_files)
         elif self.gaze_backend == "pytorch":
-            from rt_gene.estimate_gaze_base_pytorch import GazeEstimator
+            from rt_gene.estimate_gaze_pytorch import GazeEstimator
             self._gaze_estimator = GazeEstimator(device_id_gaze, model_files)
         else:
             raise ValueError("Incorrect gaze_base backend, choices are: tensorflow or pytorch")

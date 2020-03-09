@@ -3,10 +3,42 @@ import torch.nn as nn
 from torchvision import models
 
 
-class RTGENEModelResnet50(nn.Module):
+class GazeEstimationAbstractModel(nn.Module):
+
+    def __init__(self):
+        super(GazeEstimationAbstractModel, self).__init__()
+
+    @staticmethod
+    def _create_fc_layers(num_out, num_features, fc=None):
+        if fc is None:
+            fc = [1024, 512, 256]
+
+        classifier = nn.Sequential(
+            nn.Linear(num_features, fc[0]),
+            nn.BatchNorm1d(fc[0]),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(fc[0], fc[1]),
+            nn.BatchNorm1d(fc[1]),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(fc[1], fc[2]),
+            nn.BatchNorm1d(fc[2]),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(fc[2], num_out)
+        )
+        return classifier
+
+    @staticmethod
+    def _init_weights(modules):
+        for m in modules:
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_uniform_(m.weight, mode="fan_in", nonlinearity="leaky_relu")
+                nn.init.zeros_(m.bias)
+
+
+class GazeEstimationModelResnet50(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):  # phi, theta
-        super(RTGENEModelResnet50, self).__init__()
+        super(GazeEstimationModelResnet50, self).__init__()
         _left_model = models.resnet50(pretrained=True)
         _right_model = models.resnet50(pretrained=True)
 
@@ -41,27 +73,8 @@ class RTGENEModelResnet50(nn.Module):
             param.requires_grad = True
 
         _num_ftrs = _left_model.fc.in_features + _right_model.fc.in_features + 2  # left, right and head_pose
-        self.classifier = nn.Sequential(
-            nn.Linear(_num_ftrs, 1024),
-            nn.BatchNorm1d(1024),
-            nn.ReLU(),
-            nn.Linear(1024, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Linear(256, num_out)
-        )
-
-        # self.init_weights()
-
-    def init_weights(self):
-        # weight initialization
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
-                nn.init.zeros_(m.bias)
+        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
+        GazeEstimationAbstractModel._init_weights(self.modules())
 
     def forward(self, left_eye, right_eye, headpose):
         left_x = self.left_features(left_eye)
@@ -77,81 +90,10 @@ class RTGENEModelResnet50(nn.Module):
         return fc_output
 
 
-class RTGENEModelResnet101(nn.Module):
-
-    def __init__(self, num_out=2):  # phi, theta
-        super(RTGENEModelResnet101, self).__init__()
-        _left_model = models.resnet101(pretrained=True)
-        _right_model = models.resnet101(pretrained=True)
-
-        # remove the last ConvBRelu layer
-        self.left_features = nn.Sequential(
-            *list([_left_model.conv1,
-                   _left_model.bn1,
-                   _left_model.relu,
-                   _left_model.maxpool,
-                   _left_model.layer1,
-                   _left_model.layer2,
-                   _left_model.layer3,
-                   _left_model.layer4,
-                   _left_model.avgpool])
-        )
-
-        self.right_features = nn.Sequential(
-            *list([_right_model.conv1,
-                   _right_model.bn1,
-                   _right_model.relu,
-                   _right_model.maxpool,
-                   _right_model.layer1,
-                   _right_model.layer2,
-                   _right_model.layer3,
-                   _right_model.layer4,
-                   _right_model.avgpool])
-        )
-
-        for param in self.left_features.parameters():
-            param.requires_grad = True
-        for param in self.right_features.parameters():
-            param.requires_grad = True
-
-        _num_ftrs = _left_model.fc.in_features + _right_model.fc.in_features + 2 # left, right and head_pose
-        self.classifier = nn.Sequential(
-            nn.Linear(_num_ftrs, _num_ftrs),
-            nn.BatchNorm1d(_num_ftrs),
-            nn.ReLU(),
-            nn.Linear(_num_ftrs, _num_ftrs),
-            nn.BatchNorm1d(_num_ftrs),
-            nn.ReLU(),
-            nn.Linear(_num_ftrs, num_out)
-        )
-
-        # self.init_weights()
-
-    def init_weights(self):
-        # weight initialization
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
-                nn.init.zeros_(m.bias)
-
-    def forward(self, left_eye, right_eye, headpose):
-        left_x = self.left_features(left_eye)
-        left_x = torch.flatten(left_x, 1)
-
-        right_x = self.right_features(right_eye)
-        right_x = torch.flatten(right_x, 1)
-
-        concat = torch.cat((left_x, right_x, headpose), dim=1)
-
-        fc_output = self.classifier(concat)
-
-        return fc_output
-
-
-class RTGENEModelResnet18(nn.Module):
+class GazeEstimationmodelResnet18(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=3):
-        super(RTGENEModelResnet18, self).__init__()
+        super(GazeEstimationmodelResnet18, self).__init__()
         _left_model = models.resnet18(pretrained=True)
         _right_model = models.resnet18(pretrained=True)
 
@@ -186,24 +128,8 @@ class RTGENEModelResnet18(nn.Module):
             param.requires_grad = True
 
         _num_ftrs = _left_model.fc.in_features + _right_model.fc.in_features + 2  # left, right and head_pose
-        self.classifier = nn.Sequential(
-            nn.Linear(_num_ftrs, _num_ftrs),
-            nn.BatchNorm1d(_num_ftrs),
-            nn.ReLU(),
-            nn.Linear(_num_ftrs, _num_ftrs),
-            nn.BatchNorm1d(_num_ftrs),
-            nn.ReLU(),
-            nn.Linear(_num_ftrs, num_out)
-        )
-
-        # self.init_weights()
-
-    def init_weights(self):
-        # weight initialization
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.orthogonal_(m.weight)
-                nn.init.zeros_(m.bias)
+        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
+        GazeEstimationAbstractModel._init_weights(self.modules())
 
     def forward(self, left_eye, right_eye, headpose):
         left_x = self.left_features(left_eye)
@@ -219,10 +145,10 @@ class RTGENEModelResnet18(nn.Module):
         return fc_output
 
 
-class RTGENEModelMobileNetV2(nn.Module):
+class GazeEstimationModelMobileNetV2(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):  # phi, theta
-        super(RTGENEModelMobileNetV2, self).__init__()
+        super(GazeEstimationModelMobileNetV2, self).__init__()
         _left_model = models.mobilenet_v2(pretrained=True)
         _right_model = models.mobilenet_v2(pretrained=True)
         _adaptive_max_pooling = torch.nn.AdaptiveAvgPool1d(1024)
@@ -241,29 +167,8 @@ class RTGENEModelMobileNetV2(nn.Module):
             param.requires_grad = True
 
         _num_ftrs = _left_model.classifier[1].in_features + _right_model.classifier[1].in_features + 2  # left, right and head_pose
-
-        # hourglass fc network as per original paper
-        self.classifier = nn.Sequential(
-            nn.Linear(_num_ftrs, 1024),
-            nn.BatchNorm1d(1024),
-            nn.ReLU(),
-            nn.Linear(1024, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Linear(256, num_out)
-        )
-
-       # self.init_weights()
-
-    def init_weights(self):
-        # weight initialization
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
-                nn.init.zeros_(m.bias)
+        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
+        GazeEstimationAbstractModel._init_weights(self.modules())
 
     def forward(self, left_eye, right_eye, headpose):
         left_x = self.left_features(left_eye)
@@ -284,10 +189,10 @@ class RTGENEModelMobileNetV2(nn.Module):
         return fc_output
 
 
-class RTGENEModelVGG(nn.Module):
+class GazeEstimationModelVGG(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):  # phi, theta
-        super(RTGENEModelVGG, self).__init__()
+        super(GazeEstimationModelVGG, self).__init__()
         _left_model = models.vgg16_bn(pretrained=True)
         _right_model = models.vgg16_bn(pretrained=True)
 
@@ -306,27 +211,8 @@ class RTGENEModelVGG(nn.Module):
             param.requires_grad = True
 
         _num_ftrs = _left_model.classifier[0].in_features + _right_model.classifier[0].in_features + 2  # left, right and head_pose
-        self.classifier = nn.Sequential(
-            nn.Linear(_num_ftrs, 1024),
-            nn.BatchNorm1d(1024),
-            nn.ReLU(),
-            nn.Linear(1024, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Linear(256, num_out)
-        )
-
-        # self.init_weights()
-
-    def init_weights(self):
-        # weight initialization
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
-                nn.init.zeros_(m.bias)
+        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
+        GazeEstimationAbstractModel._init_weights(self.modules())
 
     def forward(self, left_eye, right_eye, head_pose):
         left_x = self.left_features(left_eye)
@@ -364,7 +250,7 @@ if __name__ == "__main__":
     trans_left_img = trans(left_img).unsqueeze(0).cuda()
     trans_right_img = trans(right_img).unsqueeze(0).cuda()
 
-    model = RTGENEModelResnet18()
+    model = GazeEstimationmodelResnet18()
     model = model.cuda()
     model.eval()
     start_time = time.time()
