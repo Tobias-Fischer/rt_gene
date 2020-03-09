@@ -83,23 +83,25 @@ class TrainRTGENE(pl.LightningModule):
 
     @pl.data_loader
     def train_dataloader(self):
-        _train_transforms = transforms.Compose([transforms.RandomResizedCrop(size=(224, 224), scale=(0.85, 1.0)),
-                                                transforms.RandomRotation(degrees=5),
-                                                transforms.Resize((224, 224), Image.BICUBIC),
-                                                transforms.RandomGrayscale(p=0.08),
-                                                lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=5)),
-                                                lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=8)),
-                                                transforms.ToTensor(),
-                                                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        _train_transforms = None
+        if self.hparams.augment:
+            _train_transforms = transforms.Compose([transforms.RandomResizedCrop(size=(224, 224), scale=(0.85, 1.0)),
+                                                    transforms.RandomRotation(degrees=5),
+                                                    transforms.Resize((224, 224), Image.BICUBIC),
+                                                    transforms.RandomGrayscale(p=0.08),
+                                                    lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=5)),
+                                                    lambda x: x if np.random.random_sample() > 0.08 else x.filter(ImageFilter.GaussianBlur(radius=8)),
+                                                    transforms.ToTensor(),
+                                                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
         _data_train = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"),
                                       subject_list=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-                                      transform=None)
-        return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True, num_workers=4)
+                                      transform=_train_transforms)
+        return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers)
 
     @pl.data_loader
     def val_dataloader(self):
         _data_validate = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[16])
-        return DataLoader(_data_validate, batch_size=self.hparams.batch_size, shuffle=True, num_workers=4)
+        return DataLoader(_data_validate, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers)
 
 
 if __name__ == "__main__":
@@ -108,18 +110,26 @@ if __name__ == "__main__":
     root_dir = os.path.dirname(os.path.realpath(__file__))
 
     _root_parser = ArgumentParser(add_help=False)
-
-    # gpu args
     _root_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
-    _root_parser.add_argument('--learning_rate', default=0.000325, type=float)
+    _root_parser.add_argument('--learning_rate', type=float, default=0.000325)
     _root_parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
-    _root_parser.add_argument('--hdf5_file', default=os.path.abspath("../../RT_GENE/dataset.hdf5"), type=str)
-    _root_parser.add_argument('--save_dir', default=os.path.abspath(os.path.join(root_dir, '..', '..', 'rt_gene', 'model_nets', 'rt_gene_pytorch_checkpoints')))
+    _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath("../../RT_GENE/dataset.hdf5"))
+    _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(os.path.join(root_dir, '..', '..', 'rt_gene', 'model_nets', 'pytorch_checkpoints')))
+    _root_parser.add_argument('--augment', action="store_true", dest="augment")
+    _root_parser.add_argument('--no_augment', action="store_false", dest="augment")
     _root_parser.add_argument('--loss_fn', choices=["mse", "pinball"], default="mse")
     _root_parser.add_argument('--batch_size', default=128, type=int)
+    _root_parser.add_argument('--benchmark', action='store_true', dest="benchmark")
+    _root_parser.add_argument('--no-benchmark', action='store_false', dest="benchmark")
+    _root_parser.add_argument('--num_io_workers', default=8, type=int)
+    _root_parser.set_defaults(benchmark=True)
+    _root_parser.set_defaults(augment=True)
 
     _model_parser = TrainRTGENE.add_model_specific_args(_root_parser, root_dir)
     _hyperparams = _model_parser.parse_args()
+
+    if _hyperparams.benchmark:
+        torch.backends.cudnn.benchmark = True
 
     _model = TrainRTGENE(hparams=_hyperparams)
 
@@ -130,5 +140,6 @@ if __name__ == "__main__":
     trainer = Trainer(gpus=_hyperparams.gpus,
                       early_stop_callback=False,
                       checkpoint_callback=checkpoint_callback,
-                      progress_bar_refresh_rate=1)
+                      progress_bar_refresh_rate=1,
+                      min_epochs=10)
     trainer.fit(_model)
