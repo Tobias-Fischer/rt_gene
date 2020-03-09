@@ -177,10 +177,10 @@ if __name__ == '__main__':
                                             model_points_file=os.path.join(script_path, "../model_nets/face_model_68.txt"))
 
     if args.gaze_backend == "tensorflow":
-        from rt_gene.estimate_gaze_base_tensorflow import GazeEstimator
+        from rt_gene.estimate_gaze_tensorflow import GazeEstimator
         gaze_estimator = GazeEstimator("/gpu:0", args.models)
     elif args.gaze_backend == "pytorch":
-        from rt_gene.estimate_gaze_base_pytorch import GazeEstimator
+        from rt_gene.estimate_gaze_pytorch import GazeEstimator
         gaze_estimator = GazeEstimator("cuda:0", args.models)
     else:
         raise ValueError("Incorrect gaze_base backend, choices are: tensorflow or pytorch")
