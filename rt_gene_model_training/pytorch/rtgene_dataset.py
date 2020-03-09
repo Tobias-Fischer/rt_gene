@@ -101,7 +101,7 @@ class RTGENEFileDataset(data.Dataset):
 if __name__ == "__main__":
     from tqdm import trange
 
-    h5file = os.path.abspath("../..RT_GENE/dataset.hdf5")
+    h5file = os.path.abspath("../../RT_GENE/dataset.hdf5")
     _ds = RTGENEH5Dataset(h5_file=h5py.File(h5file, 'r'), subject_list=[0])
 
     for i in trange(1000):

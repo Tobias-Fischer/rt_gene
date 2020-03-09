@@ -6,8 +6,8 @@ import numpy as np
 import torch
 from torchvision import transforms
 
-from RTGENEModels import RTGENEModelResnet18
-from rt_gene.estimate_gaze_base_tensorflow import GazeEstimator
+from gaze_estimation_models_pytorch import GazeEstimationmodelResnet18
+from rt_gene.estimate_gaze_pytorch import GazeEstimator
 from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
 from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 
@@ -30,8 +30,8 @@ device_id_gazeestimation = "cuda:0"
 def load_model(ckpts):
     models = []
     for ckpt in ckpts:
-        _model = RTGENEModelResnet18(num_out=3)
-        _torch_load = torch.load(os.path.join(__script_path, "../../rt_gene/model_nets/resnet_18_pinball_checkpoints/{}".format(ckpt)))['state_dict']
+        _model = GazeEstimationmodelResnet18(num_out=2)
+        _torch_load = torch.load(os.path.join(__script_path, "../../rt_gene/model_nets/{}".format(ckpt)))['state_dict']
         _state_dict = {k[7:]: v for k, v in _torch_load.items()}
         _model.load_state_dict(_state_dict)
         _model.to(device_id_gazeestimation)
@@ -49,8 +49,8 @@ def extract_eye_image_patches(subject):
     subject.right_eye_bb = re_bb
 
 
-_img_list = glob.glob(os.path.join(__script_path, "../../rt_gene/data/", "*.jpg"))
-models = load_model(["_ckpt_epoch_1.ckpt", "_ckpt_epoch_2.ckpt", "_ckpt_epoch_3.ckpt"])
+_img_list = glob.glob(os.path.join(__script_path, "../../rt_gene/samples/*.jpg"))
+models = load_model(["rt_gene_pytorch_checkpoints/_ckpt_epoch_1.ckpt"])
 
 try:
     # _cap = cv2.VideoCapture(0)
@@ -103,20 +103,8 @@ try:
                 r_gaze_img = GazeEstimator.visualize_eye_result(subject.right_eye_color, gaze2.tolist()[0])
                 s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
 
-                up_error = gaze2 - gaze2[:, 2]
-                l_gaze_img = GazeEstimator.visualize_eye_result(subject.left_eye_color, up_error.tolist()[0])
-                r_gaze_img = GazeEstimator.visualize_eye_result(subject.right_eye_color, up_error.tolist()[0])
-                u_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
-
-                down_error = gaze2 + gaze2[:, 2]
-                l_gaze_img = GazeEstimator.visualize_eye_result(subject.left_eye_color, down_error.tolist()[0])
-                r_gaze_img = GazeEstimator.visualize_eye_result(subject.right_eye_color, down_error.tolist()[0])
-                d_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
-
                 cv2.imshow("face", frame)
                 cv2.imshow("patches", s_gaze_img)
-                cv2.imshow("up patch", u_gaze_img)
-                cv2.imshow("down patch", d_gaze_img)
                 cv2.waitKey(0)
 
 except KeyboardInterrupt:
