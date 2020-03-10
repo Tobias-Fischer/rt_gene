@@ -33,7 +33,8 @@ def load_camera_calibration(calibration_file):
 
 def extract_eye_image_patches(subjects):
     for subject in subjects:
-        le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject.transformed_eye_landmarks, subject.face_color, landmark_estimator.eye_image_size)
+        le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject.transformed_eye_landmarks, subject.face_color,
+                                                                        landmark_estimator.eye_image_size)
         subject.left_eye_color = le_c
         subject.right_eye_color = re_c
         subject.left_eye_bb = le_bb
@@ -144,7 +145,8 @@ if __name__ == '__main__':
     parser.add_argument('--save-estimate', dest='save_estimate', action='store_true', help='Save the predictions in a text file')
     parser.add_argument('--no-save-gaze', dest='save_gaze', action='store_false', help='Do not save the gaze images')
     parser.add_argument('--gaze_backend', choices=['tensorflow', 'pytorch'], default='tensorflow')
-    parser.add_argument('--output_path', type=str, default=os.path.join(script_path, '../samples/out'), help='Output directory for head pose and gaze images')
+    parser.add_argument('--output_path', type=str, default=os.path.join(script_path, './samples_gaze/out'),
+                        help='Output directory for head pose and gaze images')
     parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../rt_gene/model_nets/Model_allsubjects1.h5')],
                         help='List of gaze estimators')
 
@@ -178,9 +180,11 @@ if __name__ == '__main__':
 
     if args.gaze_backend == "tensorflow":
         from rt_gene.estimate_gaze_tensorflow import GazeEstimator
+
         gaze_estimator = GazeEstimator("/gpu:0", args.models)
     elif args.gaze_backend == "pytorch":
         from rt_gene.estimate_gaze_pytorch import GazeEstimator
+
         gaze_estimator = GazeEstimator("cuda:0", args.models)
     else:
         raise ValueError("Incorrect gaze_base backend, choices are: tensorflow or pytorch")
