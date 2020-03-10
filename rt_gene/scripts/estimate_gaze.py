@@ -10,27 +10,31 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 
 from __future__ import print_function, division, absolute_import
 
-import collections
 import os
-
 import numpy as np
+from tqdm import tqdm
+import collections
+
 import rospkg
 import rospy
-import tf2_ros
-from cv_bridge import CvBridge
 from geometry_msgs.msg import TransformStamped
-from rt_gene.msg import MSG_Gaze, MSG_GazeList
-from rt_gene.msg import MSG_SubjectImagesList
 from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import tf2_ros
 from tf import transformations
-from tqdm import tqdm
 
 import rt_gene.gaze_tools as gaze_tools
+import rt_gene.ros_tools as ros_tools
 from rt_gene.subject_ros_bridge import SubjectListBridge
+from rt_gene.msg import MSG_SubjectImagesList
+from rt_gene.msg import MSG_Gaze, MSG_GazeList
+
+from rt_gene.estimate_gaze_base import GazeEstimatorBase
 
 
-class GazeEstimatorROS(object):
+class GazeEstimatorROS(GazeEstimatorBase):
     def __init__(self, device_id_gaze, model_files):
+        super(GazeEstimatorROS, self).__init__(device_id_gaze, model_files)
         self.bridge = CvBridge()
         self.subjects_bridge = SubjectListBridge()
 
@@ -40,19 +44,8 @@ class GazeEstimatorROS(object):
 
         self.tf_prefix = rospy.get_param("~tf_prefix", "gaze")
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
-        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "kinect2_ros_frame")
-        self.gaze_backend = rospy.get_param("~gaze_backend", "tensorflow")
 
-        if self.gaze_backend == "tensorflow":
-            from rt_gene.estimate_gaze_tensorflow import GazeEstimator
-            self._gaze_estimator = GazeEstimator(device_id_gaze, model_files)
-        elif self.gaze_backend == "pytorch":
-            from rt_gene.estimate_gaze_pytorch import GazeEstimator
-            self._gaze_estimator = GazeEstimator(device_id_gaze, model_files)
-        else:
-            raise ValueError("Incorrect gaze_base backend, choices are: tensorflow or pytorch")
-
-        self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2 ** 24)
+        self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
         self.subjects_gaze_img = rospy.Publisher("/subjects/gazeimages", Image, queue_size=3)
         self.gaze_publishers = rospy.Publisher("/subjects/gaze", MSG_GazeList, queue_size=3)
 
@@ -75,6 +68,7 @@ class GazeEstimatorROS(object):
         and this image is published along with the estimated gaze vector (see :meth:`publish_image` and
         :func:`publish_gaze`)"""
         timestamp = subject_image_list.header.stamp
+        camera_frame = subject_image_list.header.frame_id
 
         subjects_dict = self.subjects_bridge.msg_to_images(subject_image_list)
         input_r_list = []
@@ -83,15 +77,17 @@ class GazeEstimatorROS(object):
         valid_subject_list = []
         for subject_id, s in subjects_dict.items():
             try:
-                transform_msg = self.tf2_buffer.lookup_transform(self.ros_tf_frame, self.headpose_frame + str(subject_id), timestamp)
+                transform_msg = self.tf2_buffer.lookup_transform(camera_frame, self.headpose_frame + str(subject_id), timestamp)
                 rot_head = transform_msg.transform.rotation
-                euler_angles_head = list(transformations.euler_from_quaternion([rot_head.x, rot_head.y, rot_head.z, rot_head.w]))
+                _m = transformations.quaternion_matrix([rot_head.x, rot_head.y, rot_head.z, rot_head.w])
+                euler_angles_head = list(transformations.euler_from_matrix(np.dot(ros_tools.camera_to_ros, _m)))
+
                 euler_angles_head = gaze_tools.limit_yaw(euler_angles_head)
 
                 phi_head, theta_head = gaze_tools.get_phi_theta_from_euler(euler_angles_head)
                 input_head_list.append([theta_head, phi_head])
-                input_r_list.append(self._gaze_estimator.input_from_image(s.right))
-                input_l_list.append(self._gaze_estimator.input_from_image(s.left))
+                input_r_list.append(self.input_from_image(s.right))
+                input_l_list.append(self.input_from_image(s.left))
                 valid_subject_list.append(subject_id)
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException, tf2_ros.TransformException):
                 pass
@@ -99,9 +95,9 @@ class GazeEstimatorROS(object):
         if len(valid_subject_list) == 0:
             return
 
-        gaze_est = self._gaze_estimator.estimate_gaze_twoeyes(inference_input_left_list=input_l_list,
-                                                              inference_input_right_list=input_r_list,
-                                                              inference_headpose_list=input_head_list)
+        gaze_est = self.estimate_gaze_twoeyes(inference_input_left_list=input_l_list,
+                                              inference_input_right_list=input_r_list,
+                                              inference_headpose_list=input_head_list)
         subject_subset = dict((k, subjects_dict[k]) for k in valid_subject_list if k in subjects_dict)
         self.publish_gaze_msg(timestamp, subject_subset, gaze_est.tolist())
 
@@ -112,8 +108,8 @@ class GazeEstimatorROS(object):
 
             if self.visualise_eyepose:
                 s = subjects_dict[subject_id]
-                r_gaze_img = self._gaze_estimator.visualize_eye_result(s.right, gaze)
-                l_gaze_img = self._gaze_estimator.visualize_eye_result(s.left, gaze)
+                r_gaze_img = self.visualize_eye_result(s.right, gaze)
+                l_gaze_img = self.visualize_eye_result(s.left, gaze)
                 s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
                 subjects_gaze_img_list.append(s_gaze_img)
 
