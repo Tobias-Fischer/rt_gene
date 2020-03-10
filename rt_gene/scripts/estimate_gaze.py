@@ -26,8 +26,10 @@ from tf import transformations
 from tqdm import tqdm
 
 import rt_gene.gaze_tools as gaze_tools
+import rt_gene.ros_tools as ros_tools
 from rt_gene.subject_ros_bridge import SubjectListBridge
 
+from rt_gene.estimate_gaze_base import GazeEstimatorBase
 
 
 class GazeEstimatorROS(GazeEstimatorBase):
@@ -46,15 +48,15 @@ class GazeEstimatorROS(GazeEstimatorBase):
         self.gaze_backend = rospy.get_param("~gaze_backend", "tensorflow")
 
         if self.gaze_backend == "tensorflow":
-            from rt_gene.estimate_gaze_base_tensorflow import GazeEstimator
+            from rt_gene.estimate_gaze_tensorflow import GazeEstimator
             self._gaze_estimator = GazeEstimator(device_id_gaze, model_files)
         elif self.gaze_backend == "pytorch":
-            from rt_gene.estimate_gaze_base_pytorch import GazeEstimator
+            from rt_gene.estimate_gaze_pytorch import GazeEstimator
             self._gaze_estimator = GazeEstimator(device_id_gaze, model_files)
         else:
             raise ValueError("Incorrect gaze_base backend, choices are: tensorflow or pytorch")
 
-        self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2 ** 24)
+        self.image_subscriber = rospy.Subscriber("/subjects/images", MSG_SubjectImagesList, self.image_callback, queue_size=3, buff_size=2**24)
         self.subjects_gaze_img = rospy.Publisher("/subjects/gazeimages", Image, queue_size=3)
         self.gaze_publishers = rospy.Publisher("/subjects/gaze", MSG_GazeList, queue_size=3)
 
