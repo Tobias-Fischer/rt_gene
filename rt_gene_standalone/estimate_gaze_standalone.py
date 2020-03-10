@@ -145,7 +145,7 @@ if __name__ == '__main__':
     parser.add_argument('--no-save-gaze', dest='save_gaze', action='store_false', help='Do not save the gaze images')
     parser.add_argument('--gaze_backend', choices=['tensorflow', 'pytorch'], default='tensorflow')
     parser.add_argument('--output_path', type=str, default=os.path.join(script_path, '../samples/out'), help='Output directory for head pose and gaze images')
-    parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../model_nets/Model_allsubjects1.h5')],
+    parser.add_argument('--models', nargs='+', type=str, default=[os.path.join(script_path, '../rt_gene/model_nets/Model_allsubjects1.h5')],
                         help='List of gaze estimators')
 
     parser.set_defaults(vis_gaze=True)
@@ -171,9 +171,10 @@ if __name__ == '__main__':
 
     tqdm.write('Loading networks')
     landmark_estimator = LandmarkMethodBase(device_id_facedetection="cuda:0",
-                                            checkpoint_path_face=os.path.join(script_path, "../model_nets/SFD/s3fd_facedetector.pth"),
-                                            checkpoint_path_landmark=os.path.join(script_path, "../model_nets/phase1_wpdc_vdc.pth.tar"),
-                                            model_points_file=os.path.join(script_path, "../model_nets/face_model_68.txt"))
+                                            checkpoint_path_face=os.path.abspath(os.path.join(script_path, "../rt_gene/model_nets/SFD/s3fd_facedetector.pth")),
+                                            checkpoint_path_landmark=os.path.abspath(
+                                                os.path.join(script_path, "../rt_gene/model_nets/phase1_wpdc_vdc.pth.tar")),
+                                            model_points_file=os.path.abspath(os.path.join(script_path, "../rt_gene/model_nets/face_model_68.txt")))
 
     if args.gaze_backend == "tensorflow":
         from rt_gene.estimate_gaze_tensorflow import GazeEstimator
