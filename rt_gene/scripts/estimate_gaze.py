@@ -10,24 +10,23 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 
 from __future__ import print_function, division, absolute_import
 
-import collections
 import os
-
 import numpy as np
+from tqdm import tqdm
+import collections
+
 import rospkg
 import rospy
-import tf2_ros
-from cv_bridge import CvBridge
 from geometry_msgs.msg import TransformStamped
-from rt_gene.msg import MSG_Gaze, MSG_GazeList
-from rt_gene.msg import MSG_SubjectImagesList
 from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import tf2_ros
 from tf import transformations
-from tqdm import tqdm
 
 import rt_gene.gaze_tools as gaze_tools
-import rt_gene.ros_tools as ros_tools
 from rt_gene.subject_ros_bridge import SubjectListBridge
+from rt_gene.msg import MSG_SubjectImagesList
+from rt_gene.msg import MSG_Gaze, MSG_GazeList
 
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
 

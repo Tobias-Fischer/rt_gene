@@ -4,18 +4,17 @@
 
 from __future__ import print_function, division, absolute_import
 
-import sys
-import os
 import argparse
+import os
+import sys
 
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from tqdm import tqdm
 
-from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
-from rt_gene.estimate_gaze_base import GazeEstimatorBase
+from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 from rt_gene.gaze_tools_standalone import euler_from_matrix
 
 script_path = os.path.dirname(os.path.realpath(__file__))
