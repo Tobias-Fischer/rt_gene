@@ -123,7 +123,7 @@ if __name__ == "__main__":
     _root_parser.add_argument('--no-benchmark', action='store_false', dest="benchmark")
     _root_parser.add_argument('--num_io_workers', default=8, type=int)
     _root_parser.set_defaults(benchmark=True)
-    _root_parser.set_defaults(augment=True)
+    _root_parser.set_defaults(augment=False)
 
     _model_parser = TrainRTGENE.add_model_specific_args(_root_parser, root_dir)
     _hyperparams = _model_parser.parse_args()
