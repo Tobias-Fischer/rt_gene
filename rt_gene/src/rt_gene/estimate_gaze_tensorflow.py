@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from estimate_gaze_base import GazeEstimatorBase
+from rt_gene.estimate_gaze_base import GazeEstimatorBase
 
 
 class GazeEstimator(GazeEstimatorBase):

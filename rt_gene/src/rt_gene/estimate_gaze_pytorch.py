@@ -7,7 +7,7 @@ import torch
 from torchvision import transforms
 from tqdm import tqdm
 
-from estimate_gaze_base import GazeEstimatorBase
+from rt_gene.estimate_gaze_base import GazeEstimatorBase
 from rt_gene.gaze_estimation_models_pytorch import GazeEstimationmodelResnet18
 
 
