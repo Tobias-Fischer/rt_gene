@@ -1,16 +1,20 @@
-!!python/unicode 'camera_matrix':
-  !!python/unicode 'data': !!python/tuple [1055.2418494342428, 0.0, 959.5498558958496,
-    0.0, 1055.800634897113, 526.8365066435917, 0.0, 0.0, 1.0]
-!!python/unicode 'camera_name': kinect2
-!!python/unicode 'distortion_coefficients':
-  !!python/unicode 'data': !!python/tuple [0.06782730293229537, -0.10186826507839701,
-    -0.003340617929219049, 0.00013233339185125118, 0.04009587588544287]
-!!python/unicode 'distortion_model': plumb_bob
-!!python/unicode 'image_height': 1080
-!!python/unicode 'image_width': 1920
-!!python/unicode 'projection_matrix':
-  !!python/unicode 'data': !!python/tuple [1055.2418494342428, 0.0, 959.5498558958496,
-    0.0, 0.0, 1055.800634897113, 526.8365066435917, 0.0, 0.0, 0.0, 1.0, 0.0]
-!!python/unicode 'rectification_matrix':
-  !!python/unicode 'data': !!python/tuple [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-    1.0]
+image_width: 1920
+image_height: 1080
+camera_name: kinect2
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [1055.2418494342428, 0.0, 959.5498558958496, 0.0, 1055.800634897113, 526.8365066435917, 0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.06782730293229537, -0.10186826507839701, -0.003340617929219049, 0.00013233339185125118, 0.04009587588544287]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [1055.2418494342428, 0.0, 959.5498558958496, 0.0, 0.0, 1055.800634897113, 526.8365066435917, 0.0, 0.0, 0.0, 1.0, 0.0]

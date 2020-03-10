@@ -10,28 +10,25 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 from __future__ import print_function, division, absolute_import
 
 import cv2
-from cv_bridge import CvBridge
-from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
-from sensor_msgs.msg import Image, CameraInfo
-from geometry_msgs.msg import TransformStamped
-from tqdm import tqdm
-from image_geometry import PinholeCameraModel
-from tf2_ros import TransformBroadcaster, TransformListener, Buffer
-from tf import transformations
-from dynamic_reconfigure.server import Server
-import rospy
-
 import numpy as np
-
-import rt_gene.gaze_tools as gaze_tools
-
-from rt_gene.kalman_stabilizer import Stabilizer
-
-from rt_gene.msg import MSG_SubjectImagesList
+import rospy
+from cv_bridge import CvBridge
+from dynamic_reconfigure.server import Server
+from geometry_msgs.msg import TransformStamped
+from image_geometry import PinholeCameraModel
+from rt_gene.cfg import ModelSizeConfig
 from rt_gene.msg import MSG_Headpose, MSG_HeadposeList
 from rt_gene.msg import MSG_Landmarks, MSG_LandmarksList
+from rt_gene.msg import MSG_SubjectImagesList
+from sensor_msgs.msg import Image, CameraInfo
+from tf import transformations
+from tf2_ros import TransformBroadcaster, TransformListener, Buffer
+from tqdm import tqdm
 
-from rt_gene.cfg import ModelSizeConfig
+import rt_gene.gaze_tools as gaze_tools
+import rt_gene.ros_tools as ros_tools
+from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
+from rt_gene.kalman_stabilizer import Stabilizer
 from rt_gene.subject_ros_bridge import SubjectListBridge
 from rt_gene.tracker_face_encoding import FaceEncodingTracker
 from rt_gene.tracker_sequential import SequentialTracker
@@ -43,13 +40,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.subject_tracker = FaceEncodingTracker() if rospy.get_param("~use_face_encoding_tracker", default=True) else SequentialTracker()
         self.bridge = CvBridge()
         self.__subject_bridge = SubjectListBridge()
-        self.__camera_to_ros = [[0.0, 0.0, 1.0, 0.0],
-                                [-1.0, 0.0, 0.0, 0.0],
-                                [0.0, -1.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 1.0]]
-
-        self.camera_frame = rospy.get_param("~camera_frame", "kinect2_link")
-        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "kinect2_ros_frame")
 
         self.tf2_broadcaster = TransformBroadcaster()
         self.tf2_buffer = Buffer()
@@ -66,6 +56,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 self.img_proc = PinholeCameraModel()
                 # noinspection PyTypeChecker
                 self.img_proc.fromCameraInfo(cam_info)
+                self.camera_frame = cam_info.header.frame_id.replace("/", "")
             else:
                 self.img_proc = img_proc
 
@@ -97,7 +88,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
         return config
 
     def process_image(self, color_msg):
-        color_img = gaze_tools.convert_image(color_msg, "bgr8")
+        color_img = ros_tools.convert_image(color_msg, "bgr8")
         timestamp = color_msg.header.stamp
 
         self.update_subject_tracker(color_img)
@@ -124,7 +115,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 self.publish_pose(timestamp, translation_vector, head_rpy, subject_id)
 
                 if self.visualise_headpose:
-                    roll_pitch_yaw = list(transformations.euler_from_matrix(np.dot(self.__camera_to_ros, transformations.euler_matrix(*head_rpy))))
+                    roll_pitch_yaw = list(transformations.euler_from_matrix(np.dot(ros_tools.camera_to_ros, transformations.euler_matrix(*head_rpy))))
                     roll_pitch_yaw = gaze_tools.limit_yaw(roll_pitch_yaw)
 
                     face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
@@ -200,6 +191,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
     def publish_subject_list(self, timestamp, subjects):
         assert (subjects is not None)
         subject_list_message = self.__subject_bridge.images_to_msg(subjects, timestamp)
+        subject_list_message.header.frame_id = self.camera_frame
         self.subject_pub.publish(subject_list_message)
 
         landmark_msg_list = MSG_LandmarksList()
