@@ -111,7 +111,7 @@ if __name__ == "__main__":
     root_dir = os.path.dirname(os.path.realpath(__file__))
 
     _root_parser = ArgumentParser(add_help=False)
-    _root_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
+    _root_parser.add_argument('--gpu', type=int, default=1, help='gpu to use, can be repeated for mutiple gpus i.e. --gpu 1 --gpu 2', action="append")
     _root_parser.add_argument('--learning_rate', type=float, default=0.000325)
     _root_parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
     _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/dataset.hdf5")))
@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     # earlystopping_callback = EarlyStopping(monitor="val_loss", patience=3, mode="min", verbose=True)
 
-    trainer = Trainer(gpus=_hyperparams.gpus,
+    trainer = Trainer(gpus=_hyperparams.gpu,
                       early_stop_callback=False,
                       checkpoint_callback=checkpoint_callback,
                       progress_bar_refresh_rate=1)
