@@ -65,5 +65,3 @@ if __name__ == "__main__":
 
                 cv2.imwrite(left_image_path, le_c)
                 cv2.imwrite(right_image_path, re_c)
-
-        cv2.destroyAllWindows()

@@ -13,7 +13,7 @@ script_path = os.path.dirname(os.path.realpath(__file__))
 
 # Tobias randomly crops and resizes the image 10 times in the `prepare_dataset.m` along side two blurring stages, grayscaling and histogram normalisation
 _required_size = (224, 224)
-_transforms_list = [transforms.RandomResizedCrop(size=_required_size, scale=(0.85, 1.0)),  # equivilant to random 5px from each edge
+_transforms_list = [transforms.RandomResizedCrop(size=_required_size, scale=(0.85, 1.0)),  # equivalent to random 5px from each edge
                     transforms.RandomResizedCrop(size=_required_size, scale=(0.85, 1.0)),
                     transforms.RandomResizedCrop(size=_required_size, scale=(0.85, 1.0)),
                     transforms.RandomResizedCrop(size=_required_size, scale=(0.85, 1.0)),

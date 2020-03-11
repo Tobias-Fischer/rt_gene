@@ -1,6 +1,5 @@
 import os
 
-import h5py
 import numpy as np
 from PIL import Image
 from torch.utils import data
@@ -96,13 +95,3 @@ class RTGENEFileDataset(data.Dataset):
         _transformed_right = self._transform(Image.fromarray(_right_img, 'RGB'))
 
         return _transformed_left, _transformed_right, np.array(_groud_truth_headpose, dtype=np.float32), np.array(_ground_truth_gaze, dtype=np.float32)
-
-
-if __name__ == "__main__":
-    from tqdm import trange
-
-    h5file = os.path.abspath("../../RT_GENE/dataset.hdf5")
-    _ds = RTGENEH5Dataset(h5_file=h5py.File(h5file, 'r'), subject_list=[0])
-
-    for i in trange(1000):
-        left, right, head_pose, gaze_pose = _ds[i]

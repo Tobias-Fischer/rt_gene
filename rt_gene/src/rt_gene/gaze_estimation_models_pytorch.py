@@ -16,13 +16,13 @@ class GazeEstimationAbstractModel(nn.Module):
         classifier = nn.Sequential(
             nn.Linear(num_features, fc[0]),
             nn.BatchNorm1d(fc[0]),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.Linear(fc[0], fc[1]),
             nn.BatchNorm1d(fc[1]),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.Linear(fc[1], fc[2]),
             nn.BatchNorm1d(fc[2]),
-            nn.LeakyReLU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.Linear(fc[2], num_out)
         )
         return classifier
@@ -174,10 +174,10 @@ class GazeEstimationModelResnet50(GazeEstimationAbstractModel):
         return fc_output
 
 
-class GazeEstimationmodelResnet18(GazeEstimationAbstractModel):
+class GazeEstimationModelResnet18(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):
-        super(GazeEstimationmodelResnet18, self).__init__()
+        super(GazeEstimationModelResnet18, self).__init__()
         _left_model = models.resnet18(pretrained=True)
         _right_model = models.resnet18(pretrained=True)
 
@@ -229,10 +229,10 @@ class GazeEstimationmodelResnet18(GazeEstimationAbstractModel):
         return fc_output
 
 
-class GazeEstimationmodelResneXt(GazeEstimationAbstractModel):
+class GazeEstimationModelResneXt(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):
-        super(GazeEstimationmodelResneXt, self).__init__()
+        super(GazeEstimationModelResneXt, self).__init__()
         _left_model = models.resnext50_32x4d(pretrained=True)
         _right_model = models.resnext50_32x4d(pretrained=True)
 
@@ -332,8 +332,8 @@ class GazeEstimationModelVGG(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):  # phi, theta
         super(GazeEstimationModelVGG, self).__init__()
-        _left_model = models.vgg16_bn(pretrained=True)
-        _right_model = models.vgg16_bn(pretrained=True)
+        _left_model = models.vgg16(pretrained=True)
+        _right_model = models.vgg16(pretrained=True)
 
         # remove the last ConvBRelu layer
         _left_modules = [module for module in _left_model.features]
@@ -366,36 +366,3 @@ class GazeEstimationModelVGG(GazeEstimationAbstractModel):
 
         return fc_output
 
-
-if __name__ == "__main__":
-    from PIL import Image
-    from torchvision import transforms
-    import os
-    import time
-    from tqdm import trange
-    import numpy as np
-
-    torch.backends.cudnn.benchmark = True
-
-    left_img = Image.open(os.path.abspath(os.path.join("../../../RT_GENE/s001_glasses/", "inpainted/left/", "left_000004_rgb.png")))
-    right_img = Image.open(os.path.abspath(os.path.join("../../../RT_GENE/s001_glasses/", "inpainted/right/", "right_000004_rgb.png")))
-    head_pose_gen = torch.from_numpy(np.random.random(2)).unsqueeze(0).float().cuda()
-
-    trans = transforms.Compose([transforms.Resize((224, 224), Image.BICUBIC),
-                                transforms.ToTensor(),
-                                transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                     std=[0.229, 0.224, 0.225])])
-
-    trans_left_img = trans(left_img).unsqueeze(0).cuda()
-    trans_right_img = trans(right_img).unsqueeze(0).cuda()
-
-    model = GazeEstimationmodelResneXt()
-    model = model.cuda()
-    model.eval()
-    start_time = time.time()
-    for _ in trange(5000):
-        _res = [model(trans_left_img, trans_right_img, head_pose_gen)]
-        _res = torch.stack(_res, dim=1)
-        _res = torch.mean(_res, dim=1)
-
-    print("Evaluation Frequency: {:.3f}Hz".format(1.0 / ((time.time() - start_time) / 5000.0)))

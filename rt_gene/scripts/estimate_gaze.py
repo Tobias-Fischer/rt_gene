@@ -43,7 +43,6 @@ class GazeEstimatorROS(GazeEstimatorBase):
 
         self.tf_prefix = rospy.get_param("~tf_prefix", "gaze")
         self.headpose_frame = self.tf_prefix + "/head_pose_estimated"
-        self.ros_tf_frame = rospy.get_param("~ros_tf_frame", "kinect2_ros_frame")
         self.gaze_backend = rospy.get_param("~gaze_backend", "tensorflow")
 
         if self.gaze_backend == "tensorflow":

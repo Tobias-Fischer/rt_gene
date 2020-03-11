@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import trange
 
-from gaze_estimation_models_pytorch import GazeEstimationmodelResnet18
+from gaze_estimation_models_pytorch import GazeEstimationModelResnet18
 from rtgene_dataset import RTGENEH5Dataset
 
 
@@ -18,12 +18,16 @@ class RTGENELearningRateFinder(object):
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.writer = SummaryWriter()
 
-        data_train = RTGENEH5Dataset(h5_file=h5py.File(os.path.abspath("../../../RT_GENE/dataset.hdf5"), mode="r"), subject_list=list(range(16)))
+        _root_dir = os.path.dirname(os.path.realpath(__file__))
+
+        data_train = RTGENEH5Dataset(h5_file=h5py.File(os.path.abspath(os.path.join(_root_dir, "../../../RT_GENE/dataset.hdf5")), mode="r"),
+                                     subject_list=list(range(16)))
 
         dataloader = DataLoader(data_train, batch_size=batch_size, shuffle=True, num_workers=4)
 
         # Train and evaluate
-        logs, losses = self.find_lr(model=model, dataloader=dataloader, criterion=loss, optimiser=optimiser, batch_size=batch_size, epoch_length=len(data_train))
+        logs, losses = self.find_lr(model=model, dataloader=dataloader, criterion=loss, optimiser=optimiser, batch_size=batch_size,
+                                    epoch_length=len(data_train))
         plt.plot(logs[10:-5], losses[10:-5])
         plt.xscale('log')
         plt.show()
@@ -98,7 +102,7 @@ class RTGENELearningRateFinder(object):
 
 
 if __name__ == "__main__":
-    rt_gene_fast_model = GazeEstimationmodelResnet18(num_out=2)
+    rt_gene_fast_model = GazeEstimationModelResnet18(num_out=2)
     params_to_update = []
     for name, param in rt_gene_fast_model.named_parameters():
         if param.requires_grad:

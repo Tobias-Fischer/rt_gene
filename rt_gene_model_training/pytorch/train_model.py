@@ -7,11 +7,11 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 from PIL import Image, ImageFilter
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
-from gaze_estimation_models_pytorch import GazeEstimationModelMobileNetV2, GazeEstimationmodelResnet18, GazeEstimationModelResnet50, GazeEstimationModelVGG
+from gaze_estimation_models_pytorch import GazeEstimationModelMobileNetV2, GazeEstimationModelResnet18, GazeEstimationModelResnet50, GazeEstimationModelVGG
 from rtgene_dataset import RTGENEH5Dataset
 from utils.GazeAngleAccuracy import GazeAngleAccuracy
 from utils.PinballLoss import PinballLoss
@@ -32,7 +32,7 @@ class TrainRTGENE(pl.LightningModule):
         _models = {
             "vgg": partial(GazeEstimationModelVGG, num_out=_param_num.get(hparams.loss_fn)),
             "mobilenet": partial(GazeEstimationModelMobileNetV2, num_out=_param_num.get(hparams.loss_fn)),
-            "resnet18": partial(GazeEstimationmodelResnet18, num_out=_param_num.get(hparams.loss_fn)),
+            "resnet18": partial(GazeEstimationModelResnet18, num_out=_param_num.get(hparams.loss_fn)),
             "resnet50": partial(GazeEstimationModelResnet50, num_out=_param_num.get(hparams.loss_fn))
         }
         self._model = _models.get(hparams.model_base)()
@@ -75,7 +75,8 @@ class TrainRTGENE(pl.LightningModule):
 
         _learning_rate = self.hparams.learning_rate
         _optimizer = torch.optim.Adam(_params_to_update, lr=_learning_rate, betas=(0.9, 0.95))
-        return _optimizer
+        _lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=_optimizer)
+        return [_optimizer], [_lr_scheduler]
 
     @staticmethod
     def add_model_specific_args(parent_parser, root_dir):
@@ -113,8 +114,8 @@ if __name__ == "__main__":
     _root_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
     _root_parser.add_argument('--learning_rate', type=float, default=0.000325)
     _root_parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
-    _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath("../../RT_GENE/dataset.hdf5"))
-    _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(os.path.join(root_dir, '..', '..', 'rt_gene', 'model_nets', 'pytorch_checkpoints')))
+    _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/dataset.hdf5")))
+    _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(os.path.join(root_dir, '../../rt_gene/model_nets/pytorch_checkpoints')))
     _root_parser.add_argument('--augment', action="store_true", dest="augment")
     _root_parser.add_argument('--no_augment', action="store_false", dest="augment")
     _root_parser.add_argument('--loss_fn', choices=["mse", "pinball"], default="mse")
@@ -133,13 +134,12 @@ if __name__ == "__main__":
 
     _model = TrainRTGENE(hparams=_hyperparams)
 
-    checkpoint_callback = ModelCheckpoint(filepath=_hyperparams.save_dir, monitor='val_loss', mode='min', verbose=True, save_top_k=1)  # save the best models
+    checkpoint_callback = ModelCheckpoint(filepath=_hyperparams.save_dir, monitor='val_loss', mode='min', verbose=True, save_top_k=-1)
 
-    earlystopping_callback = EarlyStopping(monitor="val_loss", patience=5, mode="min", verbose=True)
+    # earlystopping_callback = EarlyStopping(monitor="val_loss", patience=3, mode="min", verbose=True)
 
     trainer = Trainer(gpus=_hyperparams.gpus,
                       early_stop_callback=False,
                       checkpoint_callback=checkpoint_callback,
-                      progress_bar_refresh_rate=1,
-                      min_epochs=10)
+                      progress_bar_refresh_rate=1)
     trainer.fit(_model)

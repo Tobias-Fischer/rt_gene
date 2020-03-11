@@ -8,7 +8,7 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
-from rt_gene.gaze_estimation_models_pytorch import GazeEstimationmodelResnet18
+from rt_gene.gaze_estimation_models_pytorch import GazeEstimationModelResnet18
 
 
 class GazeEstimator(GazeEstimatorBase):
@@ -31,8 +31,12 @@ class GazeEstimator(GazeEstimatorBase):
 
         self._models = []
         for ckpt in self.model_files:
-            _model = GazeEstimationmodelResnet18(num_out=2)
+            _model = GazeEstimationModelResnet18(num_out=2)
             _torch_load = torch.load(ckpt)['state_dict']
+
+            # the ckpt file saves the pytorch_lightning module which includes it's child members. The only child member we're interested in is the "_model".
+            # Loading the state_dict with _model creates an error as the GazeEstimationmodelResetnet18 tries to find a child called _model within it that doesn't
+            # exist. Thus remove _model from the dictionary and all is well.
             _state_dict = {k[7:]: v for k, v in _torch_load.items()}
             _model.load_state_dict(_state_dict)
             _model.to(self.device_id_gazeestimation)
