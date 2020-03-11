@@ -27,13 +27,12 @@ from tqdm import tqdm
 
 import rt_gene.gaze_tools as gaze_tools
 import rt_gene.ros_tools as ros_tools
-from rt_gene.estimate_gaze_base import GazeEstimatorBase
 from rt_gene.subject_ros_bridge import SubjectListBridge
 
 
-class GazeEstimatorROS(GazeEstimatorBase):
+class GazeEstimatorROS(object):
+    
     def __init__(self, device_id_gaze, model_files):
-        super(GazeEstimatorROS, self).__init__(device_id_gaze, model_files)
         self.bridge = CvBridge()
         self.subjects_bridge = SubjectListBridge()
 
