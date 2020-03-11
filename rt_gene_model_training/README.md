@@ -36,7 +36,7 @@ This code was used to train the eye gaze estimation CNN for RT-GENE.
 - Finally, the `evaluate_model.py` can be used to get the individual models' performance as well as the ensemble performance. An example to call this script is given in the `evaluate_models.sh` file.
 
 ## Model training code (pytorch)
-**This is currently experiemental**
+**This is currently experimental**
 - First, generate the new patches from the new RT-GENE pipeline using `GenerateEyePatchesDataset.py`. This will create new directories inside "RT_GENE/subject/inpainted": "left_new" and "right_new".
 - Compile the left_new and right_new patches along the labels into a h5 file using `GenerateRTGeneH5Dataset.py`, optionally augment the patches here to make it as similar to `prepare_dataset.m` from the tensorflow preparation stage.
 - Finally, run `train_model.py` on the h5 dataset generated. This will take a while. Available options can be viewed by running `train_model.py --help`. 
