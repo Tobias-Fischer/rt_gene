@@ -37,9 +37,9 @@ This code was used to train the eye gaze estimation CNN for RT-GENE.
 
 ## Model training code (pytorch)
 **This is currently experiemental**
-- First, generate the new patches from the new rt_gene pipeline using `GenerateEyePatchesDataset.py`. This wil create new directories inside RT_GENE/subject/inpainted of left_new and right_new
-- Compile the left_new and right_new patches along the labels into a h5 file using `GenerateRTGeneH5Dataset.py`, optinally augment the patches here to make it as similar to `prepare_dataset.m` from the tensorflow preparation stage
-- Finally, run `train_mode.py` on the h5 dataset generated. This will take a while. Options are in the argument parser. 
+- First, generate the new patches from the new RT-GENE pipeline using `GenerateEyePatchesDataset.py`. This will create new directories inside "RT_GENE/subject/inpainted": "left_new" and "right_new".
+- Compile the left_new and right_new patches along the labels into a h5 file using `GenerateRTGeneH5Dataset.py`, optionally augment the patches here to make it as similar to `prepare_dataset.m` from the tensorflow preparation stage.
+- Finally, run `train_model.py` on the h5 dataset generated. This will take a while. Available options can be viewed by running `train_model.py --help`. 
 
 ## List of libraries
 - Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
