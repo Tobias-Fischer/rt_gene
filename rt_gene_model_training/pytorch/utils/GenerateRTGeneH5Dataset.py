@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    subject_path = [os.path.join(args.rt_gene_root, "s{:03d}_glasses/".format(_i)) for _i in list(range(0, 17))]
+    subject_path = [os.path.join(args.rt_gene_root, "s{:03d}_glasses/".format(_i)) for _i in range(0, 17)]
 
     hdf_file = h5py.File(os.path.abspath(os.path.join(args.rt_gene_root, 'dataset.hdf5')), mode='w')
     for subject_id, subject_data in enumerate(subject_path):
