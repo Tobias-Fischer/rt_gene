@@ -19,11 +19,11 @@ from utils.PinballLoss import PinballLoss
 
 class TrainRTGENE(pl.LightningModule):
 
-    def __init__(self, hparams):
+    def __init__(self, hparams, train_subjects, validate_subjects):
         super(TrainRTGENE, self).__init__()
         _loss_fn = {
             "mse": partial(torch.nn.MSELoss, reduction="sum"),
-            "pinball": PinballLoss
+            "pinball": partial(PinballLoss, reduction="sum")
         }
         _param_num = {
             "mse": 2,
@@ -38,6 +38,8 @@ class TrainRTGENE(pl.LightningModule):
         self._model = _models.get(hparams.model_base)()
         self._criterion = _loss_fn.get(hparams.loss_fn)()
         self._angle_acc = GazeAngleAccuracy()
+        self._train_subjects = train_subjects
+        self._validate_subjects = validate_subjects
         self.hparams = hparams
 
     def forward(self, left_patch, right_patch, head_pose):
@@ -75,12 +77,18 @@ class TrainRTGENE(pl.LightningModule):
 
         _learning_rate = self.hparams.learning_rate
         _optimizer = torch.optim.Adam(_params_to_update, lr=_learning_rate, betas=(0.9, 0.95))
-        _lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=_optimizer)
-        return [_optimizer], [_lr_scheduler]
+        return _optimizer
 
     @staticmethod
     def add_model_specific_args(parent_parser, root_dir):
-        return parent_parser
+        parser = ArgumentParser(parents=[parent_parser])
+        parser.add_argument('--augment', action="store_true", dest="augment")
+        parser.add_argument('--no_augment', action="store_false", dest="augment")
+        parser.add_argument('--loss_fn', choices=["mse", "pinball"], default="mse")
+        parser.add_argument('--batch_size', default=128, type=int)
+        parser.add_argument('--learning_rate', type=float, default=0.000325)
+        parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
+        return parser
 
     @pl.data_loader
     def train_dataloader(self):
@@ -95,13 +103,13 @@ class TrainRTGENE(pl.LightningModule):
                                                     transforms.ToTensor(),
                                                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
         _data_train = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"),
-                                      subject_list=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                                      subject_list=self._train_subjects,
                                       transform=_train_transforms)
         return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers)
 
     @pl.data_loader
     def val_dataloader(self):
-        _data_validate = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=[16])
+        _data_validate = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=self._validate_subjects)
         return DataLoader(_data_validate, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers)
 
 
@@ -112,17 +120,12 @@ if __name__ == "__main__":
 
     _root_parser = ArgumentParser(add_help=False)
     _root_parser.add_argument('--gpu', type=int, default=1, help='gpu to use, can be repeated for mutiple gpus i.e. --gpu 1 --gpu 2', action="append")
-    _root_parser.add_argument('--learning_rate', type=float, default=0.000325)
-    _root_parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
     _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/dataset.hdf5")))
     _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(os.path.join(root_dir, '../../rt_gene/model_nets/pytorch_checkpoints')))
-    _root_parser.add_argument('--augment', action="store_true", dest="augment")
-    _root_parser.add_argument('--no_augment', action="store_false", dest="augment")
-    _root_parser.add_argument('--loss_fn', choices=["mse", "pinball"], default="mse")
-    _root_parser.add_argument('--batch_size', default=128, type=int)
     _root_parser.add_argument('--benchmark', action='store_true', dest="benchmark")
     _root_parser.add_argument('--no-benchmark', action='store_false', dest="benchmark")
     _root_parser.add_argument('--num_io_workers', default=8, type=int)
+    _root_parser.add_argument('--k_fold_validation', default=False, type=bool)
     _root_parser.set_defaults(benchmark=True)
     _root_parser.set_defaults(augment=False)
 
@@ -132,14 +135,33 @@ if __name__ == "__main__":
     if _hyperparams.benchmark:
         torch.backends.cudnn.benchmark = True
 
-    _model = TrainRTGENE(hparams=_hyperparams)
+    _train_subjects = []
+    _valid_subjects = []
+    if _hyperparams.k_fold_validation is False:
+        _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+        _valid_subjects.append([16])
+    else:
+        # this is provided by scikit-learn KFold class, but presented here to avoid adding further dependencies
+        _train_subjects.append([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+        _train_subjects.append([0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+        _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16])
+        _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14, 15, 16])
+        _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
+        _valid_subjects.append([0, 1, 2, 3])
+        _valid_subjects.append([4, 5, 6, 7])
+        _valid_subjects.append([8, 9, 10])
+        _valid_subjects.append([11, 12, 13])
+        _valid_subjects.append([14, 15, 16])
 
-    checkpoint_callback = ModelCheckpoint(filepath=_hyperparams.save_dir, monitor='val_loss', mode='min', verbose=True, save_top_k=-1)
+    for fold, (train_s, valid_s) in enumerate(zip(_train_subjects, _valid_subjects)):
+        complete_path = os.path.abspath(os.path.join(_hyperparams.save_dir, "fold_{}".format(fold)))
 
-    # earlystopping_callback = EarlyStopping(monitor="val_loss", patience=3, mode="min", verbose=True)
-
-    trainer = Trainer(gpus=_hyperparams.gpu,
-                      early_stop_callback=False,
-                      checkpoint_callback=checkpoint_callback,
-                      progress_bar_refresh_rate=1)
-    trainer.fit(_model)
+        _model = TrainRTGENE(hparams=_hyperparams, train_subjects=train_s, validate_subjects=valid_s)
+        # save all models
+        checkpoint_callback = ModelCheckpoint(filepath=complete_path, monitor='val_loss', mode='min', verbose=False, save_top_k=-1)
+        # start training
+        trainer = Trainer(gpus=_hyperparams.gpu,
+                          checkpoint_callback=checkpoint_callback,
+                          progress_bar_refresh_rate=1,
+                          max_epochs=5)
+        trainer.fit(_model)

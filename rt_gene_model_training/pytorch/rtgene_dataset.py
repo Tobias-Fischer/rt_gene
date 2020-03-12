@@ -9,10 +9,12 @@ from tqdm import tqdm
 
 class RTGENEH5Dataset(data.Dataset):
 
-    def __init__(self, h5_file, subject_list=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16), transform=None):
+    def __init__(self, h5_file, subject_list=None, transform=None):
         self._h5_file = h5_file
         self._transform = transform
         self._subject_labels = []
+
+        assert subject_list is not None, "Must pass a list of subjects to load the data for"
 
         if self._transform is None:
             self._transform = transforms.Compose([transforms.Resize((224, 224), Image.BICUBIC),
@@ -51,10 +53,12 @@ class RTGENEH5Dataset(data.Dataset):
 
 class RTGENEFileDataset(data.Dataset):
 
-    def __init__(self, root_path, subject_list=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16), transform=None):
+    def __init__(self, root_path, subject_list=None, transform=None):
         self._root_path = root_path
         self._transform = transform
         self._subject_labels = []
+
+        assert subject_list is not None, "Must pass a list of subjects to load the data for"
 
         if self._transform is None:
             self._transform = transforms.Compose([transforms.Resize((224, 224), Image.BICUBIC),
