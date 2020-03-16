@@ -81,7 +81,7 @@ The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze
 </p>
 
 #### RT-BENE Standalone Version
-The [rt_gene_standalone](./rt_gene_standalone) directory contains instructions for blink estimation given a set of images. It shares code with the `rt_gene` package (above), in particular the code in [rt_gene/src/rt_bene](./rt_gene/src/rt_bene).
+The [rt_bene_standalone](./rt_bene_standalone) directory contains instructions for blink estimation given a set of images. It makes use of the code in [rt_gene/src/rt_bene](./rt_gene/src/rt_bene).
 
 #### RT-BENE Model Training
 The [rt_bene_model_training](./rt_bene_model_training) directory contains the code required to train models with the labels contained in the RT-BENE dataset (see below). We will soon at evaluation code in this directory, too.
