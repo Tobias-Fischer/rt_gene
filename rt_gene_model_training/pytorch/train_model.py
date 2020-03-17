@@ -11,7 +11,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
-from gaze_estimation_models_pytorch import GazeEstimationModelMobileNetV2, GazeEstimationModelResnet18, GazeEstimationModelResnet50, GazeEstimationModelVGG
+from rt_gene.gaze_estimation_models_pytorch import GazeEstimationModelMobileNetV2, GazeEstimationModelResnet18, GazeEstimationModelResnet50, \
+    GazeEstimationModelVGG
 from rtgene_dataset import RTGENEH5Dataset
 from utils.GazeAngleAccuracy import GazeAngleAccuracy
 from utils.PinballLoss import PinballLoss
@@ -19,7 +20,7 @@ from utils.PinballLoss import PinballLoss
 
 class TrainRTGENE(pl.LightningModule):
 
-    def __init__(self, hparams, train_subjects, validate_subjects):
+    def __init__(self, hparams, train_subjects, validate_subjects, test_subjects):
         super(TrainRTGENE, self).__init__()
         _loss_fn = {
             "mse": partial(torch.nn.MSELoss, reduction="sum"),
@@ -40,6 +41,7 @@ class TrainRTGENE(pl.LightningModule):
         self._angle_acc = GazeAngleAccuracy()
         self._train_subjects = train_subjects
         self._validate_subjects = validate_subjects
+        self._test_subjects = test_subjects
         self.hparams = hparams
 
     def forward(self, left_patch, right_patch, head_pose):
@@ -69,6 +71,20 @@ class TrainRTGENE(pl.LightningModule):
         tensorboard_logs = {'val_loss': _losses.mean(), 'val_angle': np.mean(_angles)}
         return {'val_loss': _losses.mean(), 'log': tensorboard_logs}
 
+    def test_step(self, batch, batch_idx):
+        _left_patch, _right_patch, _headpose_label, _gaze_labels = batch
+
+        angular_out = self.forward(_left_patch, _right_patch, _headpose_label)
+        angle_acc = self._angle_acc(angular_out[:, :2], _gaze_labels)
+
+        return {"angle_acc": angle_acc}
+
+    def test_end(self, outputs):
+        _angles = np.array([x['angle_acc'] for x in outputs])
+        _mean = np.mean(_angles)
+        _std = np.std(_angles)
+        return {'test_angle_mean': _mean, 'test_angle_std': _std}
+
     def configure_optimizers(self):
         _params_to_update = []
         for name, param in self._model.named_parameters():
@@ -90,7 +106,6 @@ class TrainRTGENE(pl.LightningModule):
         parser.add_argument('--model_base', choices=["vgg", "mobilenet", "resnet18", "resnet50"], default="vgg")
         return parser
 
-    @pl.data_loader
     def train_dataloader(self):
         _train_transforms = None
         if self.hparams.augment:
@@ -105,12 +120,15 @@ class TrainRTGENE(pl.LightningModule):
         _data_train = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"),
                                       subject_list=self._train_subjects,
                                       transform=_train_transforms)
-        return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers)
+        return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers, pin_memory=False)
 
-    @pl.data_loader
     def val_dataloader(self):
         _data_validate = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=self._validate_subjects)
-        return DataLoader(_data_validate, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers)
+        return DataLoader(_data_validate, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers, pin_memory=False)
+
+    def test_dataloader(self):
+        _data_test = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=self._test_subjects)
+        return DataLoader(_data_test, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers, pin_memory=False)
 
 
 if __name__ == "__main__":
@@ -137,26 +155,28 @@ if __name__ == "__main__":
 
     _train_subjects = []
     _valid_subjects = []
+    _test_subjects = []
     if _hyperparams.k_fold_validation is False:
         _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
         _valid_subjects.append([16])
     else:
         # this is provided by scikit-learn KFold class, but presented here to avoid adding further dependencies
-        _train_subjects.append([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
-        _train_subjects.append([0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16])
-        _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16])
-        _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14, 15, 16])
-        _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
-        _valid_subjects.append([0, 1, 2, 3])
-        _valid_subjects.append([4, 5, 6, 7])
-        _valid_subjects.append([8, 9, 10])
-        _valid_subjects.append([11, 12, 13])
+        _train_subjects.append([0, 1, 2, 8, 10, 3, 4, 7, 9])
+        _train_subjects.append([0, 1, 2, 8, 10, 5, 6, 11, 12, 13])
+        _train_subjects.append([3, 4, 7, 9, 5, 6, 11, 12, 13])
+        # validation set is always subjects 14, 15 and 16
         _valid_subjects.append([14, 15, 16])
+        _valid_subjects.append([14, 15, 16])
+        _valid_subjects.append([14, 15, 16])
+        # test subjects
+        _test_subjects.append([5, 6, 11, 12, 13])
+        _test_subjects.append([3, 4, 7, 9])
+        _test_subjects.append([0, 1, 2, 8, 10])
 
-    for fold, (train_s, valid_s) in enumerate(zip(_train_subjects, _valid_subjects)):
-        complete_path = os.path.abspath(os.path.join(_hyperparams.save_dir, "fold_{}".format(fold)))
+    for fold, (train_s, valid_s, test_s) in enumerate(zip(_train_subjects, _valid_subjects, _test_subjects)):
+        complete_path = os.path.abspath(os.path.join(_hyperparams.save_dir, "fold_{}/".format(fold)))
 
-        _model = TrainRTGENE(hparams=_hyperparams, train_subjects=train_s, validate_subjects=valid_s)
+        _model = TrainRTGENE(hparams=_hyperparams, train_subjects=train_s, validate_subjects=valid_s, test_subjects=test_s)
         # save all models
         checkpoint_callback = ModelCheckpoint(filepath=complete_path, monitor='val_loss', mode='min', verbose=False, save_top_k=-1)
         # start training
@@ -165,3 +185,4 @@ if __name__ == "__main__":
                           progress_bar_refresh_rate=1,
                           max_epochs=5)
         trainer.fit(_model)
+        trainer.test()
