@@ -33,7 +33,9 @@ The code is split into four parts, each having its own README contained. There i
 #### RT-GENE ROS package
 The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze and blink estimation. This contains all the code required at inference time.
 
-![Inference example](./dataset_figure.jpg)
+<p align="center">
+  <img src="./dataset_video.gif" alt="RT-GENE inference example"/>
+</p>
 
 #### RT-GENE Standalone Version
 The [rt_gene_standalone](./rt_gene_standalone) directory contains instructions for eye gaze estimation given a set of images. It shares code with the `rt_gene` package (above), in particular the code in [rt_gene/src/rt_gene](./rt_gene/src/rt_gene).
@@ -74,8 +76,12 @@ The code is split into several parts, each having its own README. There is also 
 #### RT-BENE ROS package
 The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze and blink estimation. This contains all the code required at inference time. For blink estimation, please refer to the [estimate_blink.py](./rt_gene/scripts/estimate_blink.py) file.
 
+<p align="center">
+  <img src="./rt_bene_inference.gif" alt="RT-BENE inference example"/>
+</p>
+
 #### RT-BENE Standalone Version
-The [rt_gene_standalone](./rt_gene_standalone) directory contains instructions for blink estimation given a set of images. It shares code with the `rt_gene` package (above), in particular the code in [rt_gene/src/rt_bene](./rt_gene/src/rt_bene).
+The [rt_bene_standalone](./rt_bene_standalone) directory contains instructions for blink estimation given a set of images. It makes use of the code in [rt_gene/src/rt_bene](./rt_gene/src/rt_bene).
 
 #### RT-BENE Model Training
 The [rt_bene_model_training](./rt_bene_model_training) directory contains the code required to train models with the labels contained in the RT-BENE dataset (see below). We will soon at evaluation code in this directory, too.

@@ -60,7 +60,9 @@ class LandmarkMethodROS(LandmarkMethodBase):
                 self.img_proc = PinholeCameraModel()
                 # noinspection PyTypeChecker
                 self.img_proc.fromCameraInfo(cam_info)
-                self.camera_frame = cam_info.header.frame_id.replace("/", "")
+                self.camera_frame = cam_info.header.frame_id
+                if self.camera_frame.startswith("/"):
+                    self.camera_frame = self.camera_frame[1:]
             else:
                 self.img_proc = img_proc
 
