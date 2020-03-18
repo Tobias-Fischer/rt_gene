@@ -1,7 +1,5 @@
 # Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 
-import time
-
 import cv2
 import numpy as np
 import torch
@@ -108,14 +106,6 @@ class LandmarkMethodBase(object):
         cv2.line(output_image, (int(center_x), int(center_y)), (int(endpoint_x), int(endpoint_y)), (0, 0, 255), 3)
         return output_image
 
-    @staticmethod
-    def transform_landmarks(landmarks, box):
-        eye_indices = np.array([36, 39, 42, 45])
-        transformed_landmarks = landmarks[eye_indices]
-        transformed_landmarks[:, 0] -= box[0]
-        transformed_landmarks[:, 1] -= box[1]
-        return transformed_landmarks
-
     def ddfa_forward_pass(self, color_img, roi_box_list):
         img_step = [crop_img(color_img, roi_box) for roi_box in roi_box_list]
         img_step = [cv2.resize(img, dsize=(120, 120), interpolation=cv2.INTER_LINEAR) for img in img_step]
@@ -136,6 +126,5 @@ class LandmarkMethodBase(object):
 
         for pts68, face_image, facebox in zip(pts68_list, face_images, faceboxes):
             np_landmarks = np.array((pts68[0], pts68[1])).T
-            transformed_landmarks = self.transform_landmarks(np_landmarks, facebox)
-            subjects.append(TrackedSubject(np.array(facebox), face_image, transformed_landmarks, np_landmarks))
+            subjects.append(TrackedSubject(np.array(facebox), face_image, np_landmarks))
         return subjects
