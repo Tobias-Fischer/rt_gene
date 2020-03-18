@@ -41,8 +41,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Estimate gaze from images')
     parser.add_argument('--rt_gene_root', type=str, required=True, nargs='?', help='Path to the base directory of RT_GENE')
     parser.add_argument('--augment_dataset', type=bool, required=False, default=False, help="Whether to augment the dataset with predefined transforms")
-
+    parser.add_argument('--compress', action='store_true', dest="compress")
+    parser.add_argument('--no-compress', action='store_false', dest="compress")
+    parser.set_defaults(compress=False)
     args = parser.parse_args()
+
+    _compression = "lzf" if args.compress is True else None
 
     subject_path = [os.path.join(args.rt_gene_root, "s{:03d}_glasses/".format(_i)) for _i in range(0, 17)]
 
@@ -69,8 +73,8 @@ if __name__ == "__main__":
 
                     left_data = load_and_augment(left_img_path, augment=args.augment_dataset)
                     right_data = load_and_augment(right_img_path, augment=args.augment_dataset)
-                    image_grp.create_dataset("left", data=left_data, compression="lzf")
-                    image_grp.create_dataset("right", data=right_data, compression="lzf")
+                    image_grp.create_dataset("left", data=left_data, compression=_compression)
+                    image_grp.create_dataset("right", data=right_data, compression=_compression)
                     image_grp.create_dataset("label", data=labels)
 
     hdf_file.flush()

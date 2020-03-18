@@ -52,8 +52,7 @@ class TrainRTGENE(pl.LightningModule):
 
         angular_out = self.forward(_left_patch, _right_patch, _headpose_label)
         loss = self._criterion(angular_out, _gaze_labels)
-        angle_acc = self._angle_acc(angular_out[:, :2], _gaze_labels)
-        tensorboard_logs = {'train_loss': loss, 'train_angle': angle_acc}
+        tensorboard_logs = {'train_loss': loss}
         return {'loss': loss, 'log': tensorboard_logs}
 
     def validation_step(self, batch, batch_idx):
@@ -77,13 +76,17 @@ class TrainRTGENE(pl.LightningModule):
         angular_out = self.forward(_left_patch, _right_patch, _headpose_label)
         angle_acc = self._angle_acc(angular_out[:, :2], _gaze_labels)
 
-        return {"angle_acc": angle_acc}
+        return {'angle_acc': angle_acc}
 
     def test_end(self, outputs):
         _angles = np.array([x['angle_acc'] for x in outputs])
         _mean = np.mean(_angles)
         _std = np.std(_angles)
-        return {'test_angle_mean': _mean, 'test_angle_std': _std}
+        results = {
+            'progress_bar': _mean,
+            'log': {'test_angle_acc': _mean, 'test_angle_std': _std}
+        }
+        return results
 
     def configure_optimizers(self):
         _params_to_update = []
@@ -142,7 +145,7 @@ if __name__ == "__main__":
     _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(os.path.join(root_dir, '../../rt_gene/model_nets/pytorch_checkpoints')))
     _root_parser.add_argument('--benchmark', action='store_true', dest="benchmark")
     _root_parser.add_argument('--no-benchmark', action='store_false', dest="benchmark")
-    _root_parser.add_argument('--num_io_workers', default=8, type=int)
+    _root_parser.add_argument('--num_io_workers', default=4, type=int)
     _root_parser.add_argument('--k_fold_validation', default=False, type=bool)
     _root_parser.set_defaults(benchmark=True)
     _root_parser.set_defaults(augment=False)
