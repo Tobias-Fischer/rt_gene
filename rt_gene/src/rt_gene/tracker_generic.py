@@ -111,9 +111,9 @@ class GenericTracker(object):
 
     @staticmethod
     def align_face_to_eyes(face_img, right_eye_center, left_eye_center, face_width=None, face_height=None):
-        # modified lightly from https://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/
+        # modified from https://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/
         desired_left_eye = (0.35, 0.35)
-        desired_face_width = face_height if face_width is not None else face_img.shape[1]
+        desired_face_width = face_width if face_width is not None else face_img.shape[1]
         desired_face_height = face_height if face_height is not None else face_img.shape[0]
         # compute the angle between the eye centroids
         d_y = right_eye_center[1] - left_eye_center[1]
