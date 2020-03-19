@@ -5,17 +5,19 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 """
 
 from __future__ import print_function
-import numpy as np
-import scipy.optimize
-from .tracker_generic import GenericTracker
+
 import cv2
 import dlib
+import numpy as np
 import rospkg
 import rospy
+import scipy.optimize
+
+from rt_gene.gaze_tools import get_normalised_eye_landmarks
+from .tracker_generic import GenericTracker
 
 
 class FaceEncodingTracker(GenericTracker):
-
     FACE_ENCODER = dlib.face_recognition_model_v1(
         rospkg.RosPack().get_path('rt_gene') + '/model_nets/dlib_face_recognition_resnet_model_v1.dat')
 
@@ -75,8 +77,21 @@ class FaceEncodingTracker(GenericTracker):
 
     def __encode_subject(self, tracked_element):
         # get the face_color and face_chip it using the transformed_eye_landmarks
-        face_chip = self.__align_tracked_subject(tracked_element)
-        encoding = self.FACE_ENCODER.compute_face_descriptor(face_chip)
+        eye_landmarks = get_normalised_eye_landmarks(tracked_element.landmarks, tracked_element.box)
+        # Get the width of the eye, and compute how big the margin should be according to the width
+        lefteye_width = eye_landmarks[3][0] - eye_landmarks[2][0]
+        righteye_width = eye_landmarks[1][0] - eye_landmarks[0][0]
+
+        lefteye_center_x = eye_landmarks[2][0] + lefteye_width / 2
+        righteye_center_x = eye_landmarks[0][0] + righteye_width / 2
+        lefteye_center_y = (eye_landmarks[2][1] + eye_landmarks[3][1]) / 2.0
+        righteye_center_y = (eye_landmarks[1][1] + eye_landmarks[0][1]) / 2.0
+        aligned_face, rot_matrix = GenericTracker.align_face_to_eyes(tracked_element.face_color,
+                                                                     right_eye_center=(righteye_center_x, righteye_center_y),
+                                                                     left_eye_center=(lefteye_center_x, lefteye_center_y),
+                                                                     face_width=150,
+                                                                     face_height=150)
+        encoding = self.FACE_ENCODER.compute_face_descriptor(aligned_face)
         return encoding
 
     def __add_new_element(self, element):
