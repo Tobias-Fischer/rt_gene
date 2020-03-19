@@ -6,6 +6,7 @@ Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 Interna
 from __future__ import print_function, division, absolute_import
 
 import math
+
 import numpy as np
 
 
@@ -140,3 +141,11 @@ def accuracy_angle(y_true, y_pred):
     angle_value = (pred_x * true_x + pred_y * true_y + pred_z * true_z) / (true_norm * pred_norm)
     tf.clip_by_value(angle_value, -0.9999999999, 0.999999999)
     return (tf.acos(angle_value) * 180.0) / np.pi
+
+
+def get_normalised_eye_landmarks(landmarks, box):
+    eye_indices = np.array([36, 39, 42, 45])
+    transformed_landmarks = landmarks[eye_indices]
+    transformed_landmarks[:, 0] -= box[0]
+    transformed_landmarks[:, 1] -= box[1]
+    return transformed_landmarks
