@@ -1,6 +1,110 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import models
+
+
+class PreactResnet(nn.Module):
+    class BasicBlock(nn.Module):
+        def __init__(self, in_channels, out_channels, stride):
+            super().__init__()
+
+            self.bn1 = nn.BatchNorm2d(in_channels)
+            self.conv1 = nn.Conv2d(in_channels,
+                                   out_channels,
+                                   kernel_size=3,
+                                   stride=stride,
+                                   padding=1,
+                                   bias=False)
+            self.bn2 = nn.BatchNorm2d(out_channels)
+            self.conv2 = nn.Conv2d(out_channels,
+                                   out_channels,
+                                   kernel_size=3,
+                                   stride=1,
+                                   padding=1,
+                                   bias=False)
+
+            self.shortcut = nn.Sequential()
+            if in_channels != out_channels:
+                self.shortcut.add_module(
+                    'conv',
+                    nn.Conv2d(in_channels,
+                              out_channels,
+                              kernel_size=1,
+                              stride=stride,
+                              padding=0,
+                              bias=False))
+
+        def forward(self, x):
+            x = F.relu(self.bn1(x), inplace=True)
+            y = self.conv1(x)
+            y = F.relu(self.bn2(y), inplace=True)
+            y = self.conv2(y)
+            y += self.shortcut(x)
+            return y
+
+    def __init__(self, depth=20, base_channels=16, input_shape=(1, 3, 224, 224)):
+        super().__init__()
+
+        n_blocks_per_stage = (depth - 2) // 6
+        n_channels = [base_channels, base_channels * 2, base_channels * 4]
+
+        self.conv = nn.Conv2d(input_shape[1],
+                              n_channels[0],
+                              kernel_size=(3, 3),
+                              stride=1,
+                              padding=1,
+                              bias=False)
+
+        self.stage1 = self._make_stage(n_channels[0],
+                                       n_channels[0],
+                                       n_blocks_per_stage,
+                                       PreactResnet.BasicBlock,
+                                       stride=1)
+        self.stage2 = self._make_stage(n_channels[0],
+                                       n_channels[1],
+                                       n_blocks_per_stage,
+                                       PreactResnet.BasicBlock,
+                                       stride=2)
+        self.stage3 = self._make_stage(n_channels[1],
+                                       n_channels[2],
+                                       n_blocks_per_stage,
+                                       PreactResnet.BasicBlock,
+                                       stride=2)
+        self.bn = nn.BatchNorm2d(n_channels[2])
+
+        self._initialize_weights(self.modules())
+
+    @staticmethod
+    def _initialize_weights(module):
+        if isinstance(module, nn.Conv2d):
+            nn.init.kaiming_normal_(module.weight, mode='fan_out')
+        elif isinstance(module, nn.BatchNorm2d):
+            nn.init.ones_(module.weight)
+            nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Linear):
+            nn.init.zeros_(module.bias)
+
+    @staticmethod
+    def _make_stage(in_channels, out_channels, n_blocks,
+                    block, stride):
+        stage = nn.Sequential()
+        for index in range(n_blocks):
+            block_name = "block{}".format(index + 1)
+            if index == 0:
+                stage.add_module(block_name, block(in_channels, out_channels, stride=stride))
+            else:
+                stage.add_module(block_name, block(out_channels, out_channels, stride=1))
+        return stage
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.stage1(x)
+        x = self.stage2(x)
+        x = self.stage3(x)
+        x = F.relu(self.bn(x), inplace=True)
+        x = F.adaptive_avg_pool2d(x, output_size=1)
+        return x
 
 
 class GazeEstimationAbstractModel(nn.Module):
@@ -9,169 +113,38 @@ class GazeEstimationAbstractModel(nn.Module):
         super(GazeEstimationAbstractModel, self).__init__()
 
     @staticmethod
-    def _create_fc_layers(num_out, num_features, fc=None):
-        if fc is None:
-            fc = [1024, 512, 256]
-
-        classifier = nn.Sequential(
-            nn.Linear(num_features, fc[0]),
-            nn.BatchNorm1d(fc[0]),
-            nn.ReLU(inplace=True),
-            nn.Linear(fc[0], fc[1]),
-            nn.BatchNorm1d(fc[1]),
-            nn.ReLU(inplace=True),
-            nn.Linear(fc[1], fc[2]),
-            nn.BatchNorm1d(fc[2]),
-            nn.ReLU(inplace=True),
-            nn.Linear(fc[2], num_out)
+    def _create_fc_layers(in_features, out_features):
+        x_l = nn.Sequential(
+            nn.Linear(in_features, 1024),
+            nn.BatchNorm1d(1024, momentum=0.99, eps=1e-3),
+            nn.ReLU(inplace=True)
         )
-        return classifier
+        x_r = nn.Sequential(
+            nn.Linear(in_features, 1024),
+            nn.BatchNorm1d(1024, momentum=0.99, eps=1e-3),
+            nn.ReLU(inplace=True)
+        )
+
+        concat = nn.Sequential(
+            nn.Linear(2048, 512),
+            nn.BatchNorm1d(512, momentum=0.99, eps=1e-3),
+            nn.ReLU(inplace=True)
+        )
+
+        fc = nn.Sequential(
+            nn.Linear(514, 256),
+            nn.ReLU(inplace=True),
+            nn.Linear(256, out_features)
+        )
+
+        return x_l, x_r, concat, fc
 
     @staticmethod
     def _init_weights(modules):
         for m in modules:
             if isinstance(m, nn.Linear):
-                nn.init.kaiming_uniform_(m.weight, mode="fan_in", nonlinearity="leaky_relu")
+                nn.init.kaiming_uniform_(m.weight, mode="fan_in", nonlinearity="relu")
                 nn.init.zeros_(m.bias)
-
-
-class GazeEstimationModelShufflenet(GazeEstimationAbstractModel):
-
-    def __init__(self, num_out=2):
-        super(GazeEstimationModelShufflenet, self).__init__()
-        _left_model = models.shufflenet_v2_x1_0(pretrained=True)
-        _right_model = models.shufflenet_v2_x1_0(pretrained=True)
-
-        self.left_features = nn.Sequential(
-            _left_model.conv1,
-            _left_model.maxpool,
-            _left_model.stage2,
-            _left_model.stage3,
-            _left_model.stage4,
-            _left_model.conv5
-        )
-
-        self.right_features = nn.Sequential(
-            _right_model.conv1,
-            _right_model.maxpool,
-            _right_model.stage2,
-            _right_model.stage3,
-            _right_model.stage4,
-            _right_model.conv5
-        )
-
-        for param in self.left_features.parameters():
-            param.requires_grad = True
-        for param in self.right_features.parameters():
-            param.requires_grad = True
-
-        _num_ftrs = _left_model.fc.in_features + _right_model.fc.in_features + 2  # left, right and head_pose
-        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
-        GazeEstimationAbstractModel._init_weights(self.modules())
-
-    def forward(self, left_eye, right_eye, headpose):
-        left_x = self.left_features(left_eye)
-        left_x = left_x.mean([2, 3])
-
-        right_x = self.right_features(right_eye)
-        right_x = right_x.mean([2, 3])
-
-        concat = torch.cat((left_x, right_x, headpose), dim=1)
-
-        fc_output = self.classifier(concat)
-
-        return fc_output
-
-
-class GazeEstimationModelMnas(GazeEstimationAbstractModel):
-
-    def __init__(self, num_out=2):
-        super(GazeEstimationModelMnas, self).__init__()
-        _left_model = models.mnasnet1_0(pretrained=True)
-        _right_model = models.mnasnet1_0(pretrained=True)
-
-        _left_features = [module for module in _left_model.layers.children()]
-        self.left_features = nn.Sequential(*_left_features)
-
-        _right_features = [module for module in _right_model.layers.children()]
-        self.right_features = nn.Sequential(*_right_features)
-
-        for param in self.left_features.parameters():
-            param.requires_grad = True
-        for param in self.right_features.parameters():
-            param.requires_grad = True
-
-        _num_ftrs = 1280 + 1280 + 2  # left, right and head_pose
-        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
-        GazeEstimationAbstractModel._init_weights(self.modules())
-
-    def forward(self, left_eye, right_eye, headpose):
-        left_x = self.left_features(left_eye)
-        left_x = left_x.mean([2, 3])
-
-        right_x = self.right_features(right_eye)
-        right_x = right_x.mean([2, 3])
-
-        concat = torch.cat((left_x, right_x, headpose), dim=1)
-
-        fc_output = self.classifier(concat)
-
-        return fc_output
-
-
-class GazeEstimationModelResnet50(GazeEstimationAbstractModel):
-
-    def __init__(self, num_out=2):  # phi, theta
-        super(GazeEstimationModelResnet50, self).__init__()
-        _left_model = models.resnet50(pretrained=True)
-        _right_model = models.resnet50(pretrained=True)
-
-        # remove the last ConvBRelu layer
-        self.left_features = nn.Sequential(
-            _left_model.conv1,
-            _left_model.bn1,
-            _left_model.relu,
-            _left_model.maxpool,
-            _left_model.layer1,
-            _left_model.layer2,
-            _left_model.layer3,
-            _left_model.layer4,
-            _left_model.avgpool
-        )
-
-        self.right_features = nn.Sequential(
-            _right_model.conv1,
-            _right_model.bn1,
-            _right_model.relu,
-            _right_model.maxpool,
-            _right_model.layer1,
-            _right_model.layer2,
-            _right_model.layer3,
-            _right_model.layer4,
-            _right_model.avgpool
-        )
-
-        for param in self.left_features.parameters():
-            param.requires_grad = True
-        for param in self.right_features.parameters():
-            param.requires_grad = True
-
-        _num_ftrs = _left_model.fc.in_features + _right_model.fc.in_features + 2  # left, right and head_pose
-        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
-        GazeEstimationAbstractModel._init_weights(self.modules())
-
-    def forward(self, left_eye, right_eye, headpose):
-        left_x = self.left_features(left_eye)
-        left_x = torch.flatten(left_x, 1)
-
-        right_x = self.right_features(right_eye)
-        right_x = torch.flatten(right_x, 1)
-
-        concat = torch.cat((left_x, right_x, headpose), dim=1)
-
-        fc_output = self.classifier(concat)
-
-        return fc_output
 
 
 class GazeEstimationModelResnet18(GazeEstimationAbstractModel):
@@ -211,82 +184,60 @@ class GazeEstimationModelResnet18(GazeEstimationAbstractModel):
         for param in self.right_features.parameters():
             param.requires_grad = True
 
-        _num_ftrs = _left_model.fc.in_features + _right_model.fc.in_features + 2  # left, right and head_pose
-        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
+        self.xl, self.xr, self.concat, self.fc = GazeEstimationAbstractModel._create_fc_layers(in_features=_left_model.fc.in_features, out_features=num_out)
         GazeEstimationAbstractModel._init_weights(self.modules())
 
     def forward(self, left_eye, right_eye, headpose):
         left_x = self.left_features(left_eye)
         left_x = torch.flatten(left_x, 1)
+        left_x = self.xl(left_x)
 
         right_x = self.right_features(right_eye)
         right_x = torch.flatten(right_x, 1)
+        right_x = self.xr(right_x)
 
-        concat = torch.cat((left_x, right_x, headpose), dim=1)
+        eyes_x = torch.cat((left_x, right_x), dim=1)
+        eyes_x = self.concat(eyes_x)
 
-        fc_output = self.classifier(concat)
+        eyes_headpose = torch.cat((eyes_x, headpose), dim=1)
+
+        fc_output = self.fc(eyes_headpose)
 
         return fc_output
 
 
-class GazeEstimationModelResneXt(GazeEstimationAbstractModel):
+class GazeEstimationModelPreactResnet(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):
-        super(GazeEstimationModelResneXt, self).__init__()
-        _left_model = models.resnext50_32x4d(pretrained=True)
-        _right_model = models.resnext50_32x4d(pretrained=True)
+        super(GazeEstimationModelPreactResnet, self).__init__()
+        self.left_features = PreactResnet()
+        self.right_features = PreactResnet()
 
-        # remove the last ConvBRelu layer
-        self.left_features = nn.Sequential(
-            _left_model.conv1,
-            _left_model.bn1,
-            _left_model.relu,
-            _left_model.maxpool,
-            _left_model.layer1,
-            _left_model.layer2,
-            _left_model.layer3,
-            _left_model.layer4,
-            _left_model.avgpool
-        )
-
-        self.right_features = nn.Sequential(
-            _right_model.conv1,
-            _right_model.bn1,
-            _right_model.relu,
-            _right_model.maxpool,
-            _right_model.layer1,
-            _right_model.layer2,
-            _right_model.layer3,
-            _right_model.layer4,
-            _right_model.avgpool
-        )
-
-        for param in self.left_features.parameters():
-            param.requires_grad = True
-        for param in self.right_features.parameters():
-            param.requires_grad = True
-
-        _num_ftrs = _left_model.fc.in_features + _right_model.fc.in_features + 2  # left, right and head_pose
-        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
+        self.xl, self.xr, self.concat, self.fc = GazeEstimationAbstractModel._create_fc_layers(in_features=64, out_features=num_out)
         GazeEstimationAbstractModel._init_weights(self.modules())
 
     def forward(self, left_eye, right_eye, headpose):
         left_x = self.left_features(left_eye)
         left_x = torch.flatten(left_x, 1)
+        left_x = self.xl(left_x)
 
         right_x = self.right_features(right_eye)
         right_x = torch.flatten(right_x, 1)
+        right_x = self.xr(right_x)
 
-        concat = torch.cat((left_x, right_x, headpose), dim=1)
+        eyes_x = torch.cat((left_x, right_x), dim=1)
+        eyes_x = self.concat(eyes_x)
 
-        fc_output = self.classifier(concat)
+        eyes_headpose = torch.cat((eyes_x, headpose), dim=1)
+
+        fc_output = self.fc(eyes_headpose)
 
         return fc_output
 
 
 class GazeEstimationModelMobileNetV2(GazeEstimationAbstractModel):
 
-    def __init__(self, num_out=2):  # phi, theta
+    def __init__(self, num_out=2):
         super(GazeEstimationModelMobileNetV2, self).__init__()
         _left_model = models.mobilenet_v2(pretrained=True)
         _right_model = models.mobilenet_v2(pretrained=True)
@@ -305,32 +256,32 @@ class GazeEstimationModelMobileNetV2(GazeEstimationAbstractModel):
         for param in self.right_features.parameters():
             param.requires_grad = True
 
-        _num_ftrs = _left_model.classifier[1].in_features + _right_model.classifier[1].in_features + 2  # left, right and head_pose
-        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
+        self.xl, self.xr, self.concat, self.fc = GazeEstimationAbstractModel._create_fc_layers(in_features=_left_model.classifier[1].in_features,
+                                                                                               out_features=num_out)
         GazeEstimationAbstractModel._init_weights(self.modules())
 
     def forward(self, left_eye, right_eye, headpose):
         left_x = self.left_features(left_eye)
         left_x = left_x.mean([2, 3])
+        left_x = self.xl(left_x)
 
         right_x = self.right_features(right_eye)
-        right_x = right_x.mean([2, 3])
+        left_x = left_x.mean([2, 3])
+        right_x = self.xr(right_x)
 
-        concat = torch.cat((left_x, right_x, headpose), dim=1)
+        eyes_x = torch.cat((left_x, right_x), dim=1)
+        eyes_x = self.concat(eyes_x)
 
-        fc_output = self.classifier(concat)
+        eyes_headpose = torch.cat((eyes_x, headpose), dim=1)
 
-        # angular_output = fc_output[:, :2]
-        #
-        # sigma = fc_output[:, 2:3]
-        # sigma = sigma.view(-1, 1).expand(sigma.size(0), 2)
+        fc_output = self.fc(eyes_headpose)
 
         return fc_output
 
 
 class GazeEstimationModelVGG(GazeEstimationAbstractModel):
 
-    def __init__(self, num_out=2):  # phi, theta
+    def __init__(self, num_out=2):
         super(GazeEstimationModelVGG, self).__init__()
         _left_model = models.vgg16(pretrained=True)
         _right_model = models.vgg16(pretrained=True)
@@ -349,20 +300,24 @@ class GazeEstimationModelVGG(GazeEstimationAbstractModel):
         for param in self.right_features.parameters():
             param.requires_grad = True
 
-        _num_ftrs = _left_model.classifier[0].in_features + _right_model.classifier[0].in_features + 2  # left, right and head_pose
-        self.classifier = GazeEstimationAbstractModel._create_fc_layers(num_out=num_out, num_features=_num_ftrs)
+        self.xl, self.xr, self.concat, self.fc = GazeEstimationAbstractModel._create_fc_layers(in_features=_left_model.classifier[0].in_features,
+                                                                                               out_features=num_out)
         GazeEstimationAbstractModel._init_weights(self.modules())
 
-    def forward(self, left_eye, right_eye, head_pose):
+    def forward(self, left_eye, right_eye, headpose):
         left_x = self.left_features(left_eye)
         left_x = torch.flatten(left_x, 1)
+        left_x = self.xl(left_x)
 
         right_x = self.right_features(right_eye)
         right_x = torch.flatten(right_x, 1)
+        right_x = self.xr(right_x)
 
-        concat = torch.cat((left_x, right_x, head_pose), dim=1)
+        eyes_x = torch.cat((left_x, right_x), dim=1)
+        eyes_x = self.concat(eyes_x)
 
-        fc_output = self.classifier(concat)
+        eyes_headpose = torch.cat((eyes_x, headpose), dim=1)
+
+        fc_output = self.fc(eyes_headpose)
 
         return fc_output
-
