@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 class RTGENEH5Dataset(data.Dataset):
 
-    def __init__(self, h5_file, subject_list=None, transform=None):
+    def __init__(self, h5_file, subject_list=None, transform=None, load_augmented=True):
         self._h5_file = h5_file
         self._transform = transform
         self._subject_labels = []
@@ -30,7 +30,8 @@ class RTGENEH5Dataset(data.Dataset):
                     right_datset = grp_i['right']
 
                     assert len(left_dataset) == len(right_datset), "Dataset left/right images aren't equal length"
-                    for _i in range(len(left_dataset)):
+                    length_of_array = len(left_dataset) if load_augmented else 1
+                    for _i in range(length_of_array):
                         self._subject_labels.append([grp_i.name, _i])
 
     def __len__(self):
