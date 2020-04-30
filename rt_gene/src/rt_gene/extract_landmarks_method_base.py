@@ -26,13 +26,13 @@ class LandmarkMethodBase(object):
 
         tqdm.write("Using device {} for face detection.".format(device_id_facedetection))
 
+        self.device = device_id_facedetection
         self.face_net = SFDDetector(device=device_id_facedetection, path_to_detector=checkpoint_path_face)
         self.facial_landmark_nn = self.load_face_landmark_model(checkpoint_path_landmark)
 
         self.model_points = self.get_full_model_points(model_points_file)
 
-    @staticmethod
-    def load_face_landmark_model(checkpoint_fp=None):
+    def load_face_landmark_model(self, checkpoint_fp=None):
         import rt_gene.ThreeDDFA.mobilenet_v1 as mobilenet_v1
         if checkpoint_fp is None:
             import rospkg
@@ -48,7 +48,7 @@ class LandmarkMethodBase(object):
             model_dict[k.replace('module.', '')] = checkpoint[k]
         model.load_state_dict(model_dict)
         cudnn.benchmark = True
-        model = model.cuda()
+        model = model.to(self.device)
         model.eval()
         return model
 
@@ -111,7 +111,7 @@ class LandmarkMethodBase(object):
         img_step = [cv2.resize(img, dsize=(120, 120), interpolation=cv2.INTER_LINEAR) for img in img_step]
         _input = torch.cat([facial_landmark_transform(img).unsqueeze(0) for img in img_step], 0)
         with torch.no_grad():
-            _input = _input.cuda()
+            _input = _input.to(self.device)
             param = self.facial_landmark_nn(_input).cpu().numpy().astype(np.float32)
 
         return [predict_68pts(p.flatten(), roi_box) for p, roi_box in zip(param, roi_box_list)]
