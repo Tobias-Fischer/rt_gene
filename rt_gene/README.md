@@ -43,8 +43,8 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     - For kinetic: `sudo apt-get install python-catkin-tools ros-kinetic-ros-numpy ros-kinetic-camera-info-manager-py ros-kinetic-uvc-camera libcamera-info-manager-dev`
     - For melodic: `sudo apt-get install python-catkin-tools python-catkin-pkg ros-melodic-uvc-camera libcamera-info-manager-dev`
 1. Install required Python packages:
-    - For `conda` users (recommended; create a new environment first if you want): `conda install -c conda-forge dlib tensorflow-gpu numpy scipy tqdm pillow rospkg opencv empy && conda install -c pytorch pytorch torchvision`
-    - For `pip` users: `pip install tensorflow-gpu numpy scipy tqdm torch torchvision Pillow dlib opencv-python`
+    - For `pip` users (we recommend using virtualenv or similar tools): `pip install tensorflow-gpu numpy scipy tqdm torch torchvision Pillow dlib opencv-python`
+    - For `conda` users (create a new environment first if you want): `conda install -c conda-forge dlib tensorflow-gpu numpy scipy tqdm pillow rospkg opencv empy && conda install -c pytorch pytorch torchvision`
 1. Download and build RT-GENE:
     1. `cd $HOME/catkin_ws/src && git clone https://github.com/Tobias-Fischer/rt_gene.git`
     1. `cd $HOME/catkin_ws && catkin build`
@@ -92,8 +92,8 @@ Follow the instructions for estimating gaze above, and run in addition `roslaunc
 ## List of libraries
 - ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)
 - Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
-- 3DDFA face alignment in [./src/rt_gene/ThreeDDFA](./src/rt_gene/ThreeDDFA); [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/cleardusk/3DDFA), [Link to paper](https://arxiv.org/abs/1804.01005)
+- 3DDFA face landmark extraction in [./src/rt_gene/ThreeDDFA](./src/rt_gene/ThreeDDFA); [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/cleardusk/3DDFA), [Link to paper](https://arxiv.org/abs/1804.01005)
 - S3FD face detector in [./src/rt_gene/SFD](./src/rt_gene/SFD); [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to GitHub](https://github.com/1adrianb/face-alignment)
 - Kalman filter in [./src/rt_gene/kalman_stabilizer.py](./src/rt_gene/kalman_stabilizer.py): [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/yinguobing/head-pose-estimation)
-- Face alignment [./src/rt_gene/tracker_generic.py](./src/rt_gene/tracker_generic.py): [Link to website](https://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/)
+- Face alignment [./src/rt_gene/tracker_generic.py](./src/rt_gene/tracker_generic.py): [MIT License](https://opensource.org/licenses/MIT), [Link to Adrian Rosebrock's Blog on Face Alignment](https://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/) (Accessed 1 April 2020 on PyImageSearch)
 

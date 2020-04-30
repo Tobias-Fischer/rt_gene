@@ -146,6 +146,7 @@ if __name__ == '__main__':
                         help='Output directory for head pose and gaze images')
     parser.add_argument('--models', nargs='+', type=str, default=[os.path.abspath(os.path.join(script_path, '../rt_gene/model_nets/Model_allsubjects1.h5'))],
                         help='List of gaze estimators')
+    parser.add_argument('--device-id-facedetection', dest="device_id_facedetection", type=str, default='cuda:0', help='Pytorch device id. Set to "cpu:0" to disable cuda')
 
     parser.set_defaults(vis_gaze=True)
     parser.set_defaults(save_gaze=True)
@@ -169,7 +170,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     tqdm.write('Loading networks')
-    landmark_estimator = LandmarkMethodBase(device_id_facedetection="cuda:0",
+    landmark_estimator = LandmarkMethodBase(device_id_facedetection=args.device_id_facedetection,
                                             checkpoint_path_face=os.path.abspath(os.path.join(script_path, "../rt_gene/model_nets/SFD/s3fd_facedetector.pth")),
                                             checkpoint_path_landmark=os.path.abspath(
                                                 os.path.join(script_path, "../rt_gene/model_nets/phase1_wpdc_vdc.pth.tar")),
