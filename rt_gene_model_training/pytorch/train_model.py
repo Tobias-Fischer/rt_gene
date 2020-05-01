@@ -183,8 +183,8 @@ if __name__ == "__main__":
         _test_subjects.append([0, 3, 4, 7, 9])
         _test_subjects.append([0, 1, 2, 8, 10])
     else:
-        _train_subjects.append([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
-        _valid_subjects.append([16])
+        _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+        _valid_subjects.append([0])
 
     for fold, (train_s, valid_s, test_s) in enumerate(zip(_train_subjects, _valid_subjects, _test_subjects)):
         complete_path = os.path.abspath(os.path.join(_hyperparams.save_dir, "fold_{}/".format(fold)))

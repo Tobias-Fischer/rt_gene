@@ -143,7 +143,7 @@ class GazeEstimationModelPreactResnet(GazeEstimationAbstractModel):
                 y += self.shortcut(x)
                 return y
 
-        def __init__(self, depth=20, base_channels=16, input_shape=(1, 3, 224, 224)):
+        def __init__(self, depth=30, base_channels=16, input_shape=(1, 3, 224, 224)):
             super().__init__()
 
             n_blocks_per_stage = (depth - 2) // 6
@@ -186,8 +186,7 @@ class GazeEstimationModelPreactResnet(GazeEstimationAbstractModel):
                 nn.init.zeros_(module.bias)
 
         @staticmethod
-        def _make_stage(in_channels, out_channels, n_blocks,
-                        block, stride):
+        def _make_stage(in_channels, out_channels, n_blocks, block, stride):
             stage = nn.Sequential()
             for index in range(n_blocks):
                 block_name = "block{}".format(index + 1)
@@ -210,6 +209,11 @@ class GazeEstimationModelPreactResnet(GazeEstimationAbstractModel):
         super(GazeEstimationModelPreactResnet, self).__init__()
         self.left_features = GazeEstimationModelPreactResnet.PreactResnet()
         self.right_features = GazeEstimationModelPreactResnet.PreactResnet()
+
+        for param in self.left_features.parameters():
+            param.requires_grad = True
+        for param in self.right_features.parameters():
+            param.requires_grad = True
 
         self.xl, self.xr, self.concat, self.fc = GazeEstimationAbstractModel._create_fc_layers(in_features=64, out_features=num_out)
         GazeEstimationAbstractModel._init_weights(self.modules())
