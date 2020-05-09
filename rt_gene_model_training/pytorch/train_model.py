@@ -122,18 +122,15 @@ class TrainRTGENE(pl.LightningModule):
                                                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
         _data_train = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"),
                                       subject_list=self._train_subjects,
-                                      transform=_train_transforms,
-                                      load_augmented=not self.hparams.augment)
+                                      transform=_train_transforms)
         return DataLoader(_data_train, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers, pin_memory=False)
 
     def val_dataloader(self):
-        _data_validate = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=self._validate_subjects,
-                                         load_augmented=not self.hparams.augment)
+        _data_validate = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=self._validate_subjects)
         return DataLoader(_data_validate, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers, pin_memory=False)
 
     def test_dataloader(self):
-        _data_test = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=self._test_subjects,
-                                     load_augmented=not self.hparams.augment)
+        _data_test = RTGENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"), subject_list=self._test_subjects)
         return DataLoader(_data_test, batch_size=self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_io_workers, pin_memory=False)
 
 
@@ -144,7 +141,7 @@ if __name__ == "__main__":
 
     _root_parser = ArgumentParser(add_help=False)
     _root_parser.add_argument('--gpu', type=int, default=1, help='gpu to use, can be repeated for mutiple gpus i.e. --gpu 1 --gpu 2', action="append")
-    _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/dataset.hdf5")))
+    _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/rtgene_dataset.hdf5")))
     _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(os.path.join(root_dir, '../../rt_gene/model_nets/pytorch_checkpoints')))
     _root_parser.add_argument('--benchmark', action='store_true', dest="benchmark")
     _root_parser.add_argument('--no-benchmark', action='store_false', dest="benchmark")
@@ -185,6 +182,7 @@ if __name__ == "__main__":
     else:
         _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
         _valid_subjects.append([0])
+        _test_subjects.append([0])
 
     for fold, (train_s, valid_s, test_s) in enumerate(zip(_train_subjects, _valid_subjects, _test_subjects)):
         complete_path = os.path.abspath(os.path.join(_hyperparams.save_dir, "fold_{}/".format(fold)))
