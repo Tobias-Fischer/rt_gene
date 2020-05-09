@@ -4,10 +4,11 @@
 
 from __future__ import print_function, division, absolute_import
 
+import hashlib
 import os
 import os.path as osp
+
 from six.moves import urllib
-import hashlib
 
 
 def md5(fname):
@@ -64,3 +65,6 @@ if __name__ == '__main__':
     download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/blink_model_2.h5'),
                           "https://imperialcollegelondon.box.com/shared/static/x4u8c5mr468r6wzki93v45jemf3sz0r5.h5",
                           "ed994ea8384a7894dac04926601d06ff")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/Model_allsubjects_pytorch.model'),
+                          "https://imperialcollegelondon.box.com/shared/static/zblg37jitf9q245k3ytad8nv814nz9o8.model",
+                          "ca13a350902899dd06febb897b111aeb")
