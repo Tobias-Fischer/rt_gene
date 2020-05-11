@@ -189,7 +189,7 @@ if __name__ == "__main__":
 
         _model = TrainRTGENE(hparams=_hyperparams, train_subjects=train_s, validate_subjects=valid_s, test_subjects=test_s)
         # save all models
-        checkpoint_callback = ModelCheckpoint(filepath=os.path.join(complete_path, "{epoch}-{val_loss:.3f}.ckpt"), monitor='val_loss', mode='min', verbose=True,
+        checkpoint_callback = ModelCheckpoint(filepath=os.path.join(complete_path, "{epoch}-{val_loss:.3f}"), monitor='val_loss', mode='min', verbose=True,
                                               save_top_k=-1 if not _hyperparams.augment else 5)
         early_stop_callback = EarlyStopping(monitor='val_loss', min_delta=0.00, verbose=True, patience=20 if _hyperparams.augment else 2, mode='min')
         # start training
