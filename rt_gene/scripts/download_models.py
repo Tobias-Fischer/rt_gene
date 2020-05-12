@@ -71,3 +71,6 @@ if __name__ == '__main__':
     download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/Model_allsubjects2_pytorch.model'),
                           "https://imperialcollegelondon.box.com/shared/static/nhmwcwzf2j15x44i4bosi8muurqj0kz7.model",
                           "0ee3ec584b6e2ba0a7c2187d78a15a20")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/Model_allsubjects3_pytorch.model'),
+                          "https://imperialcollegelondon.box.com/shared/static/25anki14qn189ah4lh5gfrhh292utm7p.model",
+                          "b02c6252a39dcef36edd158aca135f9e")
