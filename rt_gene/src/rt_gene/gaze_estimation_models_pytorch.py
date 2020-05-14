@@ -243,20 +243,3 @@ class GazeEstimationModelVGG(GazeEstimationAbstractModel):
         self.xl, self.xr, self.concat, self.fc = GazeEstimationAbstractModel._create_fc_layers(in_features=_left_model.classifier[0].in_features,
                                                                                                out_features=num_out)
         GazeEstimationAbstractModel._init_weights(self.modules())
-
-
-if __name__ == "__main__":
-    import numpy as np
-    from tqdm import tqdm
-
-    torch.backends.cuda.benchmark = True
-
-    model = GazeEstimationModelVGG()
-    model.eval()
-    model.to("cuda:0")
-    l_i = torch.as_tensor(np.random.random((1, 3, 224, 224))).float().to("cuda:0")
-    r_i = torch.as_tensor(np.random.random((1, 3, 224, 224))).float().to("cuda:0")
-    head_i = torch.as_tensor(np.array([[0.5, 0.5]])).float().to("cuda:0")
-
-    for _ in tqdm(range(5000)):
-        model(l_i, r_i, head_i)
