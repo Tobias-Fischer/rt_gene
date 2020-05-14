@@ -96,4 +96,8 @@ Follow the instructions for estimating gaze above, and run in addition `roslaunc
 - S3FD face detector in [./src/rt_gene/SFD](./src/rt_gene/SFD); [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to GitHub](https://github.com/1adrianb/face-alignment)
 - Kalman filter in [./src/rt_gene/kalman_stabilizer.py](./src/rt_gene/kalman_stabilizer.py): [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/yinguobing/head-pose-estimation)
 - Face alignment [./src/rt_gene/tracker_generic.py](./src/rt_gene/tracker_generic.py): [MIT License](https://opensource.org/licenses/MIT), [Link to Adrian Rosebrock's Blog on Face Alignment](https://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/) (Accessed 1 April 2020 on PyImageSearch)
-
+- OpenCV; [3-clause BSD License](https://raw.githubusercontent.com/opencv/opencv/master/LICENSE), [Link to website](https://opencv.org/)
+- Matplotlib; [Matplotlib License](https://raw.githubusercontent.com/matplotlib/matplotlib/master/LICENSE/LICENSE), [Link to website](https://matplotlib.org/)
+- TQDM; [Mozilla Public Licence and MIT License](https://github.com/tqdm/tqdm/blob/master/LICENCE), [Link to website](https://tqdm.github.io/)
+- Pillow; [PIL Software License (MIT-like)](https://github.com/python-pillow/Pillow/blob/master/LICENSE), [Link to website](https://pillow.readthedocs.io/en/stable/)
+- Numpy; [3-clause BSD License](https://raw.githubusercontent.com/numpy/numpy/master/LICENSE.txt), [Link to website](https://numpy.org/)
