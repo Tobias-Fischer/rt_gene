@@ -123,7 +123,7 @@ if __name__ == "__main__":
                 left_eye_theta = asin(-1 * left_gaze[1])
                 left_eye_phi = atan2(-1 * left_gaze[0], -1 * left_gaze[2])
 
-                right_eye_theta = asin(-1 * left_gaze[1])
+                right_eye_theta = asin(-1 * right_gaze[1])
                 right_eye_phi = atan2(-1 * right_gaze[0], -1 * right_gaze[2])
 
                 gaze_theta = (left_eye_theta + right_eye_theta) / 2.0
