@@ -20,11 +20,11 @@ def md5(fname):
 
 
 def download_if_not_exist(fname, url, md5sum=None):
-    print('Download ' + os.path.basename(fname))
+    print('Download ' + os.path.basename(fname), end="")
     if not osp.isfile(fname):
         urllib.request.urlretrieve(url, fname)
     if md5sum is not None:
-        print('File exists, checking md5')
+        print('..checking md5')
         assert md5sum == md5(fname)
 
 
@@ -74,3 +74,6 @@ if __name__ == '__main__':
     download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/Model_allsubjects3_pytorch.model'),
                           "https://imperialcollegelondon.box.com/shared/static/25anki14qn189ah4lh5gfrhh292utm7p.model",
                           "b02c6252a39dcef36edd158aca135f9e")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/Model_allsubjects4_pytorch.model'),
+                          "https://imperialcollegelondon.box.com/shared/static/5j6mum8350tsn51tcktus1546kwyu6yy.model",
+                          "e9d2aff52aff1270fcdd8466f97b3528")
