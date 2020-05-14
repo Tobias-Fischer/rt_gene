@@ -20,6 +20,10 @@ rt_gene/model_nets/all_subjects_mpii_prl_utmv_2_02.h5
 rt_gene/model_nets/all_subjects_mpii_prl_utmv_3_02.h5
 rt_gene/model_nets/blink_model_1.h5
 rt_gene/model_nets/blink_model_2.h5
+rt_gene/model_nets/Model_allsubjects1_pytorch.model
+rt_gene/model_nets/Model_allsubjects2_pytorch.model
+rt_gene/model_nets/Model_allsubjects3_pytorch.model
+rt_gene/model_nets/Model_allsubjects4_pytorch.model
 rt_gene_standalone/samples_gaze/out
 
 *~
