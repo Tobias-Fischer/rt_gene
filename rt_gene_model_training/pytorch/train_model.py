@@ -142,6 +142,7 @@ if __name__ == "__main__":
     _root_parser = ArgumentParser(add_help=False)
     _root_parser.add_argument('--gpu', type=int, default=1, help='gpu to use, can be repeated for mutiple gpus i.e. --gpu 1 --gpu 2', action="append")
     _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/rtgene_dataset.hdf5")))
+    _root_parser.add_argument('--dataset', type=str, choices=["rt_gene", "mpii"], default="rt_gene")
     _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(os.path.join(root_dir, '../../rt_gene/model_nets/pytorch_checkpoints')))
     _root_parser.add_argument('--benchmark', action='store_true', dest="benchmark")
     _root_parser.add_argument('--no-benchmark', action='store_false', dest="benchmark")
@@ -166,23 +167,31 @@ if __name__ == "__main__":
     _train_subjects = []
     _valid_subjects = []
     _test_subjects = []
-    if _hyperparams.k_fold_validation:
-        # this is provided by scikit-learn KFold class, but presented here to avoid adding further dependencies
-        _train_subjects.append([1, 2, 8, 10, 3, 4, 7, 9])
-        _train_subjects.append([1, 2, 8, 10, 5, 6, 11, 12, 13])
-        _train_subjects.append([3, 4, 7, 9, 5, 6, 11, 12, 13])
-        # validation set is always subjects 14, 15 and 16
-        _valid_subjects.append([14, 15, 16])
-        _valid_subjects.append([14, 15, 16])
-        _valid_subjects.append([14, 15, 16])
-        # test subjects
-        _test_subjects.append([0, 5, 6, 11, 12, 13])
-        _test_subjects.append([0, 3, 4, 7, 9])
-        _test_subjects.append([0, 1, 2, 8, 10])
-    else:
-        _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
-        _valid_subjects.append([0])
-        _test_subjects.append([0])
+    if _hyperparams.dataset == "rt_gene":
+        if _hyperparams.k_fold_validation:
+            # this is provided by scikit-learn KFold class, but presented here to avoid adding further dependencies
+            _train_subjects.append([1, 2, 8, 10, 3, 4, 7, 9])
+            _train_subjects.append([1, 2, 8, 10, 5, 6, 11, 12, 13])
+            _train_subjects.append([3, 4, 7, 9, 5, 6, 11, 12, 13])
+            # validation set is always subjects 14, 15 and 16
+            _valid_subjects.append([14, 15, 16])
+            _valid_subjects.append([14, 15, 16])
+            _valid_subjects.append([14, 15, 16])
+            # test subjects
+            _test_subjects.append([0, 5, 6, 11, 12, 13])
+            _test_subjects.append([0, 3, 4, 7, 9])
+            _test_subjects.append([0, 1, 2, 8, 10])
+        else:
+            _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+            _valid_subjects.append([0])
+            _test_subjects.append([0])
+    elif _hyperparams.dataset == "mpii":
+        if _hyperparams.k_fold_validation:
+            raise NotImplementedError()
+        else:
+            _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+            _valid_subjects.append([0])
+            _test_subjects.append([0])
 
     for fold, (train_s, valid_s, test_s) in enumerate(zip(_train_subjects, _valid_subjects, _test_subjects)):
         complete_path = os.path.abspath(os.path.join(_hyperparams.save_dir, "fold_{}/".format(fold)))
