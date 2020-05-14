@@ -19,7 +19,7 @@ torch.backends.cudnn.benchmark = True
 root_dir = os.path.dirname(os.path.realpath(__file__))
 
 root_parser = ArgumentParser(add_help=False)
-root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/dataset.hdf5")))
+root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/rtgene_dataset.hdf5")))
 root_parser.add_argument('--fold_folder', type=str, default=os.path.abspath(os.path.join(root_dir, '../../rt_gene/model_nets/pytorch_checkpoints')))
 root_parser.add_argument('--num_io_workers', default=8, type=int)
 root_parser.add_argument('--loss_fn', choices=["mse", "pinball"], default="mse")
