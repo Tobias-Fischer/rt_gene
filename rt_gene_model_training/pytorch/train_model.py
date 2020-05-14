@@ -187,7 +187,11 @@ if __name__ == "__main__":
             _test_subjects.append([0])
     elif _hyperparams.dataset == "mpii":
         if _hyperparams.k_fold_validation:
-            raise NotImplementedError()
+            all_subjects = range(15)
+            for leave_one_out_idx in all_subjects:
+                _train_subjects.append(all_subjects[:leave_one_out_idx]+all_subjects[leave_one_out_idx+1:])
+                _valid_subjects.append([leave_one_out_idx])  # Note that this is a hack and should not be used to get results for papers
+                _test_subjects.append([leave_one_out_idx])
         else:
             _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
             _valid_subjects.append([0])
