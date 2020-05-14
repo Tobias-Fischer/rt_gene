@@ -37,11 +37,6 @@ class GazeEstimator(GazeEstimatorBase):
             _model.eval()
             self._models.append(_model)
 
-        if len(self._models) == 1:
-            self._gaze_offset = 0.11
-        else:
-            self._gaze_offset = 0.0
-
         tqdm.write('Loaded ' + str(len(self._models)) + ' model(s)')
 
     def estimate_gaze_twoeyes(self, inference_input_left_list, inference_input_right_list, inference_headpose_list):

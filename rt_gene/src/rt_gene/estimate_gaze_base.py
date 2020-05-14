@@ -22,6 +22,11 @@ class GazeEstimatorBase(ABC):
         if not isinstance(model_files, list):
             self.model_files = [model_files]
 
+        if len(self.model_files) == 1:
+            self._gaze_offset = 0.11
+        else:
+            self._gaze_offset = 0.0
+
     def estimate_gaze_twoeyes(self, inference_input_left_list, inference_input_right_list, inference_headpose_list):
         pass
 

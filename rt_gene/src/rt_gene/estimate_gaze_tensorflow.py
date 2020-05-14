@@ -44,10 +44,8 @@ class GazeEstimator(GazeEstimatorBase):
             models[-1]._name = "model_{}".format(len(models))
 
         if len(models) == 1:
-            self._gaze_offset = 0.11
             self.ensemble_model = models[0]
         elif len(models) > 1:
-            self._gaze_offset = 0.0
             tensors = [model([img_input_l, img_input_r, headpose_input]) for model in models]
             output_layer = tf.keras.layers.average(tensors)
             self.ensemble_model = tf.keras.Model(inputs=[img_input_l, img_input_r, headpose_input], outputs=output_layer)
