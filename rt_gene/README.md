@@ -101,3 +101,6 @@ Follow the instructions for estimating gaze above, and run in addition `roslaunc
 - TQDM; [Mozilla Public Licence and MIT License](https://github.com/tqdm/tqdm/blob/master/LICENCE), [Link to website](https://tqdm.github.io/)
 - Pillow; [PIL Software License (MIT-like)](https://github.com/python-pillow/Pillow/blob/master/LICENSE), [Link to website](https://pillow.readthedocs.io/en/stable/)
 - Numpy; [3-clause BSD License](https://raw.githubusercontent.com/numpy/numpy/master/LICENSE.txt), [Link to website](https://numpy.org/)
+- Pytorch; [3-clause BSD License](https://raw.githubusercontent.com/pytorch/pytorch/master/LICENSE), [Link to website](http://pytorch.org)
+- TF transforms; [MIT License](https://raw.githubusercontent.com/davheld/tf/master/src/tf/transformations.py), [Link to GitHub](https://raw.githubusercontent.com/davheld/tf/master/src/tf/transformations.py)
+- Yin Guobing's image utilities; [MIT License](https://raw.githubusercontent.com/yinguobing/ImageUtility/master/LICENSE), [Link to GitHub 1](https://github.com/yinguobing/image_utility), [Link to GitHub 2](https://github.com/yinguobing/head-pose-estimation)
