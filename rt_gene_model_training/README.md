@@ -27,7 +27,7 @@ This work was supported in part by the Samsung Global Research Outreach program,
 More information can be found on the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>.
 
 ## Requirements
-- `pip install tensorflow-gpu numpy scipy tqdm matplotlib h5py scikit-learn pytorch_lightning torch torchvision`
+- `pip install tensorflow-gpu numpy scipy tqdm matplotlib h5py scikit-learn pytorch_lightning torch torchvision Pillow`
 - Run the [rt_gene/scripts/download_models.py](../rt_gene/scripts/download_models.py) script to download the required model files
 
 ## Model training code (tensorflow)
