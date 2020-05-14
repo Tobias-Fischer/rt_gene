@@ -4,15 +4,15 @@ import cv2
 import numpy as np
 import torch
 import torchvision.transforms as transforms
-from rt_gene.SFD.sfd_detector import SFDDetector
-# noinspection PyUnresolvedReferences
-from rt_gene import gaze_tools as gaze_tools
-from rt_gene.ThreeDDFA.inference import crop_img, predict_68pts, parse_roi_box_from_bbox, parse_roi_box_from_landmark
-from rt_gene.tracker_generic import TrackedSubject
 from torch.backends import cudnn as cudnn
 from tqdm import tqdm
 
+# noinspection PyUnresolvedReferences
+from rt_gene import gaze_tools as gaze_tools
+from rt_gene.SFD.sfd_detector import SFDDetector
 from rt_gene.ThreeDDFA.ddfa import ToTensorGjz, NormalizeGjz
+from rt_gene.ThreeDDFA.inference import crop_img, predict_68pts, parse_roi_box_from_bbox, parse_roi_box_from_landmark
+from rt_gene.tracker_generic import TrackedSubject
 
 facial_landmark_transform = transforms.Compose([ToTensorGjz(), NormalizeGjz(mean=127.5, std=128)])
 
@@ -81,7 +81,7 @@ class LandmarkMethodBase(object):
             box = result[:4]
             confidence = result[4]
 
-            if gaze_tools.box_in_image(box, image) and confidence > 0.8:
+            if gaze_tools.box_in_image(box, image) and confidence > 0.6:
                 box = [x * fraction for x in box]  # scale back up
                 diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
                 offset_y = int(abs(diff_height_width / 2))
