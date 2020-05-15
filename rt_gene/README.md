@@ -90,12 +90,17 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 Follow the instructions for estimating gaze above, and run in addition `roslaunch rt_gene estimate_blink.launch`. Note that the blink estimation relies on the `extract_landmarks_node.py` node, however can run independently from the `estimate_gaze.py` node.
 
 ## List of libraries
-- ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)
-- Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
-- 3DDFA face landmark extraction in [./src/rt_gene/ThreeDDFA](./src/rt_gene/ThreeDDFA); [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/cleardusk/3DDFA), [Link to paper](https://arxiv.org/abs/1804.01005)
+
+### Code included from other libraries
 - S3FD face detector in [./src/rt_gene/SFD](./src/rt_gene/SFD); [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to GitHub](https://github.com/1adrianb/face-alignment)
 - Kalman filter in [./src/rt_gene/kalman_stabilizer.py](./src/rt_gene/kalman_stabilizer.py): [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/yinguobing/head-pose-estimation)
 - Face alignment [./src/rt_gene/tracker_generic.py](./src/rt_gene/tracker_generic.py): [MIT License](https://opensource.org/licenses/MIT), [Link to Adrian Rosebrock's Blog on Face Alignment](https://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/) (Accessed 1 April 2020 on PyImageSearch)
+- Yin Guobing's image utilities; [MIT License](https://raw.githubusercontent.com/yinguobing/ImageUtility/master/LICENSE), [Link to GitHub 1](https://github.com/yinguobing/image_utility), [Link to GitHub 2](https://github.com/yinguobing/head-pose-estimation)
+
+### External libraries required via Python imports
+- ROS; [BSD 3-clause](https://opensource.org/licenses/BSD-3-Clause), [Link to website](http://ros.org/)
+- Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
+- 3DDFA face landmark extraction in [./src/rt_gene/ThreeDDFA](./src/rt_gene/ThreeDDFA); [MIT License](https://opensource.org/licenses/MIT), [Link to GitHub](https://github.com/cleardusk/3DDFA), [Link to paper](https://arxiv.org/abs/1804.01005)
 - OpenCV; [3-clause BSD License](https://raw.githubusercontent.com/opencv/opencv/master/LICENSE), [Link to website](https://opencv.org/)
 - Matplotlib; [Matplotlib License](https://raw.githubusercontent.com/matplotlib/matplotlib/master/LICENSE/LICENSE), [Link to website](https://matplotlib.org/)
 - TQDM; [Mozilla Public Licence and MIT License](https://github.com/tqdm/tqdm/blob/master/LICENCE), [Link to website](https://tqdm.github.io/)
@@ -103,4 +108,4 @@ Follow the instructions for estimating gaze above, and run in addition `roslaunc
 - Numpy; [3-clause BSD License](https://raw.githubusercontent.com/numpy/numpy/master/LICENSE.txt), [Link to website](https://numpy.org/)
 - Pytorch; [3-clause BSD License](https://raw.githubusercontent.com/pytorch/pytorch/master/LICENSE), [Link to website](http://pytorch.org)
 - TF transforms; [MIT License](https://raw.githubusercontent.com/davheld/tf/master/src/tf/transformations.py), [Link to GitHub](https://raw.githubusercontent.com/davheld/tf/master/src/tf/transformations.py)
-- Yin Guobing's image utilities; [MIT License](https://raw.githubusercontent.com/yinguobing/ImageUtility/master/LICENSE), [Link to GitHub 1](https://github.com/yinguobing/image_utility), [Link to GitHub 2](https://github.com/yinguobing/head-pose-estimation)
+- dlib; [Boost Software License](https://github.com/davisking/dlib/blob/master/dlib/LICENSE.txt), [Link to website](http://dlib.net/)
