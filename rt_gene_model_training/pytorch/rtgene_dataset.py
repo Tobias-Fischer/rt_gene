@@ -31,7 +31,6 @@ class RTGENEH5Dataset(data.Dataset):
 
                     assert len(left_dataset) == len(right_datset), "Dataset left/right images aren't equal length"
                     for _i in range(len(left_dataset)):
-                        # there's a bug in grp_i.name that outputs names that don't exist...
                         self._subject_labels.append(["/" + grp_s_n + "/" + grp_i_n, _i])
 
     def __len__(self):
