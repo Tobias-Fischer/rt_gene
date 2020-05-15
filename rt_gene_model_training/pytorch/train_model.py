@@ -169,7 +169,6 @@ if __name__ == "__main__":
     _test_subjects = []
     if _hyperparams.dataset == "rt_gene":
         if _hyperparams.k_fold_validation:
-            # this is provided by scikit-learn KFold class, but presented here to avoid adding further dependencies
             _train_subjects.append([1, 2, 8, 10, 3, 4, 7, 9])
             _train_subjects.append([1, 2, 8, 10, 5, 6, 11, 12, 13])
             _train_subjects.append([3, 4, 7, 9, 5, 6, 11, 12, 13])
@@ -183,19 +182,22 @@ if __name__ == "__main__":
             _test_subjects.append([0, 1, 2, 8, 10])
         else:
             _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
-            _valid_subjects.append([0])
+            _valid_subjects.append([0])  # Note that this is a hack and should not be used to get results for papers
             _test_subjects.append([0])
-    elif _hyperparams.dataset == "mpii":
+    else:
+        file = h5py.File(_hyperparams.hdf5_file, mode="r")
+        keys = [int(subject[1:]) for subject in list(file.keys())]
+        file.close()
         if _hyperparams.k_fold_validation:
-            all_subjects = range(15)
+            all_subjects = range(len(keys))
             for leave_one_out_idx in all_subjects:
-                _train_subjects.append(all_subjects[:leave_one_out_idx]+all_subjects[leave_one_out_idx+1:])
+                _train_subjects.append(all_subjects[:leave_one_out_idx] + all_subjects[leave_one_out_idx + 1:])
                 _valid_subjects.append([leave_one_out_idx])  # Note that this is a hack and should not be used to get results for papers
                 _test_subjects.append([leave_one_out_idx])
         else:
-            _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
-            _valid_subjects.append([0])
-            _test_subjects.append([0])
+            _train_subjects.append(keys[1:])
+            _valid_subjects.append([keys[0]])
+            _test_subjects.append([keys[0]])
 
     for fold, (train_s, valid_s, test_s) in enumerate(zip(_train_subjects, _valid_subjects, _test_subjects)):
         complete_path = os.path.abspath(os.path.join(_hyperparams.save_dir, "fold_{}/".format(fold)))

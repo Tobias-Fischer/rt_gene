@@ -31,13 +31,15 @@ class RTGENEH5Dataset(data.Dataset):
 
                     assert len(left_dataset) == len(right_datset), "Dataset left/right images aren't equal length"
                     for _i in range(len(left_dataset)):
-                        self._subject_labels.append([grp_i.name, _i])
+                        # there's a bug in grp_i.name that outputs names that don't exist...
+                        self._subject_labels.append(["/" + grp_s_n + "/" + grp_i_n, _i])
 
     def __len__(self):
         return len(self._subject_labels)
 
     def __getitem__(self, index):
         _sample = self._subject_labels[index]
+        assert type(_sample[0]) == str, "Sample not found at index {}".format(index)
         _left_img = self._h5_file[_sample[0] + "/left"][_sample[1]][()]
         _right_img = self._h5_file[_sample[0] + "/right"][_sample[1]][()]
         label_data = self._h5_file[_sample[0]+"/label"][()]
