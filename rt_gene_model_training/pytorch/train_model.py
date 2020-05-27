@@ -142,7 +142,7 @@ if __name__ == "__main__":
     _root_parser = ArgumentParser(add_help=False)
     _root_parser.add_argument('--gpu', type=int, default=1, help='gpu to use, can be repeated for mutiple gpus i.e. --gpu 1 --gpu 2', action="append")
     _root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/rtgene_dataset.hdf5")))
-    _root_parser.add_argument('--dataset', type=str, choices=["rt_gene", "mpii"], default="rt_gene")
+    _root_parser.add_argument('--dataset', type=str, choices=["rt_gene", "other"], default="rt_gene")
     _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(os.path.join(root_dir, '../../rt_gene/model_nets/pytorch_checkpoints')))
     _root_parser.add_argument('--benchmark', action='store_true', dest="benchmark")
     _root_parser.add_argument('--no-benchmark', action='store_false', dest="benchmark")

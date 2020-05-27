@@ -77,3 +77,9 @@ if __name__ == '__main__':
     download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/Model_allsubjects4_pytorch.model'),
                           "https://imperialcollegelondon.box.com/shared/static/5j6mum8350tsn51tcktus1546kwyu6yy.model",
                           "e9d2aff52aff1270fcdd8466f97b3528")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/Model_prl_mpii_allsubjects1_pytorch.model'),
+                          "https://imperialcollegelondon.box.com/shared/static/1rp9nrdw7y2q5pbuly4pipf2riy0ne8w.model",
+                          "0ffac7333ba5659d2b7f86ac302ba9ba")
+    download_if_not_exist(osp.join(osp.dirname(osp.realpath(__file__)), '../model_nets/Model_prl_mpii_allsubjects2_pytorch.model'),
+                          "https://imperialcollegelondon.box.com/shared/static/nlkqe42rch2so4k5fb9ql40jjxsze0bh.model",
+                          "87e13756863393a94a8ffc4a75f2fca2")
