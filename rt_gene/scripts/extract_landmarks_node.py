@@ -258,8 +258,6 @@ class LandmarkMethodROS(LandmarkMethodBase):
             else:
                 raise exc
 
-        self.tf2_buffer.set_transform(t, 'extract_landmarks')
-
     def update_subject_tracker(self, color_img):
         faceboxes = self.get_face_bb(color_img)
         if len(faceboxes) == 0:
