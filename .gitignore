@@ -20,6 +20,9 @@ rt_gene/model_nets/all_subjects_mpii_prl_utmv_2_02.h5
 rt_gene/model_nets/all_subjects_mpii_prl_utmv_3_02.h5
 rt_gene/model_nets/blink_model_1.h5
 rt_gene/model_nets/blink_model_2.h5
+rt_gene/model_nets/rt-bene_mobilenetv2_fold1_best.h5
+rt_gene/model_nets/rt-bene_mobilenetv2_fold2_best.h5
+rt_gene/model_nets/rt-bene_mobilenetv2_fold3_best.h5
 rt_gene/model_nets/Model_allsubjects1_pytorch.model
 rt_gene/model_nets/Model_allsubjects2_pytorch.model
 rt_gene/model_nets/Model_allsubjects3_pytorch.model
