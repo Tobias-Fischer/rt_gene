@@ -25,7 +25,7 @@ RT-BENE was supported by the EU Horizon 2020 Project PAL (643783-RIA) and a Roya
 More information can be found on the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>.
 
 ## Requirements
-For pip users: `pip install tensorflow-gpu numpy tqdm opencv-python` or for conda users: `conda install tensorflow-gpu numpy tqdm opencv`
+For pip users: `pip install tensorflow-gpu numpy tqdm opencv-python scikit-learn` or for conda users: `conda install tensorflow-gpu numpy tqdm opencv scikit-learn`
 
 ## Model training code
 This code was used to train the blink estimator for RT-BENE. The labels for the RT-BENE blink dataset are contained in the [rt_bene_dataset](../rt_bene_dataset) directory. The images corresponding to the labels can be downloaded from the RT-GENE dataset (labels are only available for the "noglasses" part): [download](https://zenodo.org/record/2529036) [(alternative link)](https://goo.gl/tfUaDm). Please run `python train_blink_model.py --help` to see the required arguments to train the model.
