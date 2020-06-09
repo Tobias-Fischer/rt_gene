@@ -31,7 +31,7 @@ For pip users: `pip install tensorflow-gpu numpy tqdm opencv-python scikit-learn
 This code was used to train the blink estimator for RT-BENE. The labels for the RT-BENE blink dataset are contained in the [rt_bene_dataset](../rt_bene_dataset) directory. The images corresponding to the labels can be downloaded from the RT-GENE dataset (labels are only available for the "noglasses" part): [download](https://zenodo.org/record/2529036) [(alternative link)](https://goo.gl/tfUaDm). Please run `python train_blink_model.py --help` to see the required arguments to train the model.
 
 ## Model testing code
-The evaluation code will be provided soon; please check back.
+Evaluation code for a 3-fold evaluation is provided in the [evaluate_blink_model.py](./evaluate_blink_model.py) file. An example to train and evaluate an ensemble of models can be found in [train_and_evaluate.py](./train_and_evaluate.py). Please run `python train_and_evaluate.py --help` to see the required arguments.
 
 ![Results](../rt_bene_precision_recall.png)
 
