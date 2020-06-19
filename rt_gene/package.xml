@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rt_gene</name>
-  <version>1.0.1</version>
+  <version>4.0.0</version>
   <description>A package implementing head pose estimation and gaze estimation based on the ECCV2018 paper RT-GENE: Real-Time Eye Gaze Estimation in Natural Environments</description>
 
   <maintainer email="t.fischer@imperial.ac.uk">Tobias Fischer</maintainer>
