@@ -50,9 +50,8 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     1. `cd $HOME/catkin_ws && catkin build`
 
 ### Optional ensemble model files
-- To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, you need to download the additional model files (make sure you comply with the licenses of [MPII](https://www.mpi-inf.mpg.de/departments/computer-vision-and-multimodal-computing/research/gaze-based-human-computer-interaction/appearance-based-gaze-estimation-in-the-wild/) and [UTMV](http://www.hci.iis.u-tokyo.ac.jp/datasets/)! these model files are licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)).
-    - `cd $HOME/catkin_ws/src && python ./rt_gene/rt_gene/scripts/download_models.py`
-- Finally, open `$(rospack find rt_gene)/launch/estimate_gaze.launch` and comment out `<rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>` and uncomment `<!--rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', ..., ..., ...</rosparam-->`
+- To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, you need to adjust the `estimate_gaze.launch` file (make sure you comply with the licenses of [MPII](https://www.mpi-inf.mpg.de/departments/computer-vision-and-multimodal-computing/research/gaze-based-human-computer-interaction/appearance-based-gaze-estimation-in-the-wild/) and [UTMV](http://www.hci.iis.u-tokyo.ac.jp/datasets/)! these model files are licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)).
+- Open `$(rospack find rt_gene)/launch/estimate_gaze.launch` and comment out `<rosparam param="model_files">['model_nets/Model_allsubjects1.h5']</rosparam>` and uncomment `<!--rosparam param="model_files">['model_nets/all_subjects_mpii_prl_utmv_0_02.h5', ..., ..., ...</rosparam-->`
 
 
 ### Requirements for live gaze estimation (Kinect One)
