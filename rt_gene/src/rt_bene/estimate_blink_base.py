@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
+from rt_gene.download_tools import download_blink_models
 
 BLINK_COLOR = (0, 0, 255)
 NO_BLINK_COLOR = (0, 255, 0)
@@ -12,6 +13,7 @@ OVERLAY_SIZE = 5
 
 class BlinkEstimatorBase(object):
     def __init__(self, device_id_blink, model_files, threshold, input_size):
+        download_blink_models()
         self.device_id_blink = device_id_blink
         self.threshold = threshold
         self.input_size = input_size

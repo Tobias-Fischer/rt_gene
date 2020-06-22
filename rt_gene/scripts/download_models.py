@@ -13,3 +13,4 @@ if __name__ == '__main__':
     download_tools.download_gaze_pytorch_models()
     download_tools.download_blink_models()
     download_tools.download_external_landmark_models()
+

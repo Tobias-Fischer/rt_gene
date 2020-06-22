@@ -7,6 +7,9 @@ import torchvision.transforms as transforms
 from torch.backends import cudnn as cudnn
 from tqdm import tqdm
 
+from rt_gene.download_tools import download_external_landmark_models
+download_external_landmark_models()
+
 # noinspection PyUnresolvedReferences
 from rt_gene import gaze_tools as gaze_tools
 from rt_gene.SFD.sfd_detector import SFDDetector
