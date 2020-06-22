@@ -28,11 +28,11 @@ def request_if_not_exist(file_name, url, md5sum=None, chunksize=1024):
                               total=int(int(request.headers['Content-length']) / chunksize),
                               unit="KiB"):
                 fh.write(chunk)
-    if md5sum is not None:
-        print("Checking md5 for {}".format(os.path.basename(file_name)))
-        assert md5sum == md5(
-            file_name), "MD5Sums do not match for {}. Please) delete the same file name to re-download".format(
-            file_name)
+        if md5sum is not None:
+            print("Checking md5 for {}".format(os.path.basename(file_name)))
+            assert md5sum == md5(
+                file_name), "MD5Sums do not match for {}. Please) delete the same file name to re-download".format(
+                file_name)
 
 
 if __name__ == '__main__':
