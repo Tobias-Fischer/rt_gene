@@ -8,7 +8,6 @@ from torch.backends import cudnn as cudnn
 from tqdm import tqdm
 
 from rt_gene.download_tools import download_external_landmark_models
-download_external_landmark_models()
 
 # noinspection PyUnresolvedReferences
 from rt_gene import gaze_tools as gaze_tools
@@ -22,6 +21,7 @@ facial_landmark_transform = transforms.Compose([ToTensorGjz(), NormalizeGjz(mean
 
 class LandmarkMethodBase(object):
     def __init__(self, device_id_facedetection, checkpoint_path_face=None, checkpoint_path_landmark=None, model_points_file=None):
+        download_external_landmark_models()
         self.model_size_rescale = 16.0
         self.head_pitch = 0.0
         self.interpupillary_distance = 0.058
