@@ -5,7 +5,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/Tobias-Fischer/rt_gene.svg?style=flat-square)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)
 
-![Dataset Collection Setup](../dataset_collection_setup.jpg)
+![Dataset Collection Setup](../assets/dataset_collection_setup.jpg)
 
 
 ## License + Attribution

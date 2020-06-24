@@ -12,7 +12,7 @@ This repository contains code and dataset references for two papers: RT-GENE (Ga
 ### License + Attribution
 The RT-GENE code is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Commercial usage is not permitted; please contact <info@tobiasfischer.info> or <y.demiris@imperial.ac.uk> regarding commercial licensing. If you use this dataset or the code in a scientific publication, please cite the following [paper](http://openaccess.thecvf.com/content_ECCV_2018/html/Tobias_Fischer_RT-GENE_Real-Time_Eye_ECCV_2018_paper.html):
 
-![Paper abstract](./paper_abstract.jpg)
+![Paper abstract](./assets/paper_abstract.jpg)
 
 ```
 @inproceedings{FischerECCV2018,
@@ -34,7 +34,7 @@ The code is split into four parts, each having its own README contained. There i
 The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze and blink estimation. This contains all the code required at inference time.
 
 <p align="center">
-  <img src="./dataset_video.gif" alt="RT-GENE inference example"/>
+  <img src="./assets/dataset_video.gif" alt="RT-GENE inference example"/>
 </p>
 
 #### RT-GENE Standalone Version
@@ -43,13 +43,13 @@ The [rt_gene_standalone](./rt_gene_standalone) directory contains instructions f
 #### RT-GENE Inpainting
 The [rt_gene_inpainting](./rt_gene_inpainting) directory contains code to inpaint the region covered by the eyetracking glasses.
 
-![Inpaining example](./inpaint_example.jpg)
+![Inpaining example](./assets/inpaint_example.jpg)
 
 #### RT-GENE Model Training
 The [rt_gene_model_training](./rt_gene_model_training) directory allows using the inpainted images to train a deep neural network for eye gaze estimation.
 
 <p align="center">
-  <img src="./accuracy_prl.jpg" alt="Accuracy on RT-GENE dataset"/>
+  <img src="./assets/accuracy_prl.jpg" alt="Accuracy on RT-GENE dataset"/>
 </p>
 
 ## RT-BENE (Blink Estimation)
@@ -71,13 +71,13 @@ RT-BENE was supported by the EU Horizon 2020 Project PAL (643783-RIA) and a Roya
 ### Overview + Accompanying Dataset
 The code is split into several parts, each having its own README. There is also an associated [RT-BENE dataset](https://zenodo.org/record/3685316). For more information, other datasets and more open-source software please visit the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>. Please note that a lot of the code is shared with RT-GENE (see above), hence there are many references to RT-GENE below.
 
-![Paper overview](./rt_bene_overview.png)
+![Paper overview](./assets/rt_bene_overview.png)
 
 #### RT-BENE ROS package
 The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze and blink estimation. This contains all the code required at inference time. For blink estimation, please refer to the [estimate_blink.py](./rt_gene/scripts/estimate_blink.py) file.
 
 <p align="center">
-  <img src="./rt_bene_inference.gif" alt="RT-BENE inference example"/>
+  <img src="./assets/rt_bene_inference.gif" alt="RT-BENE inference example"/>
 </p>
 
 #### RT-BENE Standalone Version
@@ -87,6 +87,6 @@ The [rt_bene_standalone](./rt_bene_standalone) directory contains instructions f
 The [rt_bene_model_training](./rt_bene_model_training) directory contains the code required to train models with the labels contained in the RT-BENE dataset (see below). We will soon at evaluation code in this directory, too.
 
 #### RT-BENE Dataset
-![RT-BENE labels](./rt_bene_labels.png)
+![RT-BENE labels](./assets/rt_bene_labels.png)
 
 We manually annotated images contained in the "noglasses" part of the RT-GENE dataset. The [RT-BENE dataset on Zenodo](https://zenodo.org/record/3685316) contains the eye image patches and associated annotations to train the blink models.

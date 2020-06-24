@@ -6,9 +6,9 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)
 
 
-![Inpaining example](../inpaint_example.jpg)
+![Inpaining example](../assets/inpaint_example.jpg)
 
-![Inpaining overview](../inpaint_overview.jpg)
+![Inpaining overview](../assets/inpaint_overview.jpg)
 
 
 ## License + Attribution
