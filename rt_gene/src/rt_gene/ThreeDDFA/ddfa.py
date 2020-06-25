@@ -25,7 +25,6 @@ SOFTWARE.
 import numpy as np
 
 import torch
-from .params import *
 
 
 def _parse_param(param):
@@ -44,6 +43,7 @@ def reconstruct_vertex(param, whitening=True, dense=False, transform=True):
     image coordinate space, but without alignment caused by face cropping.
     transform: whether transform to image space
     """
+    from .params import param_mean, param_std, w_shp, w_exp, u, std_size, w_shp_base, w_exp_base, u_base
     if len(param) == 12:
         param = np.concatenate((param, [0] * 50))
     if whitening:

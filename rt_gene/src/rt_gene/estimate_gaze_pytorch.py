@@ -9,18 +9,14 @@ from tqdm import tqdm
 
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
 from rt_gene.gaze_estimation_models_pytorch import GazeEstimationModelVGG
+from rt_gene.download_tools import download_gaze_pytorch_models
 
 
 class GazeEstimator(GazeEstimatorBase):
-    """This class encapsulates a deep neural network for gaze estimation.
-
-    It retrieves two image streams, one containing the left eye and another containing the right eye.
-    It synchronizes these two images with the estimated head pose.
-    The images are then converted in a suitable format, and a forward pass of the deep neural network
-    results in the estimated gaze for this frame. The estimated gaze is then published in the (theta, phi) notation."""
-
     def __init__(self, device_id_gaze, model_files):
         super(GazeEstimator, self).__init__(device_id_gaze, model_files)
+        download_gaze_pytorch_models()
+
         if "OMP_NUM_THREADS" not in os.environ:
             os.environ["OMP_NUM_THREADS"] = "8"
         tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
