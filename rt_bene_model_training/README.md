@@ -5,7 +5,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/Tobias-Fischer/rt_gene.svg?style=flat-square)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)
 
-![Best Poster Award](../rt_bene_best_poster_award.png)
+![Best Poster Award](../assets/rt_bene_best_poster_award.png)
 
 
 ## License + Attribution
@@ -33,5 +33,5 @@ This code was used to train the blink estimator for RT-BENE. The labels for the 
 ## Model testing code
 Evaluation code for a 3-fold evaluation is provided in the [evaluate_blink_model.py](./evaluate_blink_model.py) file. An example to train and evaluate an ensemble of models can be found in [train_and_evaluate.py](./train_and_evaluate.py). Please run `python train_and_evaluate.py --help` to see the required arguments.
 
-![Results](../rt_bene_precision_recall.png)
+![Results](../assets/rt_bene_precision_recall.png)
 
