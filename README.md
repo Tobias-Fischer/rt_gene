@@ -5,9 +5,13 @@
 ![GitHub issues](https://img.shields.io/github/issues/Tobias-Fischer/rt_gene.svg?style=flat-square)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-mpii-gaze)](https://paperswithcode.com/sota/gaze-estimation-on-mpii-gaze?p=rt-gene-real-time-eye-gaze-estimation-in?style=square)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-rt-gene)](https://paperswithcode.com/sota/gaze-estimation-on-rt-gene?p=rt-gene-real-time-eye-gaze-estimation-in)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-ut-multi-view)](https://paperswithcode.com/sota/gaze-estimation-on-ut-multi-view?p=rt-gene-real-time-eye-gaze-estimation-in)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-mpii-gaze&style=flat-square)](https://paperswithcode.com/sota/gaze-estimation-on-mpii-gaze?p=rt-gene-real-time-eye-gaze-estimation-in?style=square)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-rt-gene&style=flat-square)](https://paperswithcode.com/sota/gaze-estimation-on-rt-gene?p=rt-gene-real-time-eye-gaze-estimation-in)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-ut-multi-view&style=flat-square)](https://paperswithcode.com/sota/gaze-estimation-on-ut-multi-view?p=rt-gene-real-time-eye-gaze-estimation-in)
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-bene-a-dataset-and-baselines-for-real-time/blink-estimation-on-eyeblink8&style=flat-square)](https://paperswithcode.com/sota/blink-estimation-on-eyeblink8?p=rt-bene-a-dataset-and-baselines-for-real-time)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-bene-a-dataset-and-baselines-for-real-time/blink-estimation-on-researcher-s-night&style=flat-square)](https://paperswithcode.com/sota/blink-estimation-on-researcher-s-night?p=rt-bene-a-dataset-and-baselines-for-real-time)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-bene-a-dataset-and-baselines-for-real-time/blink-estimation-on-rt-bene&style=flat-square)](https://paperswithcode.com/sota/blink-estimation-on-rt-bene?p=rt-bene-a-dataset-and-baselines-for-real-time)
 
 This repository contains code and dataset references for two papers: RT-GENE (Gaze Estimation; ECCV2018) and RT-BENE (Blink Estimation; ICCV2019 Workshops).
 
