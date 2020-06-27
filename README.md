@@ -5,6 +5,10 @@
 ![GitHub issues](https://img.shields.io/github/issues/Tobias-Fischer/rt_gene.svg?style=flat-square)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-mpii-gaze)](https://paperswithcode.com/sota/gaze-estimation-on-mpii-gaze?p=rt-gene-real-time-eye-gaze-estimation-in?style=square)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-rt-gene)](https://paperswithcode.com/sota/gaze-estimation-on-rt-gene?p=rt-gene-real-time-eye-gaze-estimation-in)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-ut-multi-view)](https://paperswithcode.com/sota/gaze-estimation-on-ut-multi-view?p=rt-gene-real-time-eye-gaze-estimation-in)
+
 This repository contains code and dataset references for two papers: RT-GENE (Gaze Estimation; ECCV2018) and RT-BENE (Blink Estimation; ICCV2019 Workshops).
 
 ## RT-GENE (Gaze Estimation)
