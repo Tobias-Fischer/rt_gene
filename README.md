@@ -1,9 +1,9 @@
 # RT-GENE & RT-BENE: Real-Time Eye Gaze and Blink Estimation in Natural Environments
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg?style=flat-square)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-[![HitCount](http://hits.dwyl.io/Tobias-Fischer/rt_gene.svg)](./)
+[![HitCount](http://hits.dwyl.io/Tobias-Fischer/rt_gene.svg)](./README.md)
 [![stars](https://img.shields.io/github/stars/Tobias-Fischer/rt_gene.svg?style=flat-square)](https://github.com/Tobias-Fischer/rt_gene/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/Tobias-Fischer/rt_gene.svg?style=flat-square)](https://github.com/Tobias-Fischer/rt_gene/issues)
-[![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)](./)
+[![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)](./README.md)
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-mpii-gaze&style=flat-square)](https://paperswithcode.com/sota/gaze-estimation-on-mpii-gaze?p=rt-gene-real-time-eye-gaze-estimation-in?style=square)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-rt-gene&style=flat-square)](https://paperswithcode.com/sota/gaze-estimation-on-rt-gene?p=rt-gene-real-time-eye-gaze-estimation-in)
