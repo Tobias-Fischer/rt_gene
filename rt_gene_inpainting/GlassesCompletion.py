@@ -1,20 +1,12 @@
 from __future__ import print_function, division, absolute_import
 
-from my_utils import *
-from models import LSGAN_Model, Completion_Model, set_trainability
-import numpy as np
-import tensorflow as tf
+from models import LSGAN_Model, Completion_Model
 from utils import *
 import os
 from glob import glob
-from tqdm import tqdm, tnrange
+from tqdm import tqdm
 
-from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras import backend as K
-
-import matplotlib.pyplot as plt
-from datetime import datetime
-
 import external.poissonblending as blending
 
 
@@ -72,13 +64,12 @@ class GlassesCompletion(object):
 
         print('Done Loading Pre-trained Network!')
 
-
     def image_completion_random_search(self, nIter=1000, GPU_ID="0"):
         filename_total_face = sorted(glob(os.path.join(self.path_images, 'face_*.png')))
 
-        self.num_total_data = len(filename_total_face)
+        num_total_data = len(filename_total_face)
 
-        print(self.num_total_data)
+        print(num_total_data)
 
         print('=======================================================')
 
@@ -115,7 +106,7 @@ class GlassesCompletion(object):
 
         print(self.path_completion)
 
-        for img_idx in tqdm(range(0, self.num_total_data)):  
+        for img_idx in tqdm(range(0, num_total_data)):
             filename_face = filename_total_face[img_idx]
             filename_index = filename_face[-14:-8]
             filename_mask = self.folder_path_images + '/original/mask/mask_' + filename_index + '_overlay.png'   
@@ -124,61 +115,60 @@ class GlassesCompletion(object):
             if os.path.isfile(filename_out):
                 continue
 
-            data_face = imread_PRL(filename_face, is_grayscale = False)
+            data_face = imread_PRL(filename_face, is_grayscale=False)
             image_face = np.array(data_face).astype(np.float32)   
 
-            data_mask = imread_PRL(filename_mask, is_grayscale = True)
+            data_mask = imread_PRL(filename_mask, is_grayscale=True)
             image_mask = np.array(data_mask).astype(np.float32)                            
 
             # Sample index
             sample_num = 1
-            sample_noise_input = np.random.uniform(-1.0, 1.0, size=[sample_num, self.noise_dim]) 
-            self.sample_num = sample_num
+            # sample_noise_input = np.random.uniform(-1.0, 1.0, size=[sample_num, self.noise_dim])
 
             # mask generation
             mask = self.mask_PRL_Glasses(image_mask)
 
-            masked_images = np.multiply(image_face, mask)            
+            # masked_images = np.multiply(image_face, mask)
 
-            y = np.ones([sample_num, 1])
+            # y = np.ones([sample_num, 1])
             zhats = np.random.uniform(-1.0, 1.0, size=[sample_num, self.noise_dim])
 
-            loss_buf = 0
+            # loss_buf = 0
 
             l_buf = 10000000
             zhats_buf = zhats
-            final_iter = 0
+            # final_iter = 0
 
             for j in range(nIter):
                 zhats_search = np.random.uniform(-1.0, 1.0, size=[sample_num, self.noise_dim])
                 G_imgs = self.generator.predict(zhats_search)
                 G_imgs = np.squeeze(G_imgs)
-                g, l, lc, lp = sess.run([gradients, loss, loss_contextual, loss_perceptual], feed_dict={complete_loss_model.input:zhats_search, mask_tensor:mask, images_tensor: image_face, G_images_tensor: G_imgs})
+                g, l, lc, lp = sess.run([gradients, loss, loss_contextual, loss_perceptual], feed_dict={complete_loss_model.input: zhats_search, mask_tensor: mask, images_tensor: image_face, G_images_tensor: G_imgs})
 
                 if np.sum(l) < l_buf:
                     l_buf = np.sum(l)
                     zhats_buf = zhats_search
-                    final_iter = j               
+                    # final_iter = j
 
-            zhats  = zhats_buf            
+            zhats = zhats_buf
             G_imgs = self.generator.predict(zhats)
             G_imgs = np.squeeze(G_imgs)
 
-            #--------------------------------------------------------------
+            # --------------------------------------------------------------
             # Generate completed images 
-            inv_masked_hat_images = np.multiply(G_imgs, 1.0-mask)
-            completed = masked_images + inv_masked_hat_images                  
+            # inv_masked_hat_images = np.multiply(G_imgs, 1.0-mask)
+            # completed = masked_images + inv_masked_hat_images
 
             filename = self.path_completion+'/hats/' + filename_index + '.png'
             scipy.misc.imsave(filename, (G_imgs + 1) / 2)
 
             # Poisson Blending
             image_out = self.iminvtransform(G_imgs)
-            image_in  = self.iminvtransform(image_face)
+            image_in = self.iminvtransform(image_face)
 
             try:          
                 image_out = self.poissonblending(image_in, image_out, mask)
-                filename  = self.path_completion+'/blended/' + filename_index + '.png'  
+                filename = self.path_completion+'/blended/' + filename_index + '.png'
                 scipy.misc.imsave(filename, image_out)
             except:
                 print("Error occurred while blending: " + str(filename_index))
@@ -186,28 +176,27 @@ class GlassesCompletion(object):
 
         sess.close()
 
-
     def mask_PRL_Glasses(self, mask_images):
         mask = np.ones(self.image_shape)
 
         for ir in range(self.img_rows):
             for ic in range(self.img_cols):
                 # if mask_images[ir,ic] >= (127.5/127.5-1):
-                if mask_images[ir,ic] > (0/127.5-1):
-                    mask[ir,ic,:] = 0
+                if mask_images[ir, ic] > (0/127.5-1):
+                    mask[ir, ic, :] = 0
                     
         return mask
 
-    def poissonblending(self, img1, img2, mask):
+    @staticmethod
+    def poissonblending(img1, img2, mask):
         """Helper: interface to external poisson blending"""
-        return blending.blend(img1, img2, 1 - mask)    
+        return blending.blend(img1, img2, 1 - mask)
 
-    def iminvtransform(self, img):
+    @staticmethod
+    def iminvtransform(img):
         """Helper: Rescale pixel value ranges to 0 and 1"""
         return (np.array(img) + 1.0) / 2.0
 
 
 def loss_LSGAN(y_true, y_pred):
     return K.mean(K.square(y_pred-y_true), axis=-1)/2
-
-

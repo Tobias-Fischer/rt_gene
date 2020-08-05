@@ -1,19 +1,13 @@
 from __future__ import print_function, division, absolute_import
 
-from my_utils import *
 from models import LSGAN_Model, set_trainability
-import numpy as np
-import tensorflow as tf
-from utils import *
 import os
 from glob import glob
-
-from tensorflow.keras.models import load_model
+import numpy as np
 from tensorflow.keras.callbacks import TensorBoard
-
 from datetime import datetime
-
-from tqdm import tqdm, tnrange, tqdm_notebook
+from tqdm.auto import tqdm
+from utils import PRL_data_image_load, write_log, GAN_plot_images
 
 
 class GAN_train(object):
@@ -87,21 +81,21 @@ class GAN_train(object):
 
         # Initial Update Discriminator
         set_trainability(self.discriminator, True)
-        d_loss_real = self.discriminator_cost.train_on_batch(images_train, np.ones([batch_size,1]))
-        d_loss_fake = self.discriminator_cost.train_on_batch(images_fake, np.zeros([batch_size,1]))
+        d_loss_real = self.discriminator_cost.train_on_batch(images_train, np.ones([batch_size, 1]))
+        d_loss_fake = self.discriminator_cost.train_on_batch(images_fake, np.zeros([batch_size, 1]))
         d_loss = d_loss_real + d_loss_fake
 
         # TRAINING STEPS ------------------------------------------------------
         print('========= Main LSGAN Training ==========')        
         num_batch = self.num_total_data // batch_size           
 
-        for e in xrange(num_epoch):
+        for e in range(num_epoch):
             shuffled_sample_idx = np.random.permutation(self.num_total_data)
 
-            for b in tqdm(xrange(num_batch)):
-                batch_sample_idx = shuffled_sample_idx[b*batch_size:(b+1)*batch_size];
-                
-                images_train = PRL_data_image_load(self.data, sample_idx=sample_idx)                                
+            for b in tqdm(range(num_batch)):
+                batch_sample_idx = shuffled_sample_idx[b*batch_size:(b+1)*batch_size]
+
+                images_train = PRL_data_image_load(self.data, sample_idx=batch_sample_idx)
 
                 # noise = np.random.normal(0.0, 1.0, size=[batch_size, self.noise_dim])
                 noise = np.random.uniform(-1.0, 1.0, size=[batch_size, self.noise_dim])
@@ -109,8 +103,8 @@ class GAN_train(object):
 
                 # Update Discriminator
                 set_trainability(self.discriminator, True)
-                d_loss_real = self.discriminator_cost.train_on_batch(images_train, np.ones([batch_size,1]))
-                d_loss_fake = self.discriminator_cost.train_on_batch(images_fake, np.zeros([batch_size,1]))
+                d_loss_real = self.discriminator_cost.train_on_batch(images_train, np.ones([batch_size, 1]))
+                d_loss_fake = self.discriminator_cost.train_on_batch(images_fake, np.zeros([batch_size, 1]))
                 d_loss = d_loss_real + d_loss_fake
 
                 # Update Generator
@@ -136,13 +130,15 @@ class GAN_train(object):
                     log_mesg = "%s: [D loss: %f, acc: %f]" % (log_mesg, d_loss[0], d_loss[1])
                     log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
                     print(log_mesg)      
-                                  
-                    GAN_plot_images(generator = self.generator, x_train=self.x_train, dataset = self.dataset, save2file=True, samples=sample_noise_input.shape[0], noise=sample_noise_input, step=(e + 1), folder_path=self.dataset_path_GAN_samples)
-                    GAN_plot_images(generator = self.generator, x_train=self.x_train, dataset = self.dataset, save2file=False, samples=sample_noise_input.shape[0], noise=sample_noise_input, step=(e + 1))
+
+                    GAN_plot_images(generator=self.generator, x_train=self.x_train, dataset=self.dataset,
+                                    save2file=True, samples=sample_noise_input.shape[0], noise=sample_noise_input,
+                                    step=(e + 1), folder_path=self.dataset_path_GAN_samples)
+                    GAN_plot_images(generator=self.generator, x_train=self.x_train, dataset=self.dataset,
+                                    save2file=False, samples=sample_noise_input.shape[0], noise=sample_noise_input,
+                                    step=(e + 1))
 
             # Save trained models
             self.adversarial_cost.save(self.dataset_path_GAN_model+"/GAN_"+str(e+1)+"_"+self.dataset+"_forganECCV_adversarial_model_uniform.h5")
             self.discriminator.save(self.dataset_path_GAN_model+"/GAN_"+str(e+1)+"_"+self.dataset+"_forganECCV_discriminator_uniform.h5")
             self.generator.save(self.dataset_path_GAN_model+"/GAN_"+str(e+1)+"_"+self.dataset+"_forganECCV_generator_uniform.h5")        
-
-

@@ -30,7 +30,8 @@ This work was supported in part by the Samsung Global Research Outreach program,
 More information can be found on the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>.
 
 ## Requirements
-`pip install tensorflow-gpu keras numpy scipy tqdm matplotlib pyamg Pillow`
+- pip: `pip install tensorflow-gpu keras numpy scipy<=1.2.1 tqdm matplotlib pyamg`
+- conda: `conda install tensorflow-gpu keras numpy scipy<=1.2.1 tqdm matplotlib pyamg`
 
 ## Inpainting source code
 This code was used to inpaint the region covered by the eyetracking glasses. There are two parts: 
@@ -41,6 +42,7 @@ In `GAN_train_run.ipynb` and `GlassesCompletion_run.py` the `dataset_folder_path
 
 ## List of libraries
 - [./external/poissonblending.py](./external/poissonblending.py): [MIT License](https://opensource.org/licenses/MIT); [Link to GitHub](https://github.com/parosky/poissonblending)
+- Some code taken from [DC-GAN](https://github.com/Newmu/dcgan_code): [MIT License](https://github.com/Newmu/dcgan_code/blob/master/LICENSE); [Link to GitHub](https://github.com/Newmu/dcgan_code)
 - Tensorflow; [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), [Link to website](http://tensorflow.org/)
 - Keras; [MIT License](https://opensource.org/licenses/MIT), [Link to website](https://keras.io)
 

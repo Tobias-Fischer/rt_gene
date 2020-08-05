@@ -3,68 +3,71 @@ Some codes from https://github.com/Newmu/dcgan_code
 # Updated: 21 Feb 2017
 """
 from __future__ import print_function, division, absolute_import
-import math
-import random
 import scipy.misc
 import numpy as np
-from time import gmtime, strftime
+import tensorflow as tf
+import matplotlib.pyplot as plt
 
-get_stddev = lambda x, k_h, k_w: 1/math.sqrt(k_w*k_h*x.get_shape()[-1])
 
-def get_image(image_path, input_height, input_width,
-              resize_height=64, resize_width=64,
-              is_crop=True, is_grayscale=False):
-    image = imread(image_path, is_grayscale)
-    return transform(image, input_height, input_width, resize_height, resize_width, is_crop)    
-
-def save_images(images, size, image_path):
-    return imsave(inverse_transform(images), size, image_path)
-
-def imread(path, is_grayscale = False):
-    if (is_grayscale):
-        return scipy.misc.imread(path, flatten = True).astype(np.float)
+def imread_PRL(path, is_grayscale=False):
+    if is_grayscale:
+        return scipy.misc.imread(path, flatten=True).astype(np.float) / 127.5 - 1.
     else:
-        return scipy.misc.imread(path).astype(np.float)
+        return scipy.misc.imread(path).astype(np.float) / 127.5 - 1.
 
-def imread_PRL(path, is_grayscale = False):
-    if (is_grayscale):
-        return scipy.misc.imread(path, flatten = True).astype(np.float)/127.5 - 1.
+
+def PRL_data_image_load(data, sample_idx=0):
+    data_files = map(lambda i: data[i], sample_idx)
+
+    data = [imread_PRL(data_file, is_grayscale=False) for data_file in data_files]
+    data_images = np.array(data).astype(np.float32)
+
+    return data_images
+
+
+def write_log(callback, names, logs, batch_no):
+    for name, value in zip(names, logs):
+        summary = tf.compat.v1.Summary()
+        summary_value = summary.value.add()
+        summary_value.simple_value = value
+        summary_value.tag = name
+        callback.writer.add_summary(summary, batch_no)
+        callback.writer.flush()
+
+
+def GAN_plot_images(generator, x_train, dataset='result', save2file=False, fake=True, samples=16, noise=None, step=0,
+                    folder_path='result'):
+    img_rows = x_train.shape[1]
+    img_cols = x_train.shape[2]
+    channel = x_train.shape[3]
+    filename = dataset+'.png'
+    if fake:
+        if noise is None:
+            noise = np.random.uniform(-1.0, 1.0, size=[samples, 100])
+        else:
+            filename = dataset+"_%05d.png" % step
+        images = generator.predict(noise)
     else:
-        return scipy.misc.imread(path).astype(np.float)/127.5 - 1.
+        i = np.random.randint(0, x_train.shape[0], samples)
+        images = x_train[i, :, :, :]
 
-def merge_images(images, size):
-    return inverse_transform(images)
+    plt.figure(figsize=(10, 10))
+    for i in range(images.shape[0]):
+        plt.subplot(int(np.sqrt(samples)), int(np.sqrt(samples)), i + 1)
+        image = (images[i, :, :, :] + 1.) / 2.
 
-def merge(images, size):
-    h, w = images.shape[1], images.shape[2]
-    img = np.zeros((h * size[0], w * size[1], 3))
-    for idx, image in enumerate(images):
-        i = idx % size[1]
-        j = idx // size[1]
-        img[j*h:j*h+h, i*w:i*w+w, :] = image
+        if channel == 1:
+            image = np.reshape(image, [img_rows, img_cols])
+            plt.imshow(image, cmap='gray')
+            plt.axis('off')
+        elif channel == 3:
+            image = np.reshape(image, [img_rows, img_cols, channel])
+            plt.imshow(image)
+            plt.axis('off')
 
-    return img
-
-def imsave(images, size, path):
-    return scipy.misc.imsave(path, merge(images, size))
-
-def center_crop(x, crop_h, crop_w, resize_h=64, resize_w=64):
-    if crop_w is None:
-        crop_w = crop_h
-    h, w = x.shape[:2]
-    j = int(round((h - crop_h)/2.))
-    i = int(round((w - crop_w)/2.))
-    return scipy.misc.imresize(x[j:j+crop_h, i:i+crop_w],
-                               [resize_w, resize_w])
-
-def transform(image, input_height, input_width, 
-              resize_height=64, resize_width=64, is_crop=True):
-    if is_crop:
-        cropped_image = center_crop(image, input_height, input_width, resize_height, resize_width)
+    plt.tight_layout()
+    if save2file:
+        plt.savefig(folder_path+'/'+filename)
+        plt.close('all')
     else:
-        cropped_image = scipy.misc.imresize(image, [resize_height, resize_width])
-    return np.array(cropped_image)/127.5 - 1.
-
-def inverse_transform(images):
-    return (images+1.)/2.
-
+        plt.show()

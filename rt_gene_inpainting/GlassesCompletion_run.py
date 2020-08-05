@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from GlassesCompletion import GlassesCompletion
-from my_utils import ElapsedTimer
 
 import tensorflow as tf
 

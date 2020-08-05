@@ -1,10 +1,10 @@
-from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense, Activation, Flatten, Reshape
-from tensorflow.keras.layers import Conv2D, Conv2DTranspose, UpSampling2D, MaxPooling2D
-from tensorflow.keras.layers import BatchNormalization, LeakyReLU, Dropout
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose
+from tensorflow.keras.layers import LeakyReLU, Dropout
 from tensorflow.keras import initializers
 from tensorflow.keras import backend as K
-from tensorflow.keras.optimizers import Adam, RMSprop, Adamax
+from tensorflow.keras.optimizers import Adam
 
 
 def set_trainability(model, trainable=False):
@@ -15,7 +15,7 @@ def set_trainability(model, trainable=False):
 
 # LSGAN Model
 class LSGAN_Model(object):
-    def __init__(self, img_rows=28, img_cols=28, channel=1, noise_dim = 100, dataset = 'MNIST'):
+    def __init__(self, img_rows=28, img_cols=28, channel=1, noise_dim=100, dataset='MNIST'):
 
         self.dataset = dataset
         self.img_rows = img_rows
@@ -29,7 +29,6 @@ class LSGAN_Model(object):
         self.DM = None
 
         self.optimizer = Adam(lr=0.00005, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-        # self.optimizer = Adamax(lr=0.0005, beta_1=0.5)        
 
     def discriminator(self):
         if self.D:
@@ -69,7 +68,6 @@ class LSGAN_Model(object):
         x = Flatten()(x)
         x = Dense(1, activation='sigmoid')(x)
 
-
         self.D = Model(inputs=input_img, outputs=x, name='Discriminator')
 
         self.D.summary()
@@ -80,13 +78,12 @@ class LSGAN_Model(object):
         if self.G:
             return self.G
 
-        # kern_init = initializers.RandomNormal(mean=0.0, stddev=0.02, seed=None)
         kern_init = initializers.glorot_normal()
 
         input_shape = (self.noise_dim,)
         input_noise = Input(shape=input_shape, name='noise')
 
-        dim = 7 # cifar10 & celebA      
+        dim = 7
         depth = 512
 
         x = Dense(dim * dim * depth, kernel_initializer=kern_init)(input_noise)
@@ -113,7 +110,7 @@ class LSGAN_Model(object):
         x = Conv2DTranspose(self.channel, 5, strides=2, padding='same', kernel_initializer=kern_init)(x)
         x = Activation('tanh')(x)                               
 
-        self.G = Model(inputs = input_noise, outputs = x, name='Generator')
+        self.G = Model(inputs=input_noise, outputs=x, name='Generator')
 
         self.G.summary()
         return self.G    
@@ -148,13 +145,14 @@ class LSGAN_Model(object):
         self.DM.compile(loss=self.loss_LSGAN, optimizer=self.optimizer, metrics=['accuracy'])
         return self.DM
 
-    def loss_LSGAN(self, y_true, y_pred):
+    @staticmethod
+    def loss_LSGAN(y_true, y_pred):
         return K.mean(K.square(y_pred-y_true), axis=-1)/2
 
 
 # Completion Model
 class Completion_Model(object):
-    def __init__(self, noise_dim = 100):
+    def __init__(self, noise_dim=100):
         self.noise_dim = noise_dim        
 
         self.CL = None
@@ -173,4 +171,3 @@ class Completion_Model(object):
         out_dis_val = Dropout(1.0, name='name_out_dis_val')(out_dis_val)
         self.CL = Model(inputs=input_noise_CL, outputs=[out_dis_val, out_gen_img])          
         return self.CL            
-
