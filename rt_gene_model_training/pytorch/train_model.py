@@ -173,13 +173,13 @@ if __name__ == "__main__":
             _train_subjects.append([1, 2, 8, 10, 5, 6, 11, 12, 13])
             _train_subjects.append([3, 4, 7, 9, 5, 6, 11, 12, 13])
             # validation set is always subjects 14, 15 and 16
-            _valid_subjects.append([14, 15, 16])
-            _valid_subjects.append([14, 15, 16])
-            _valid_subjects.append([14, 15, 16])
+            _valid_subjects.append([0, 14, 15, 16])
+            _valid_subjects.append([0, 14, 15, 16])
+            _valid_subjects.append([0, 14, 15, 16])
             # test subjects
-            _test_subjects.append([0, 5, 6, 11, 12, 13])
-            _test_subjects.append([0, 3, 4, 7, 9])
-            _test_subjects.append([0, 1, 2, 8, 10])
+            _test_subjects.append([5, 6, 11, 12, 13])
+            _test_subjects.append([3, 4, 7, 9])
+            _test_subjects.append([1, 2, 8, 10])
         else:
             _train_subjects.append([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
             _valid_subjects.append([0])  # Note that this is a hack and should not be used to get results for papers
