@@ -1,8 +1,6 @@
 # Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 
 import os
-from abc import ABC
-
 import cv2
 import numpy as np
 from tqdm import tqdm
@@ -10,7 +8,7 @@ from tqdm import tqdm
 from rt_gene.gaze_tools import get_endpoint
 
 
-class GazeEstimatorBase(ABC):
+class GazeEstimatorBase(object):
     """This class encapsulates a deep neural network for gaze estimation.
 
     It retrieves two image streams, one containing the left eye and another containing the right eye.
