@@ -34,8 +34,10 @@ import torch
 import torch.nn.functional as F
 import cv2
 import numpy as np
-from .net_s3fd import s3fd
-
+try:
+    from .net_s3fd import s3fd
+except ImportError:
+    from net_s3fd import s3fd
 
 class SFDDetector(object):
 
