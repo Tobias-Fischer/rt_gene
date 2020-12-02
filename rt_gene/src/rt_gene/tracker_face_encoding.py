@@ -26,55 +26,6 @@ class FaceEncodingTracker(GenericTracker):
         self.__encoding_list = {}
         self.__threshold = float(rospy.get_param("~face_encoding_threshold", default=0.6))
 
-    @staticmethod
-    def __align_tracked_subject(tracked_subject, desired_left_eye=(0.3, 0.3), desired_face_width=150, desired_face_height=150):
-        # extract the left and right eye (x, y)-coordinates
-        right_eye_pts = np.array([tracked_subject.transformed_eye_landmarks[0], tracked_subject.transformed_eye_landmarks[1]])
-        left_eye_pts = np.array([tracked_subject.transformed_eye_landmarks[2], tracked_subject.transformed_eye_landmarks[3]])
-
-        # compute the center of mass for each eye
-        left_eye_centre = left_eye_pts.mean(axis=0).astype("int")
-        right_eye_centre = right_eye_pts.mean(axis=0).astype("int")
-
-        # compute the angle between the eye centroids
-        d_y = right_eye_centre[1] - left_eye_centre[1]
-        d_x = right_eye_centre[0] - left_eye_centre[0]
-        angle = np.degrees(np.arctan2(d_y, d_x)) - 180
-
-        # compute the desired right eye x-coordinate based on the
-        # desired x-coordinate of the left eye
-        desired_right_eye_x = 1.0 - desired_left_eye[0]
-
-        # determine the scale of the new resulting image by taking
-        # the ratio of the distance between eyes in the *current*
-        # image to the ratio of distance between eyes in the
-        # *desired* image
-        dist = np.sqrt((d_x ** 2) + (d_y ** 2))
-        desired_dist = (desired_right_eye_x - desired_left_eye[0])
-        desired_dist *= desired_face_width
-        scale = desired_dist / dist
-
-        # compute center (x, y)-coordinates (i.e., the median point)
-        # between the two eyes in the input image
-        eyes_center = ((left_eye_centre[0] + right_eye_centre[0]) // 2,
-                       (left_eye_centre[1] + right_eye_centre[1]) // 2)
-
-        # grab the rotation matrix for rotating and scaling the face
-        rotation_matrix = cv2.getRotationMatrix2D(eyes_center, angle, scale)
-
-        # update the translation component of the matrix
-        t_x = desired_face_width * 0.5
-        t_y = desired_face_height * desired_left_eye[1]
-        rotation_matrix[0, 2] += (t_x - eyes_center[0])
-        rotation_matrix[1, 2] += (t_y - eyes_center[1])
-
-        # apply the affine transformation
-        output = cv2.warpAffine(tracked_subject.face_color, rotation_matrix, (desired_face_width, desired_face_height),
-                                flags=cv2.INTER_CUBIC)
-
-        # return the aligned face
-        return output
-
     def __encode_subject(self, tracked_element):
         # get the face_color and face_chip it using the transformed_eye_landmarks
         eye_landmarks = get_normalised_eye_landmarks(tracked_element.landmarks, tracked_element.box)
