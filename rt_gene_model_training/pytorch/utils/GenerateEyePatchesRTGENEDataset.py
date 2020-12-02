@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
         subjects = landmark_estimator.get_subjects_from_faceboxes(image, faceboxes)
         for subject in subjects:
-            le_c, re_c, _, _ = subject.get_eye_image_from_landmarks(subject.transformed_eye_landmarks, subject.face_color, landmark_estimator.eye_image_size)
+            le_c, re_c, _, _ = subject.get_eye_image_from_landmarks(subject, landmark_estimator.eye_image_size)
 
             if le_c is not None and re_c is not None:
                 img_name = image_file_name.split(".")[0]
