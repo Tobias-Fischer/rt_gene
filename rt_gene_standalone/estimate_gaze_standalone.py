@@ -90,7 +90,8 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
             plt.show()
 
         if args.save_headpose:
-            cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_headpose.jpg'), head_pose_image)
+            # add idx to cope with multiple persons in one image
+            cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_headpose_%s.jpg'%(idx)), head_pose_image)
 
         input_r_list.append(gaze_estimator.input_from_image(subject.right_eye_color))
         input_l_list.append(gaze_estimator.input_from_image(subject.left_eye_color))
@@ -117,12 +118,14 @@ def estimate_gaze(base_name, color_img, dist_coefficients, camera_matrix):
             plt.show()
 
         if args.save_gaze:
-            cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_gaze.jpg'), s_gaze_img)
+            # add subject_id to cope with multiple persons in one image
+            cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_gaze_%s.jpg'%(subject_id)), s_gaze_img)
             # cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_left.jpg'), subject.left_eye_color)
             # cv2.imwrite(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_right.jpg'), subject.right_eye_color)
 
         if args.save_estimate:
-            with open(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_output.txt'), 'w+') as f:
+            # add subject_id to cope with multiple persons in one image
+            with open(os.path.join(args.output_path, os.path.splitext(base_name)[0] + '_output_%s.txt'%(subject_id)), 'w+') as f:
                 f.write(os.path.splitext(base_name)[0] + ', [' + str(headpose[1]) + ', ' + str(headpose[0]) + ']' +
                         ', [' + str(gaze[1]) + ', ' + str(gaze[0]) + ']' + '\n')
 
