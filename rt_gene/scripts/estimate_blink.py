@@ -82,7 +82,7 @@ class BlinkEstimatorNode(BlinkEstimatorBase):
 
     def publish_msg(self, header, subjects, probabilities):
         blink_msg_list = MSG_BlinkList()
-        blink_msg_list.header.stamp = header
+        blink_msg_list.header = header
         for subject_id, p in zip(subjects.keys(), probabilities):
             blink_msg = MSG_Blink()
             blink_msg.subject_id = str(subject_id)
