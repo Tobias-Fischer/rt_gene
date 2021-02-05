@@ -107,7 +107,7 @@ class GazeEstimatorROS(object):
                                                               inference_input_right_list=input_r_list,
                                                               inference_headpose_list=input_head_list)
         subject_subset = dict((k, subjects_dict[k]) for k in valid_subject_list if k in subjects_dict)
-        self.publish_gaze_msg(timestamp, subject_subset, gaze_est.tolist())
+        self.publish_gaze_msg(subject_image_list.header, subject_subset, gaze_est.tolist())
 
         subjects_gaze_img_list = []
         for subject_id, gaze in zip(valid_subject_list, gaze_est.tolist()):
@@ -135,10 +135,9 @@ class GazeEstimatorROS(object):
             '\033[2K\033[1;32mTime now: {:.2f} message color: {:.2f} latency: {:.2f}s for {} subject(s) {:.0f}Hz\033[0m'.format(
                 (_now.to_sec()), timestamp.to_sec(), np.mean(self._latency_deque), len(valid_subject_list), np.mean(self._freq_deque)), end="\r")
 
-    def publish_gaze_msg(self, timestamp, subjects, gazes):
+    def publish_gaze_msg(self, header, subjects, gazes):
         gaze_msg_list = MSG_GazeList()
-        gaze_msg_list.header.stamp = timestamp
-        gaze_msg_list.header.frame_id = '0'
+        gaze_msg_list.header = header
         for subjects_id, gaze in zip(subjects.keys(), gazes):
             gaze_msg = MSG_Gaze()
             gaze_msg.subject_id = subjects_id

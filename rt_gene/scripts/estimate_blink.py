@@ -57,7 +57,7 @@ class BlinkEstimatorNode(BlinkEstimatorBase):
 
         probs, _ = self.predict(left_eyes, right_eyes)
 
-        self.publish_msg(msg.header.stamp, subjects, probs)
+        self.publish_msg(msg.header, subjects, probs)
 
         if self.viz:
             blink_image_list = []
@@ -80,10 +80,9 @@ class BlinkEstimatorNode(BlinkEstimatorBase):
             '\033[2K\033[1;32mTime now: {:.2f} message color: {:.2f} latency: {:.2f}s for {} subject(s) {:.0f}Hz\033[0m'.format(
                 (_now.to_sec()), timestamp.to_sec(), np.mean(self._latency_deque), len(subjects), np.mean(self._freq_deque)), end="\r")
 
-    def publish_msg(self, timestamp, subjects, probabilities):
+    def publish_msg(self, header, subjects, probabilities):
         blink_msg_list = MSG_BlinkList()
-        blink_msg_list.header.stamp = timestamp
-        blink_msg_list.header.frame_id = '0'
+        blink_msg_list.header = header
         for subject_id, p in zip(subjects.keys(), probabilities):
             blink_msg = MSG_Blink()
             blink_msg.subject_id = str(subject_id)

@@ -86,7 +86,7 @@ class BlinkEstimatorFolderPair(BlinkEstimatorStandalone):
                 pair_img = np.concatenate((right_image, left_image), axis=1)
                 viz_img = self.overlay_prediction_over_img(pair_img, is_blinking)
                 cv2.imshow('folder images visualisation', viz_img)
-                cv2.waitKey(1)
+                cv2.waitKey(0)
         for left_image, right_image, p, is_blinking in zip(left_image_paths, right_image_paths, probs, blinks):
             print("Blink: %s (p=%.3f) for image pair: %20s %20s" % ("Yes" if is_blinking else "No ", p,
                                                                     os.path.basename(left_image), os.path.basename(right_image)))
