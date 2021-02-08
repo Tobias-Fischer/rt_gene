@@ -159,7 +159,7 @@ if __name__ == "__main__":
             print('Training on the whole dataset - do not use the trained model for evaluation purposes!')
             _train_subjects.append(
                 [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, 16])  # 6 is discarded, 7 is used for validation
-            _valid_subjects.append([7])  # Note that this is a hack and should not be used to get results for papers
+            _valid_subjects.append([7])
     else:
         raise NotImplementedError("No other dataset is currently implemented")
 
