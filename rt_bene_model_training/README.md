@@ -25,13 +25,24 @@ RT-BENE was supported by the EU Horizon 2020 Project PAL (643783-RIA) and a Roya
 More information can be found on the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>.
 
 ## Requirements
+### Tensorflow
 For pip users: `pip install tensorflow-gpu numpy tqdm opencv-python scikit-learn` or for conda users: `conda install tensorflow-gpu numpy tqdm opencv scikit-learn`
+### Pytorch
+
 
 ## Model training code
+### Tensorflow (as per paper)
 This code was used to train the blink estimator for RT-BENE. The labels for the RT-BENE blink dataset are contained in the [rt_bene_dataset](../rt_bene_dataset) directory. The images corresponding to the labels can be downloaded from the RT-GENE dataset (labels are only available for the "noglasses" part): [download](https://zenodo.org/record/2529036) [(alternative link)](https://goo.gl/tfUaDm). Please run `python train_blink_model.py --help` to see the required arguments to train the model.
+### Pytorch (experimental)
+This code attempts to duplicate the Tensorflow version using Pytorch and Pytorch-Lightning. It uses the same dataset. An HDF5 file is required, to generate this run [GenerateRTBENEH5Dataset.py](pytorch/util/GenerateRTBENEH5Dataset.py) with the argument to locate the RT-BENE dataset.
+[train_model](pytorch/train_model.py) contains the code required to train the model in pytorch.
+
 
 ## Model testing code
+### Tensorflow
 Evaluation code for a 3-fold evaluation is provided in the [evaluate_blink_model.py](tensorflow/evaluate_blink_model.py) file. An example to train and evaluate an ensemble of models can be found in [train_and_evaluate.py](tensorflow/train_and_evaluate.py). Please run `python train_and_evaluate.py --help` to see the required arguments.
 
 ![Results](../assets/rt_bene_precision_recall.png)
+### Pytorch
+No evaluation code is available yet, this is to be added.
 
