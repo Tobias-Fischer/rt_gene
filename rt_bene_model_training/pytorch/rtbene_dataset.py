@@ -26,10 +26,12 @@ class RTBENEH5Dataset(data.Dataset):
 
         for grp_s_n in tqdm(_wanted_subjects, desc="Loading ({}) subject metadata...".format(loader_desc)):  # subjects
             for grp_i_n, grp_i in h5_file[grp_s_n].items():  # images
-                if "image" in grp_i.keys() and "label" in grp_i.keys():
-                    image_dataset = grp_i["image"]
+                if "left" in grp_i.keys() and "right" in grp_i.keys() and "label" in grp_i.keys():
+                    left_dataset = grp_i["left"]
+                    right_datset = grp_i['right']
 
-                    for _i in range(len(image_dataset)):
+                    assert len(left_dataset) == len(right_datset), "Weird: Dataset left/right images aren't equal length"
+                    for _i in range(len(left_dataset)):
                         self._subject_labels.append(["/" + grp_s_n + "/" + grp_i_n, _i])
 
     @staticmethod
@@ -38,9 +40,9 @@ class RTBENEH5Dataset(data.Dataset):
         total = 0
         _wanted_subjects = ["s{:03d}".format(_i) for _i in subject_list]
 
-        for grp_s_n in tqdm(_wanted_subjects, desc="Loading class weights..."):
-            for grp_i_n, grp_i in h5_file[grp_s_n].items():  # images
-                if "image" in grp_i.keys() and "label" in grp_i.keys():
+        for grp_s_n in tqdm(_wanted_subjects, desc="Loading class weights...", position=0):
+            for grp_i_n, grp_i in tqdm(h5_file[grp_s_n].items(), "{}".format(grp_s_n), position=1):  # images
+                if "left" in grp_i.keys() and "right" in grp_i.keys() and "label" in grp_i.keys():
                     label = grp_i["label"][()][0]
                     if label == 1.0:
                         positive = positive + 1
@@ -57,10 +59,12 @@ class RTBENEH5Dataset(data.Dataset):
     def __getitem__(self, index):
         _sample = self._subject_labels[index]
         assert type(_sample[0]) == str, "Sample not found at index {}".format(index)
-        _img = self._h5_file[_sample[0] + "/image"][_sample[1]][()]
-        label_data = self._h5_file[_sample[0] + "/label"][()].astype(np.float32)
+        _left_img = self._h5_file[_sample[0] + "/left"][_sample[1]][()]
+        _right_img = self._h5_file[_sample[0] + "/right"][_sample[1]][()]
+        _label = self._h5_file[_sample[0] + "/label"][()].astype(np.float32)
 
         # Load data and get label
-        _transformed_img = self._transform(Image.fromarray(_img, 'RGB'))
+        _transformed_left_img = self._transform(Image.fromarray(_left_img, 'RGB'))
+        _transformed_right_img = self._transform(Image.fromarray(_right_img, 'RGB'))
 
-        return _transformed_img, label_data
+        return _transformed_left_img, _transformed_right_img, _label

@@ -2,7 +2,6 @@
 
 import torch
 import torch.nn as nn
-from functools import partial
 from torchvision import models
 
 
@@ -11,30 +10,14 @@ class BlinkEstimationAbstractModel(nn.Module):
     def __init__(self):
         super(BlinkEstimationAbstractModel, self).__init__()
 
-    @staticmethod
-    def _create_fc_layers(in_features, out_features, dropout_p=0.2):
-        fc = nn.Sequential(
-            nn.Linear(in_features, 256),
+    def _create_fc_layers(self, in_features, out_features, dropout_p=0.6):
+        self.fc = nn.Sequential(
+            nn.Linear(in_features, 512),
+            nn.BatchNorm1d(512, momentum=0.999, eps=1e-3),
             nn.ReLU(inplace=True),
             nn.Dropout(p=dropout_p),
-            nn.Linear(256, 128),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_p),
-            nn.Linear(128, 64),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout_p),
-            nn.Linear(64, out_features),
+            nn.Linear(512, out_features)
         )
-
-        return fc
-
-    def forward(self, eye_patch):
-        x = self._features(eye_patch)
-        x = torch.flatten(x, 1)
-
-        fc_output = self.fc(x)
-
-        return fc_output
 
     @staticmethod
     def _init_weights(modules):
@@ -43,106 +26,179 @@ class BlinkEstimationAbstractModel(nn.Module):
                 nn.init.kaiming_uniform_(m.weight, mode="fan_in", nonlinearity="relu")
                 nn.init.zeros_(m.bias)
 
+    def forward(self, left_eye, right_eye):
+        left_x = self.left_features(left_eye)
+        left_x = torch.flatten(left_x, 1)
+
+        right_x = self.right_features(right_eye)
+        right_x = torch.flatten(right_x, 1)
+
+        eyes_x = torch.cat((left_x, right_x), dim=1)
+        fc_output = self.fc(eyes_x)
+
+        return fc_output
+
 
 class BlinkEstimationModelResnet18(BlinkEstimationAbstractModel):
 
-    def __init__(self, num_out=2):
+    def __init__(self, num_out=1):
         super(BlinkEstimationModelResnet18, self).__init__()
-        _model = models.resnet18(pretrained=True)
+        _left_model = models.resnet18(pretrained=True)
+        _right_model = models.resnet18(pretrained=True)
 
-        self._features = nn.Sequential(
-            _model.conv1,
-            _model.bn1,
-            _model.relu,
-            _model.maxpool,
-            _model.layer1,
-            _model.layer2,
-            _model.layer3,
-            _model.layer4,
-            _model.avgpool
+        # remove the last ConvBRelu layer
+        self.left_features = nn.Sequential(
+            _left_model.conv1,
+            _left_model.bn1,
+            _left_model.relu,
+            _left_model.maxpool,
+            _left_model.layer1,
+            _left_model.layer2,
+            _left_model.layer3,
+            _left_model.layer4,
+            _left_model.avgpool
         )
 
-        for param in self._features.parameters():
+        self.right_features = nn.Sequential(
+            _right_model.conv1,
+            _right_model.bn1,
+            _right_model.relu,
+            _right_model.maxpool,
+            _right_model.layer1,
+            _right_model.layer2,
+            _right_model.layer3,
+            _right_model.layer4,
+            _right_model.avgpool
+        )
+
+        for param in self.left_features.parameters():
+            param.requires_grad = True
+        for param in self.right_features.parameters():
             param.requires_grad = True
 
-        self.fc = BlinkEstimationAbstractModel._create_fc_layers(in_features=_model.fc.in_features,
-                                                                 out_features=num_out)
-        BlinkEstimationAbstractModel._init_weights(self.modules())
+        self._create_fc_layers(in_features=_left_model.fc.in_features + _right_model.fc.in_features,
+                               out_features=num_out)
+        self._init_weights(self.modules())
 
 
 class BlinkEstimationModelResnet50(BlinkEstimationAbstractModel):
 
-    def __init__(self, num_out=2):
+    def __init__(self, num_out=1):
         super(BlinkEstimationModelResnet50, self).__init__()
-        _model = models.resnet50(pretrained=True)
+        _left_model = models.resnet50(pretrained=True)
+        _right_model = models.resnet50(pretrained=True)
 
-        self._features = nn.Sequential(
-            _model.conv1,
-            _model.bn1,
-            _model.relu,
-            _model.maxpool,
-            _model.layer1,
-            _model.layer2,
-            _model.layer3,
-            _model.layer4,
-            _model.avgpool
+        # remove the last ConvBRelu layer
+        self.left_features = nn.Sequential(
+            _left_model.conv1,
+            _left_model.bn1,
+            _left_model.relu,
+            _left_model.maxpool,
+            _left_model.layer1,
+            _left_model.layer2,
+            _left_model.layer3,
+            _left_model.layer4,
+            _left_model.avgpool
         )
 
-        for param in self._features.parameters():
+        self.right_features = nn.Sequential(
+            _right_model.conv1,
+            _right_model.bn1,
+            _right_model.relu,
+            _right_model.maxpool,
+            _right_model.layer1,
+            _right_model.layer2,
+            _right_model.layer3,
+            _right_model.layer4,
+            _right_model.avgpool
+        )
+
+        for param in self.left_features.parameters():
+            param.requires_grad = True
+        for param in self.right_features.parameters():
             param.requires_grad = True
 
-        self.fc = BlinkEstimationAbstractModel._create_fc_layers(in_features=_model.fc.in_features,
-                                                                 out_features=num_out)
-        BlinkEstimationAbstractModel._init_weights(self.modules())
+        self._create_fc_layers(in_features=_left_model.fc.in_features + _right_model.fc.in_features,
+                               out_features=num_out)
+        self._init_weights(self.modules())
 
 
-class BlinkEstimationModelVGG(BlinkEstimationAbstractModel):
+class BlinkEstimationModelVGG16(BlinkEstimationAbstractModel):
 
-    def __init__(self, num_out=2):
-        super(BlinkEstimationModelVGG, self).__init__()
-        _model = models.vgg16(pretrained=True)
+    def __init__(self, num_out=1):
+        super(BlinkEstimationModelVGG16, self).__init__()
+        _left_model = models.vgg16(pretrained=True)
+        _right_model = models.vgg16(pretrained=True)
 
-        _modules = [module for module in _model.features]
-        _modules.append(_model.avgpool)
-        self._features = nn.Sequential(*_modules)
-        for param in self._features.parameters():
+        # remove the last ConvBRelu layer
+        _left_modules = [module for module in _left_model.features]
+        _left_modules.append(_left_model.avgpool)
+        self.left_features = nn.Sequential(*_left_modules)
+
+        _right_modules = [module for module in _right_model.features]
+        _right_modules.append(_right_model.avgpool)
+        self.right_features = nn.Sequential(*_right_modules)
+
+        for param in self.left_features.parameters():
+            param.requires_grad = True
+        for param in self.right_features.parameters():
             param.requires_grad = True
 
-        self.fc = BlinkEstimationAbstractModel._create_fc_layers(in_features=_model.classifier[0].in_features,
-                                                                 out_features=num_out)
-        BlinkEstimationAbstractModel._init_weights(self.modules())
+        self._create_fc_layers(
+            in_features=_left_model.classifier[0].in_features + _right_model.classifier[0].in_features,
+            out_features=num_out)
+        self._init_weights(self.modules())
 
 
 class BlinkEstimationModelVGG19(BlinkEstimationAbstractModel):
 
-    def __init__(self, num_out=2):
+    def __init__(self, num_out=1):
         super(BlinkEstimationModelVGG19, self).__init__()
-        _model = models.vgg19(pretrained=True)
+        _left_model = models.vgg19(pretrained=True)
+        _right_model = models.vgg19(pretrained=True)
 
-        _modules = [module for module in _model.features]
-        _modules.append(_model.avgpool)
-        self._features = nn.Sequential(*_modules)
-        for param in self._features.parameters():
+        # remove the last ConvBRelu layer
+        _left_modules = [module for module in _left_model.features]
+        _left_modules.append(_left_model.avgpool)
+        self.left_features = nn.Sequential(*_left_modules)
+
+        _right_modules = [module for module in _right_model.features]
+        _right_modules.append(_right_model.avgpool)
+        self.right_features = nn.Sequential(*_right_modules)
+
+        for param in self.left_features.parameters():
+            param.requires_grad = True
+        for param in self.right_features.parameters():
             param.requires_grad = True
 
-        self.fc = BlinkEstimationAbstractModel._create_fc_layers(in_features=_model.classifier[0].in_features,
-                                                                 out_features=num_out)
-        BlinkEstimationAbstractModel._init_weights(self.modules())
+        self._create_fc_layers(
+            in_features=_left_model.classifier[0].in_features + _right_model.classifier[0].in_features,
+            out_features=num_out)
+        self._init_weights(self.modules())
 
 
 class BlinkEstimationModelDenseNet121(BlinkEstimationAbstractModel):
 
-    def __init__(self, num_out=2):
+    def __init__(self, num_out=1):
         super(BlinkEstimationModelDenseNet121, self).__init__()
-        _model = models.densenet121(pretrained=True)
+        _left_model = models.densenet121(pretrained=True)
+        _right_model = models.densenet121(pretrained=True)
 
-        _modules = [module for module in _model.features]
-        _modules.append(nn.ReLU(inplace=True))
-        _modules.append(nn.AdaptiveAvgPool2d(output_size=(1, 1)))
-        self._features = nn.Sequential(*_modules)
-        for param in self._features.parameters():
+        _left_modules = [module for module in _left_model.features]
+        _left_modules.append(nn.ReLU(inplace=True))
+        _left_modules.append(nn.AdaptiveAvgPool2d(output_size=(1, 1)))
+        self.left_features = nn.Sequential(*_left_modules)
+
+        _right_modules = [module for module in _right_model.features]
+        _right_modules.append(nn.ReLU(inplace=True))
+        _right_modules.append(nn.AdaptiveAvgPool2d(output_size=(1, 1)))
+        self.right_features = nn.Sequential(*_right_modules)
+
+        for param in self.left_features.parameters():
+            param.requires_grad = True
+        for param in self.right_features.parameters():
             param.requires_grad = True
 
-        self.fc = BlinkEstimationAbstractModel._create_fc_layers(in_features=_model.classifier.in_features,
-                                                                 out_features=num_out)
-        BlinkEstimationAbstractModel._init_weights(self.modules())
+        self._create_fc_layers(in_features=_left_model.classifier.in_features + _right_model.classifier.in_features,
+                               out_features=num_out)
+        self._init_weights(self.modules())

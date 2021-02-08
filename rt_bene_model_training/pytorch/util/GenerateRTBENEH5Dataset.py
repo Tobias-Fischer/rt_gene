@@ -37,12 +37,15 @@ if __name__ == "__main__":
                 for line in tqdm(_lines, desc="Subject {}".format(subject_id)):
 
                     split = line.split(",")
-                    image_name = split[0]
+                    image_name = split[0][5:]
                     image_grp = subject_grp.create_group(image_name)
-                    image_path = os.path.join(subject_data, "natural/left/", "{}".format(split[0]))
-                    if os.path.exists(image_path):
+                    left_image_path = os.path.join(subject_data, "natural/left/", "left_{}".format(image_name))
+                    right_image_path = os.path.join(subject_data, "natural/right/", "right_{}".format(image_name))
+                    if os.path.exists(left_image_path) and os.path.exists(right_image_path):
                         label = float(split[1].strip("\n"))
                         if label != 0.5:  # paper removed 0.5s
-                            image_data = np.array([Image.open(image_path).resize(_required_size)])
-                            image_grp.create_dataset("image", data=image_data, compression=_compression)
+                            left_image_data = np.array([np.array(Image.open(left_image_path).resize(_required_size))])
+                            right_image_data = np.array([np.array(Image.open(right_image_path).resize(_required_size))])
+                            image_grp.create_dataset("left", data=left_image_data, compression=_compression)
+                            image_grp.create_dataset("right", data=left_image_data, compression=_compression)
                             image_grp.create_dataset("label", data=[label])

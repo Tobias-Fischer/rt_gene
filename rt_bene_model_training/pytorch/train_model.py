@@ -12,7 +12,7 @@ from PIL import ImageFilter
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18, BlinkEstimationModelResnet50, \
-    BlinkEstimationModelVGG, BlinkEstimationModelDenseNet121
+    BlinkEstimationModelVGG16, BlinkEstimationModelVGG19, BlinkEstimationModelDenseNet121
 from rtbene_dataset import RTBENEH5Dataset
 import matplotlib.pyplot as plt
 
@@ -31,7 +31,8 @@ class TrainRTBENE(pl.LightningModule):
         _models = {
             "resnet18": partial(BlinkEstimationModelResnet18, num_out=_param_num.get(hparams.loss_fn)),
             "resnet50": partial(BlinkEstimationModelResnet50, num_out=_param_num.get(hparams.loss_fn)),
-            "vgg": partial(BlinkEstimationModelVGG, num_out=_param_num.get(hparams.loss_fn)),
+            "vgg16": partial(BlinkEstimationModelVGG16, num_out=_param_num.get(hparams.loss_fn)),
+            "vgg19": partial(BlinkEstimationModelVGG19, num_out=_param_num.get(hparams.loss_fn)),
             "densenet121": partial(BlinkEstimationModelDenseNet121, num_out=_param_num.get(hparams.loss_fn)),
         }
         self._model = _models.get(hparams.model_base)()
@@ -40,20 +41,20 @@ class TrainRTBENE(pl.LightningModule):
         self._validate_subjects = validate_subjects
         self.hparams = hparams
 
-    def forward(self, image_patch):
-        return self._model(image_patch)
+    def forward(self, left_patch, right_patch):
+        return self._model(left_patch, right_patch)
 
     def training_step(self, batch, batch_idx):
-        _img, _label = batch
+        _left, _right, _label = batch
 
-        blink_out = self.forward(_img)
+        blink_out = self.forward(_left, _right)
         loss = self._criterion(blink_out, _label)
         self.log("train_loss", loss)
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
-        _img, _label = batch
-        _pred_blink = self.forward(_img)
+        _left, _right, _label = batch
+        _pred_blink = self.forward(_left, _right)
         loss = self._criterion(_pred_blink, _label)
         return {'val_loss': loss}
 
@@ -82,7 +83,7 @@ class TrainRTBENE(pl.LightningModule):
         parser.add_argument('--batch_size', default=64, type=int)
         parser.add_argument('--batch_norm', default=True, type=bool)
         parser.add_argument('--learning_rate', type=float, default=1e-3)
-        parser.add_argument('--model_base', choices=["vgg", "resnet18", "resnet50", "densenet121"], default="densenet121")
+        parser.add_argument('--model_base', choices=["vgg16", "vgg19", "resnet18", "resnet50", "densenet121"], default="densenet121")
         parser.add_argument('--scheduler_step', default=2, type=int)
         parser.add_argument('--scheduler_gamma', default=0.8, type=float)
         return parser
@@ -99,6 +100,7 @@ class TrainRTBENE(pl.LightningModule):
                                                     transforms.ToTensor(),
                                                     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                                          std=[0.229, 0.224, 0.225])])
+
         _data_train = RTBENEH5Dataset(h5_file=h5py.File(self.hparams.hdf5_file, mode="r"),
                                       subject_list=self._train_subjects, transform=_train_transforms,
                                       loader_desc="train")
@@ -161,8 +163,8 @@ if __name__ == "__main__":
 
     for fold, (train_s, valid_s) in enumerate(zip(_train_subjects, _valid_subjects)):
         # this is a hack to get class weights, i'm sure there's a better way fo doing it but I can't think of it
-        _h5_f = h5py.File(_hyperparams.hdf5_file, mode="r")
-        _class_weights = RTBENEH5Dataset.get_class_weights(h5_file=_h5_f, subject_list=train_s)
+        with h5py.File(_hyperparams.hdf5_file, mode="r") as _h5_f:
+            _class_weights = RTBENEH5Dataset.get_class_weights(h5_file=_h5_f, subject_list=train_s)
 
         _model = TrainRTBENE(hparams=_hyperparams,
                              train_subjects=train_s,
