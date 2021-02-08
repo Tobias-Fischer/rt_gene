@@ -24,13 +24,15 @@ class RTBENEH5Dataset(data.Dataset):
 
         _wanted_subjects = ["s{:03d}".format(_i) for _i in subject_list]
 
-        for grp_s_n in tqdm(_wanted_subjects, desc="Loading ({}) subject metadata...".format(loader_desc)):  # subjects
+        for grp_s_n in tqdm(_wanted_subjects, desc="Loading ({}) subject metadata...".format(loader_desc),
+                            position=0):  # subjects
             for grp_i_n, grp_i in h5_file[grp_s_n].items():  # images
                 if "left" in grp_i.keys() and "right" in grp_i.keys() and "label" in grp_i.keys():
                     left_dataset = grp_i["left"]
                     right_datset = grp_i['right']
 
-                    assert len(left_dataset) == len(right_datset), "Weird: Dataset left/right images aren't equal length"
+                    assert len(left_dataset) == len(
+                        right_datset), "Weird: Dataset left/right images aren't equal length"
                     for _i in range(len(left_dataset)):
                         self._subject_labels.append(["/" + grp_s_n + "/" + grp_i_n, _i])
 
@@ -41,7 +43,7 @@ class RTBENEH5Dataset(data.Dataset):
         _wanted_subjects = ["s{:03d}".format(_i) for _i in subject_list]
 
         for grp_s_n in tqdm(_wanted_subjects, desc="Loading class weights...", position=0):
-            for grp_i_n, grp_i in tqdm(h5_file[grp_s_n].items(), "{}".format(grp_s_n), position=1):  # images
+            for grp_i_n, grp_i in h5_file[grp_s_n].items():  # images
                 if "left" in grp_i.keys() and "right" in grp_i.keys() and "label" in grp_i.keys():
                     label = grp_i["label"][()][0]
                     if label == 1.0:

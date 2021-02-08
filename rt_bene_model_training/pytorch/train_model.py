@@ -6,7 +6,7 @@ from functools import partial
 import h5py
 import numpy as np
 import pytorch_lightning as pl
-import pytorch_lightning.metrics as metrics
+from pytorch_lightning.callbacks import ModelCheckpoint
 import torch
 from PIL import ImageFilter
 from torch.utils.data import DataLoader
@@ -14,7 +14,7 @@ from torchvision.transforms import transforms
 from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18, BlinkEstimationModelResnet50, \
     BlinkEstimationModelVGG16, BlinkEstimationModelVGG19, BlinkEstimationModelDenseNet121
 from rtbene_dataset import RTBENEH5Dataset
-import matplotlib.pyplot as plt
+
 
 
 class TrainRTBENE(pl.LightningModule):
@@ -46,9 +46,8 @@ class TrainRTBENE(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         _left, _right, _label = batch
-
-        blink_out = self.forward(_left, _right)
-        loss = self._criterion(blink_out, _label)
+        _pred_blink = self.forward(_left, _right)
+        loss = self._criterion(_pred_blink, _label)
         self.log("train_loss", loss)
         return {"loss": loss}
 
@@ -60,6 +59,7 @@ class TrainRTBENE(pl.LightningModule):
 
     def validation_epoch_end(self, outputs):
         _losses = torch.stack([x['val_loss'] for x in outputs])
+
         self.log("val_loss", _losses.mean())
 
     def configure_optimizers(self):
@@ -68,7 +68,7 @@ class TrainRTBENE(pl.LightningModule):
             if param.requires_grad:
                 _params_to_update.append(param)
 
-        _optimizer = torch.optim.Adam(_params_to_update, lr=self.hparams.learning_rate, betas=(0.9, 0.95))
+        _optimizer = torch.optim.AdamW(_params_to_update, lr=self.hparams.learning_rate)
         _scheduler = torch.optim.lr_scheduler.StepLR(_optimizer, step_size=self.hparams.scheduler_step,
                                                      gamma=self.hparams.scheduler_gamma)
 
@@ -83,7 +83,8 @@ class TrainRTBENE(pl.LightningModule):
         parser.add_argument('--batch_size', default=64, type=int)
         parser.add_argument('--batch_norm', default=True, type=bool)
         parser.add_argument('--learning_rate', type=float, default=1e-3)
-        parser.add_argument('--model_base', choices=["vgg16", "vgg19", "resnet18", "resnet50", "densenet121"], default="densenet121")
+        parser.add_argument('--model_base', choices=["vgg16", "vgg19", "resnet18", "resnet50", "densenet121"],
+                            default="densenet121")
         parser.add_argument('--scheduler_step', default=2, type=int)
         parser.add_argument('--scheduler_gamma', default=0.8, type=float)
         return parser
@@ -126,7 +127,7 @@ if __name__ == "__main__":
                               default=os.path.abspath(os.path.join(root_dir, "../../RT_BENE/rtbene_dataset.hdf5")))
     _root_parser.add_argument('--dataset', type=str, choices=["rt_bene"], default="rt_bene")
     _root_parser.add_argument('--save_dir', type=str, default=os.path.abspath(
-        os.path.join(root_dir, '../../rt_bene/model_nets/pytorch_checkpoints')))
+        os.path.join(root_dir, '../../rt_bene_model_training/pytorch/model_nets')))
     _root_parser.add_argument('--benchmark', action='store_true', dest="benchmark")
     _root_parser.add_argument('--no-benchmark', action='store_false', dest="benchmark")
     _root_parser.add_argument('--num_io_workers', default=4, type=int)
@@ -171,13 +172,20 @@ if __name__ == "__main__":
                              validate_subjects=valid_s,
                              class_weights=_class_weights)
 
+        checkpoint_callback = ModelCheckpoint(dirpath=_hyperparams.save_dir,
+                                              monitor='val_loss',
+                                              save_top_k=3,
+                                              filename=f'fold={fold}-' + '{epoch}-{val_loss:.2f}')
+
         # start training
         trainer = Trainer(gpus=_hyperparams.gpu,
+                          callbacks=[checkpoint_callback],
                           precision=32,
                           progress_bar_refresh_rate=1,
-                          min_epochs=5 if _hyperparams.augment else 3,
-                          max_epochs=100 if _hyperparams.augment else 5,
+                          min_epochs=1 if _hyperparams.augment else 3,
+                          max_epochs=2 if _hyperparams.augment else 5,
                           accumulate_grad_batches=_hyperparams.accumulate_grad_batches,
-                          deterministic=True,
+                          log_gpu_memory="all",
+                          log_every_n_steps=10,
                           benchmark=_hyperparams.benchmark)
         trainer.fit(_model)
