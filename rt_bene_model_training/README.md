@@ -28,7 +28,7 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 ### Tensorflow
 For pip users: `pip install tensorflow-gpu numpy tqdm opencv-python scikit-learn` or for conda users: `conda install tensorflow-gpu numpy tqdm opencv scikit-learn`
 ### Pytorch
-
+For conda users: conda install -c conda-forge numpy scipy tqdm pillow rospkg opencv scikit-learn h5py matplotlib pytorch-lightning && conda install -c pytorch pytorch torchvision
 
 ## Model training code
 ### Tensorflow (as per paper)
@@ -45,4 +45,3 @@ Evaluation code for a 3-fold evaluation is provided in the [evaluate_blink_model
 ![Results](../assets/rt_bene_precision_recall.png)
 ### Pytorch
 No evaluation code is available yet, this is to be added.
-
