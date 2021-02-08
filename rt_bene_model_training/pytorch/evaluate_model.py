@@ -19,7 +19,6 @@ if __name__ == "__main__":
                               default=os.path.abspath(os.path.join(root_dir, "../../RT_BENE/rtbene_dataset.hdf5")))
     _root_parser.add_argument('--dataset', type=str, choices=["rt_bene"], default="rt_bene")
     _root_parser.add_argument('--model_net_dir', type=str, required=True)
-    _root_parser.add_argument('--seed', type=int, default=0)
     _args = _root_parser.parse_args()
 
     _valid_subjects = [0, 11, 15, 16]
