@@ -12,17 +12,17 @@ class BlinkEstimationAbstractModel(nn.Module):
         super(BlinkEstimationAbstractModel, self).__init__()
 
     @staticmethod
-    def _create_fc_layers(in_features, out_features):
+    def _create_fc_layers(in_features, out_features, dropout_p=0.2):
         fc = nn.Sequential(
             nn.Linear(in_features, 256),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=dropout_p),
             nn.Linear(256, 128),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=dropout_p),
             nn.Linear(128, 64),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=dropout_p),
             nn.Linear(64, out_features),
         )
 
@@ -101,6 +101,23 @@ class BlinkEstimationModelVGG(BlinkEstimationAbstractModel):
     def __init__(self, num_out=2):
         super(BlinkEstimationModelVGG, self).__init__()
         _model = models.vgg16(pretrained=True)
+
+        _modules = [module for module in _model.features]
+        _modules.append(_model.avgpool)
+        self._features = nn.Sequential(*_modules)
+        for param in self._features.parameters():
+            param.requires_grad = True
+
+        self.fc = BlinkEstimationAbstractModel._create_fc_layers(in_features=_model.classifier[0].in_features,
+                                                                 out_features=num_out)
+        BlinkEstimationAbstractModel._init_weights(self.modules())
+
+
+class BlinkEstimationModelVGG19(BlinkEstimationAbstractModel):
+
+    def __init__(self, num_out=2):
+        super(BlinkEstimationModelVGG19, self).__init__()
+        _model = models.vgg19(pretrained=True)
 
         _modules = [module for module in _model.features]
         _modules.append(_model.avgpool)

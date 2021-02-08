@@ -13,8 +13,6 @@ class RTBENEH5Dataset(data.Dataset):
         self._h5_file = h5_file
         self._transform = transform
         self._subject_labels = []
-        self._positive_labels = 0
-        self._total_labels = 0
 
         assert subject_list is not None, "Must pass a list of subjects to load the data for"
 
@@ -30,10 +28,6 @@ class RTBENEH5Dataset(data.Dataset):
             for grp_i_n, grp_i in h5_file[grp_s_n].items():  # images
                 if "image" in grp_i.keys() and "label" in grp_i.keys():
                     image_dataset = grp_i["image"]
-                    label = grp_i["label"]
-                    if label == 1.0:
-                        self._positive_labels = self._positive_labels + 1
-                    self._total_labels = self._total_labels + 1
 
                     for _i in range(len(image_dataset)):
                         self._subject_labels.append(["/" + grp_s_n + "/" + grp_i_n, _i])
