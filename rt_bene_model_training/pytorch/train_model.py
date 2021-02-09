@@ -16,7 +16,6 @@ from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18
 from rtbene_dataset import RTBENEH5Dataset
 
 
-
 class TrainRTBENE(pl.LightningModule):
 
     def __init__(self, hparams, train_subjects, validate_subjects, class_weights=None):
@@ -135,6 +134,9 @@ if __name__ == "__main__":
     _root_parser.add_argument('--all_dataset', action='store_false', dest="k_fold_validation")
     _root_parser.add_argument('--accumulate_grad_batches', default=1, type=int)
     _root_parser.add_argument('--seed', type=int, default=0)
+    _root_parser.add_argument('--min_epochs', type=int, default=5, help="Number of Epochs to perform at a minimum")
+    _root_parser.add_argument('--max_epochs', type=int, default=20,
+                              help="Maximum number of epochs to perform; the trainer will Exit after.")
     _root_parser.set_defaults(benchmark=True)
     _root_parser.set_defaults(augment=True)
 
@@ -183,8 +185,8 @@ if __name__ == "__main__":
                           callbacks=[checkpoint_callback],
                           precision=32,
                           progress_bar_refresh_rate=1,
-                          min_epochs=5 if _hyperparams.augment else 3,
-                          max_epochs=20 if _hyperparams.augment else 5,
+                          min_epochs=_hyperparams.min_epochs,
+                          max_epochs=_hyperparams.max_epochs,
                           accumulate_grad_batches=_hyperparams.accumulate_grad_batches,
                           log_gpu_memory="all",
                           log_every_n_steps=10,

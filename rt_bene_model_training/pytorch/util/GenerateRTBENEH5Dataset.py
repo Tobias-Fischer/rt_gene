@@ -34,18 +34,17 @@ if __name__ == "__main__":
             with open(os.path.join(args.rt_bene_root, "{}_blink_labels.csv".format(subject_id)), "r") as f:
                 _lines = f.readlines()
 
-                for line in tqdm(_lines, desc="Subject {}".format(subject_id)):
-
-                    split = line.split(",")
-                    image_name = split[0][5:]
-                    image_grp = subject_grp.create_group(image_name)
-                    left_image_path = os.path.join(subject_data, "natural/left/", "left_{}".format(image_name))
-                    right_image_path = os.path.join(subject_data, "natural/right/", "right_{}".format(image_name))
-                    if os.path.exists(left_image_path) and os.path.exists(right_image_path):
-                        label = float(split[1].strip("\n"))
-                        if label != 0.5:  # paper removed 0.5s
-                            left_image_data = np.array([np.array(Image.open(left_image_path).resize(_required_size))])
-                            right_image_data = np.array([np.array(Image.open(right_image_path).resize(_required_size))])
-                            image_grp.create_dataset("left", data=left_image_data, compression=_compression)
-                            image_grp.create_dataset("right", data=left_image_data, compression=_compression)
-                            image_grp.create_dataset("label", data=[label])
+            for line in tqdm(_lines, desc="Subject {}".format(subject_id)):
+                split = line.split(",")
+                image_name = split[0][5:]
+                image_grp = subject_grp.create_group(image_name.split("_")[0])
+                left_image_path = os.path.join(subject_data, "natural/left/", "left_{}".format(image_name))
+                right_image_path = os.path.join(subject_data, "natural/right/", "right_{}".format(image_name))
+                if os.path.exists(left_image_path) and os.path.exists(right_image_path):
+                    label = float(split[1].strip("\n"))
+                    if label != 0.5:  # paper removed 0.5s
+                        left_image_data = np.array([np.array(Image.open(left_image_path).resize(_required_size))])
+                        right_image_data = np.array([np.array(Image.open(right_image_path).resize(_required_size))])
+                        image_grp.create_dataset("left", data=left_image_data, compression=_compression)
+                        image_grp.create_dataset("right", data=left_image_data, compression=_compression)
+                        image_grp.create_dataset("label", data=[label])
