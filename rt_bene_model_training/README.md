@@ -44,4 +44,5 @@ Evaluation code for a 3-fold evaluation is provided in the [evaluate_blink_model
 
 ![Results](../assets/rt_bene_precision_recall.png)
 ### Pytorch
-No evaluation code is available yet, this is to be added.
+Evaluation code for 3-fold validation is in [evaluate_model.py](pytorch/evaluate_model.py)
+![Results](../assets/rtbene_pytorch_resnet18.png)

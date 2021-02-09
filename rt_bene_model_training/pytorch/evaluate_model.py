@@ -9,17 +9,31 @@ from sklearn.metrics import roc_curve, precision_recall_curve
 from torch import sigmoid
 from tqdm import tqdm
 
-from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18
+from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18, BlinkEstimationModelResnet50, \
+    BlinkEstimationModelVGG19, BlinkEstimationModelDenseNet121, BlinkEstimationModelVGG16
 from rt_bene_model_training.pytorch.rtbene_dataset import RTBENEH5Dataset
 
 if __name__ == "__main__":
     root_dir = os.path.dirname(os.path.realpath(__file__))
     _root_parser = ArgumentParser(add_help=False)
     _root_parser.add_argument('--hdf5_file', type=str,
-                              default=os.path.abspath(os.path.join(root_dir, "../../RT_BENE/rtbene_dataset.hdf5")))
-    _root_parser.add_argument('--dataset', type=str, choices=["rt_bene"], default="rt_bene")
-    _root_parser.add_argument('--model_net_dir', type=str, required=True)
+                              default=os.path.abspath(os.path.join(root_dir, "../../RT_BENE/rtbene_dataset.hdf5")),
+                              help="The RT-BENE dataset HDF5 file")
+    _root_parser.add_argument('--dataset', type=str, choices=["rt_bene"], default="rt_bene",
+                              help="Which dataset to use, at present, only RT-BENE is supported")
+    _root_parser.add_argument('--model_base', choices=["vgg16", "vgg19", "resnet18", "resnet50", "densenet121"],
+                              default="densenet121", help="Which model-base (i.e. backbone) is used")
+    _root_parser.add_argument('--model_net_dir', type=str, required=True,
+                              help="the directory in which the .model files reside")
     _args = _root_parser.parse_args()
+
+    _models = {
+        "resnet18": BlinkEstimationModelResnet18,
+        "resnet50": BlinkEstimationModelResnet50,
+        "vgg16": BlinkEstimationModelVGG16,
+        "vgg19": BlinkEstimationModelVGG19,
+        "densenet121": BlinkEstimationModelDenseNet121
+    }
 
     _valid_subjects = [0, 11, 15, 16]
     # create a master list of predictions and labels
@@ -27,7 +41,7 @@ if __name__ == "__main__":
     for model_file in tqdm(glob.glob(os.path.join(_args.model_net_dir, "*.model")), desc="Model", position=1):
         labels = []
         predictions = []
-        _model = BlinkEstimationModelResnet18()
+        _model = _models.get(_args.model_base)()
         _model.load_state_dict(torch.load(model_file))
         _model.cuda()
         _model.eval()
