@@ -45,7 +45,7 @@ if __name__ == "__main__":
     root_parser.add_argument('--hdf5_file', type=str, default=os.path.abspath(os.path.join(root_dir, "../../RT_GENE/rtgene_dataset.hdf5")))
     root_parser.add_argument('--num_io_workers', default=8, type=int)
     root_parser.add_argument('--loss_fn', choices=["mse", "pinball"], default="mse")
-    root_parser.add_argument('--model_base', choices=["vgg", "resnet18", "preactresnet"], default="vgg")
+    root_parser.add_argument('--model_base', choices=["vgg", "resnet18_0", "preactresnet"], default="vgg")
     root_parser.add_argument('--batch_size', default=64, type=int)
 
     hyperparams = root_parser.parse_args()
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     }
     _models = {
         "vgg": partial(GazeEstimationModelVGG, num_out=_param_num.get(hyperparams.loss_fn)),
-        "resnet18": partial(GazeEstimationModelResnet18, num_out=_param_num.get(hyperparams.loss_fn)),
+        "resnet18_0": partial(GazeEstimationModelResnet18, num_out=_param_num.get(hyperparams.loss_fn)),
         "preactresnet": partial(GazeEstimationModelPreactResnet, num_out=_param_num.get(hyperparams.loss_fn))
     }
 

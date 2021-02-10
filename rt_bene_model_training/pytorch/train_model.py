@@ -32,7 +32,7 @@ class TrainRTBENE(pl.LightningModule):
             "resnet50": partial(BlinkEstimationModelResnet50, num_out=_param_num.get(hparams.loss_fn)),
             "vgg16": partial(BlinkEstimationModelVGG16, num_out=_param_num.get(hparams.loss_fn)),
             "vgg19": partial(BlinkEstimationModelVGG19, num_out=_param_num.get(hparams.loss_fn)),
-            "densenet121": partial(BlinkEstimationModelDenseNet121, num_out=_param_num.get(hparams.loss_fn)),
+            "densenet121": partial(BlinkEstimationModelDenseNet121, num_out=_param_num.get(hparams.loss_fn))
         }
         self._model = _models.get(hparams.model_base)()
         self._criterion = _loss_fn.get(hparams.loss_fn)()
@@ -80,22 +80,23 @@ class TrainRTBENE(pl.LightningModule):
         parser.add_argument('--no_augment', action="store_false", dest="augment")
         parser.add_argument('--loss_fn', choices=["bce"], default="bce")
         parser.add_argument('--batch_size', default=64, type=int)
-        parser.add_argument('--batch_norm', default=True, type=bool)
         parser.add_argument('--learning_rate', type=float, default=1e-3)
-        parser.add_argument('--model_base', choices=["vgg16", "vgg19", "resnet18", "resnet50", "densenet121"],
+        parser.add_argument('--model_base',
+                            choices=["vgg16", "vgg19", "resnet18", "resnet50", "densenet121"],
                             default="densenet121")
-        parser.add_argument('--scheduler_step', default=2, type=int)
-        parser.add_argument('--scheduler_gamma', default=0.8, type=float)
+        parser.add_argument('--scheduler_step', default=1, type=int)
+        parser.add_argument('--scheduler_gamma', default=0.75, type=float)
         return parser
 
     def train_dataloader(self):
         _train_transforms = None
         if self.hparams.augment:
-            _train_transforms = transforms.Compose([transforms.RandomResizedCrop(size=(224, 224), scale=(0.85, 1.0)),
-                                                    transforms.RandomGrayscale(p=0.08),
-                                                    lambda x: x if np.random.random_sample() > 0.08 else x.filter(
-                                                        ImageFilter.GaussianBlur(radius=1)),
-                                                    lambda x: x if np.random.random_sample() > 0.08 else x.filter(
+            _train_transforms = transforms.Compose([transforms.RandomResizedCrop(size=(224, 224), scale=(0.5, 1.3)),
+                                                    transforms.RandomPerspective(distortion_scale=0.2),
+                                                    transforms.RandomGrayscale(p=0.1),
+                                                    transforms.ColorJitter(brightness=0.5, hue=0.2, contrast=0.5,
+                                                                           saturation=0.5),
+                                                    lambda x: x if np.random.random_sample() <= 0.1 else x.filter(
                                                         ImageFilter.GaussianBlur(radius=3)),
                                                     transforms.ToTensor(),
                                                     transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -137,7 +138,7 @@ if __name__ == "__main__":
     _root_parser.add_argument('--min_epochs', type=int, default=5, help="Number of Epochs to perform at a minimum")
     _root_parser.add_argument('--max_epochs', type=int, default=20,
                               help="Maximum number of epochs to perform; the trainer will Exit after.")
-    _root_parser.set_defaults(benchmark=True)
+    _root_parser.set_defaults(benchmark=False)
     _root_parser.set_defaults(augment=True)
 
     _model_parser = TrainRTBENE.add_model_specific_args(_root_parser, root_dir)
@@ -160,7 +161,7 @@ if __name__ == "__main__":
         else:  # we want to train with the entire dataset
             print('Training on the whole dataset - do not use the trained model for evaluation purposes!')
             _train_subjects.append(
-                [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, 16])  # 6 is discarded, 7 is used for validation
+                [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, 16])  # 6 is discarded, 0 is used for validation
             _valid_subjects.append([7])
     else:
         raise NotImplementedError("No other dataset is currently implemented")
@@ -188,7 +189,5 @@ if __name__ == "__main__":
                           min_epochs=_hyperparams.min_epochs,
                           max_epochs=_hyperparams.max_epochs,
                           accumulate_grad_batches=_hyperparams.accumulate_grad_batches,
-                          log_gpu_memory="all",
-                          log_every_n_steps=10,
                           benchmark=_hyperparams.benchmark)
         trainer.fit(_model)

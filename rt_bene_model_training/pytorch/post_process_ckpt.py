@@ -33,7 +33,7 @@ if __name__ == "__main__":
     Path(_params.save_dir).mkdir(parents=True, exist_ok=True)
 
     _model = _models.get(_params.model_base)()
-    for ckpt in tqdm(glob(os.path.join(_params.ckpt_dir, "*.ckpt"))):
+    for ckpt in tqdm(glob(os.path.join(_params.ckpt_dir, "*.ckpt")), desc="Processing..."):
         filename, file_extension = os.path.splitext(ckpt)
         filename = os.path.basename(filename)
         _torch_load = torch.load(ckpt)['state_dict']
