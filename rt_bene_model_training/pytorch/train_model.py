@@ -179,7 +179,7 @@ if __name__ == "__main__":
         checkpoint_callback = ModelCheckpoint(dirpath=_hyperparams.save_dir,
                                               monitor='val_loss',
                                               save_top_k=3,
-                                              filename=f'fold={fold}-' + '{epoch}-{val_loss:.2f}')
+                                              filename=f'fold={fold}-' + '{epoch}-{val_loss:.3f}')
 
         # start training
         trainer = Trainer(gpus=_hyperparams.gpu,
