@@ -160,8 +160,10 @@ if __name__ == "__main__":
             _valid_subjects.append([0, 11, 15, 16])
         else:  # we want to train with the entire dataset
             print('Training on the whole dataset - do not use the trained model for evaluation purposes!')
-            _train_subjects.append(
-                [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, 16])  # 6 is discarded, 0 is used for validation
+            print('Validation dataset is a subject included in training...use at your own peril!')
+
+            # 6 is discarded as per the paper
+            _train_subjects.append([0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
             _valid_subjects.append([7])
     else:
         raise NotImplementedError("No other dataset is currently implemented")
@@ -178,7 +180,7 @@ if __name__ == "__main__":
 
         checkpoint_callback = ModelCheckpoint(dirpath=_hyperparams.save_dir,
                                               monitor='val_loss',
-                                              save_top_k=3,
+                                              save_top_k=3 if _hyperparams.k_fold_validation else -1,
                                               filename=f'fold={fold}-' + '{epoch}-{val_loss:.3f}')
 
         # start training

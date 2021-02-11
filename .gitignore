@@ -27,6 +27,10 @@ rt_gene/model_nets/Model_allsubjects1_pytorch.model
 rt_gene/model_nets/Model_allsubjects2_pytorch.model
 rt_gene/model_nets/Model_allsubjects3_pytorch.model
 rt_gene/model_nets/Model_allsubjects4_pytorch.model
+rt_gene/model_nets/Model_prl_mpii_allsubjects1_pytorch.model
+rt_gene/model_nets/Model_prl_mpii_allsubjects2_pytorch.model
+rt_gene/model_nets/blink_model_pytorch_resnet18_allsubjects1.model
+rt_gene/model_nets/blink_model_pytorch_resnet18_allsubjects2.model
 rt_gene_standalone/samples_gaze/out
 
 *~
