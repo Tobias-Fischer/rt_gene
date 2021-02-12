@@ -90,6 +90,14 @@ def download_blink_models():
                          "https://imperialcollegelondon.box.com/shared/static/x4u8c5mr468r6wzki93v45jemf3sz0r5.h5",
                          "ed994ea8384a7894dac04926601d06ff")
 
+    request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/blink_model_pytorch_resnet18_allsubjects1.model'),
+                         "https://imperialcollegelondon.box.com/shared/static/p8jmekxhw4k8xtbz6vph3924g6ywnbre.model",
+                         "7c228fe7b95ce5960c4c5cae8f2d3a09")
+    request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                      '../../model_nets/blink_model_pytorch_resnet18_allsubjects2.model'),
+                         "https://imperialcollegelondon.box.com/shared/static/yu53g8n1007d80s71o3dyrxqtv59o15u.model",
+                         "0a0d2d066737b333737018d738de386f")
+
 
 def download_external_landmark_models():
     request_if_not_exist(

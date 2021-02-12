@@ -2,10 +2,12 @@
     <arg name="threshold" default="0.425" />
     <arg name="viz_topic" default="/subjects/blink_images" />
     <arg name="viz" default="True" />
-    <arg name="device_id_blinkestimation"  default="/gpu:0" /> <!-- tensorflow format, e.g. /gpu:0 or /cpu:0 -->
+    <arg name="blink_backend" default="tensorflow" /> <!-- can be tensorflow or pytorch -->
+    <arg name="device_id_blinkestimation"  default="/gpu:0" /> <!-- format depends on backend, e.g. /gpu:0 or /cpu:0 for tensorflow, or cuda:0 or cpu:0 for pytorch -->
 
     <node pkg="rt_gene" type="estimate_blink.py" name="estimate_blink" output="screen">
         <rosparam param="model_files">['model_nets/blink_model_1.h5', 'model_nets/blink_model_2.h5']</rosparam>
+        <param name="blink_backend" value="$(arg blink_backend)" />
         <param name="threshold"  value="$(arg threshold)" />
         <param name="viz_topic"  value="$(arg viz_topic)" />
         <param name="viz"  value="$(arg viz)" />
