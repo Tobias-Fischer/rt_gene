@@ -165,7 +165,7 @@ if __name__ == '__main__':
         args.im_path = os.path.split(args.im_path)[0]
     elif os.path.isdir(args.im_path):
         for image_file_name in sorted(os.listdir(args.im_path)):
-            if image_file_name.endswith('.jpg') or image_file_name.endswith('.png'):
+            if image_file_name.lower().endswith('.jpg') or image_file_name.lower().endswith('.png') or image_file_name.lower().endswith('.jpeg'):
                 if '_gaze' not in image_file_name and '_headpose' not in image_file_name:
                     image_path_list.append(image_file_name)
     else:
