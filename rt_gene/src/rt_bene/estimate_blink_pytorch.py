@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 from tqdm import tqdm
-from rt_gene.download_tools import download_blink_models
+from rt_gene.download_tools import download_blink_pytorch_models
 from rt_bene.estimate_blink_base import BlinkEstimatorBase
 from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18, BlinkEstimationModelVGG16
 import os
@@ -14,7 +14,7 @@ class BlinkEstimatorPytorch(BlinkEstimatorBase):
 
     def __init__(self, device_id_blink, model_files, threshold):
         super(BlinkEstimatorPytorch, self).__init__(device_id=device_id_blink, threshold=threshold)
-        download_blink_models()
+        download_blink_pytorch_models()
         if "OMP_NUM_THREADS" not in os.environ:
             os.environ["OMP_NUM_THREADS"] = "8"
         tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
