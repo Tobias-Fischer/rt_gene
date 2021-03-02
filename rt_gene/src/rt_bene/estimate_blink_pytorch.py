@@ -3,7 +3,7 @@
 from tqdm import tqdm
 from rt_gene.download_tools import download_blink_models
 from rt_bene.estimate_blink_base import BlinkEstimatorBase
-from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18
+from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18, BlinkEstimationModelVGG16
 import os
 import cv2
 import torch
@@ -19,14 +19,14 @@ class BlinkEstimatorPytorch(BlinkEstimatorBase):
             os.environ["OMP_NUM_THREADS"] = "8"
         tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
 
-        self._transform = transforms.Compose([lambda x: cv2.resize(x, dsize=(224, 224), interpolation=cv2.INTER_CUBIC),
+        self._transform = transforms.Compose([lambda x: cv2.resize(x, dsize=(60, 36), interpolation=cv2.INTER_CUBIC),
                                               transforms.ToTensor(),
                                               transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                                    std=[0.229, 0.224, 0.225])])
 
         self._models = []
         for ckpt in model_files:
-            _model = BlinkEstimationModelResnet18()
+            _model = BlinkEstimationModelVGG16()
             _model.load_state_dict(torch.load(ckpt))
             _model.to(self.device_id)
             _model.eval()

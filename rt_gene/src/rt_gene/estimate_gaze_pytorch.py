@@ -8,7 +8,7 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
-from rt_gene.gaze_estimation_models_pytorch import GazeEstimationModelVGG
+from rt_gene.gaze_estimation_models_pytorch import GazeEstimationModelVGG, GazeEstimationModelResnet18
 from rt_gene.download_tools import download_gaze_pytorch_models
 
 
@@ -21,17 +21,20 @@ class GazeEstimator(GazeEstimatorBase):
             os.environ["OMP_NUM_THREADS"] = "8"
         tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
 
-        self._transform = transforms.Compose([lambda x: cv2.resize(x, dsize=(224, 224), interpolation=cv2.INTER_CUBIC),
+        self._transform = transforms.Compose([lambda x: cv2.resize(x, dsize=(60, 36), interpolation=cv2.INTER_CUBIC),
                                               transforms.ToTensor(),
                                               transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
         self._models = []
         for ckpt in self.model_files:
-            _model = GazeEstimationModelVGG(num_out=2)
-            _model.load_state_dict(torch.load(ckpt))
-            _model.to(self.device_id_gazeestimation)
-            _model.eval()
-            self._models.append(_model)
+            try:
+                _model = GazeEstimationModelVGG(num_out=2)
+                _model.load_state_dict(torch.load(ckpt))
+                _model.to(self.device_id_gazeestimation)
+                _model.eval()
+                self._models.append(_model)
+            except Exception:
+                print("Error loading checkpoint", ckpt)
 
         tqdm.write('Loaded ' + str(len(self._models)) + ' model(s)')
 
