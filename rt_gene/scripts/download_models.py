@@ -11,6 +11,7 @@ import rt_gene.download_tools as download_tools
 if __name__ == '__main__':
     download_tools.download_gaze_tensorflow_models()
     download_tools.download_gaze_pytorch_models()
-    download_tools.download_blink_models()
+    download_tools.download_blink_tensorflow_models()()
+    download_tools.download_blink_pytorch_models()
     download_tools.download_external_landmark_models()
 
