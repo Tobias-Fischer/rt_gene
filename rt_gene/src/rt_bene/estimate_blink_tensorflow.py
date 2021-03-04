@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import tensorflow as tf
 from tqdm import tqdm
-from rt_gene.download_tools import download_blink_models
+from rt_gene.download_tools import download_blink_tensorflow_models
 from rt_bene.estimate_blink_base import BlinkEstimatorBase
 
 
@@ -12,7 +12,7 @@ class BlinkEstimatorTensorflow(BlinkEstimatorBase):
 
     def __init__(self, device_id_blink, model_files, threshold):
         super(BlinkEstimatorTensorflow, self).__init__(device_id=device_id_blink, threshold=threshold)
-        download_blink_models()
+        download_blink_tensorflow_models()
         self.device_id_blink = device_id_blink
         self._input_size = (96, 96)
 

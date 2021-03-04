@@ -36,53 +36,51 @@ def download_gaze_tensorflow_models():
         'https://imperialcollegelondon.box.com/shared/static/zu424pzptmw1klh70jsc697b37h7mwif.h5',
         'e55ea59d494d66dd075bf1503a32f99c')
     request_if_not_exist(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/all_subjects_mpii_prl_utmv_0_02.h5'),
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                     '../../model_nets/all_subjects_mpii_prl_utmv_0_02.h5'),
         "https://imperialcollegelondon.box.com/shared/static/5cjnijpo8qxawbkik0gjrmyc802j2h1v.h5",
         "af5554d5b405e5a1515c08d553a96613")
     request_if_not_exist(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/all_subjects_mpii_prl_utmv_1_02.h5'),
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                     '../../model_nets/all_subjects_mpii_prl_utmv_1_02.h5'),
         "https://imperialcollegelondon.box.com/shared/static/1ye5jlh5ce11f93yn1s36uysjta7a3ob.h5",
         "eccea117ed40c903d07537125f77af88")
     request_if_not_exist(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/all_subjects_mpii_prl_utmv_2_02.h5'),
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                     '../../model_nets/all_subjects_mpii_prl_utmv_2_02.h5'),
         "https://imperialcollegelondon.box.com/shared/static/5vl9samndju9zhygtai8z6kkpw2jmjll.h5",
         "e41362688850bd3d51f58c14c75f3744")
     request_if_not_exist(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/all_subjects_mpii_prl_utmv_3_02.h5'),
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                     '../../model_nets/all_subjects_mpii_prl_utmv_3_02.h5'),
         "https://imperialcollegelondon.box.com/shared/static/hmcoxopu4xetic5bm47xqrl5mqktpg92.h5",
         "581f7a96ef88faf3a564aca083496dfa")
 
 
 def download_gaze_pytorch_models():
     request_if_not_exist(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/Model_allsubjects1_pytorch.model'),
-        "https://imperialcollegelondon.box.com/shared/static/zblg37jitf9q245k3ytad8nv814nz9o8.model",
-        "ca13a350902899dd06febb897b111aeb")
-    request_if_not_exist(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/Model_allsubjects2_pytorch.model'),
-        "https://imperialcollegelondon.box.com/shared/static/nhmwcwzf2j15x44i4bosi8muurqj0kz7.model",
-        "0ee3ec584b6e2ba0a7c2187d78a15a20")
-    request_if_not_exist(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/Model_allsubjects3_pytorch.model'),
-        "https://imperialcollegelondon.box.com/shared/static/25anki14qn189ah4lh5gfrhh292utm7p.model",
-        "b02c6252a39dcef36edd158aca135f9e")
-    request_if_not_exist(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/Model_allsubjects4_pytorch.model'),
-        "https://imperialcollegelondon.box.com/shared/static/5j6mum8350tsn51tcktus1546kwyu6yy.model",
-        "e9d2aff52aff1270fcdd8466f97b3528")
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                     '../../model_nets/gaze_model_pytorch_vgg16_prl_mpii_allsubjects1.model'),
+        "https://imperialcollegelondon.box.com/shared/static/6rvctw7wmkpl7a9bw9hm1b9b7dwntfut.model",
+        "ae435739673411940eed18c98c29bfb1")
     request_if_not_exist(
         os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                     '../../model_nets/Model_prl_mpii_allsubjects1_pytorch.model'),
-        "https://imperialcollegelondon.box.com/shared/static/1rp9nrdw7y2q5pbuly4pipf2riy0ne8w.model",
-        "0ffac7333ba5659d2b7f86ac302ba9ba")
+                     '../../model_nets/gaze_model_pytorch_vgg16_prl_mpii_allsubjects2.model'),
+        "https://imperialcollegelondon.box.com/shared/static/xuhs5qg7eju4kw3e4to7db945qk2c123.model",
+        "4afd7ccf5619552ed4a9f14606b7f4dd")
     request_if_not_exist(
         os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                     '../../model_nets/Model_prl_mpii_allsubjects2_pytorch.model'),
-        "https://imperialcollegelondon.box.com/shared/static/nlkqe42rch2so4k5fb9ql40jjxsze0bh.model",
-        "87e13756863393a94a8ffc4a75f2fca2")
+                     '../../model_nets/gaze_model_pytorch_vgg16_prl_mpii_allsubjects3.model'),
+        "https://imperialcollegelondon.box.com/shared/static/h75tro719fcyvgdkzr8tarpco32ve21u.model",
+        "743902e643322c40bd78ca36aacc5b4d")
+    request_if_not_exist(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                     '../../model_nets/gaze_model_pytorch_vgg16_prl_mpii_allsubjects4.model'),
+        "https://imperialcollegelondon.box.com/shared/static/1xywt1so20vw09iij4t3tp9lu6f6yb0g.model",
+        "06a10f43088651053a65f9b0cd5ac4aa")
 
 
-def download_blink_models():
+def download_blink_tensorflow_models():
     request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/blink_model_1.h5'),
                          "https://imperialcollegelondon.box.com/shared/static/lke3k5f86qnfchzfh6lpon3isniqvkpz.h5",
                          "75aab57645faed3beaba5dedfd0f3d36")
@@ -90,13 +88,19 @@ def download_blink_models():
                          "https://imperialcollegelondon.box.com/shared/static/x4u8c5mr468r6wzki93v45jemf3sz0r5.h5",
                          "ed994ea8384a7894dac04926601d06ff")
 
-    request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/blink_model_pytorch_resnet18_allsubjects1.model'),
-                         "https://imperialcollegelondon.box.com/shared/static/p8jmekxhw4k8xtbz6vph3924g6ywnbre.model",
-                         "7c228fe7b95ce5960c4c5cae8f2d3a09")
+
+def download_blink_pytorch_models():
+    request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/blink_model_pytorch_vgg16_allsubjects1.model'),
+                         "https://imperialcollegelondon.box.com/shared/static/wwky1um443vgz9oy90zllv0s7474a5dj.model",
+                         "cde99055e3b6dcf9fae6b78191c0fd9b")
     request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                      '../../model_nets/blink_model_pytorch_resnet18_allsubjects2.model'),
-                         "https://imperialcollegelondon.box.com/shared/static/yu53g8n1007d80s71o3dyrxqtv59o15u.model",
-                         "0a0d2d066737b333737018d738de386f")
+                                      '../../model_nets/blink_model_pytorch_vgg16_allsubjects2.model'),
+                         "https://imperialcollegelondon.box.com/shared/static/psha8bclz9bv5d87qetajgovioc03vb3.model",
+                         "67339ceefcfec4b3b8b3d7ccb03fadfa")
+    request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                      '../../model_nets/blink_model_pytorch_vgg16_allsubjects3.model'),
+                         "https://imperialcollegelondon.box.com/shared/static/puebet9v05pxt06g42rtz805u5ww0u7e.model",
+                         "e5de548b2a97162c5e655259463e4d23")
 
 
 def download_external_landmark_models():
@@ -121,4 +125,3 @@ def download_external_landmark_models():
         os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/SFD/s3fd_facedetector.pth'),
         "https://imperialcollegelondon.box.com/shared/static/wgfkq3pyzzuewiiwq0pzj0xiebolvlju.pth",
         "3b5a9888bf0beb93c177db5a18375a6c")
-

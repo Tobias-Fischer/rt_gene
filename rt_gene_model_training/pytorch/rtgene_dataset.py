@@ -17,7 +17,7 @@ class RTGENEH5Dataset(data.Dataset):
         assert subject_list is not None, "Must pass a list of subjects to load the data for"
 
         if self._transform is None:
-            self._transform = transforms.Compose([transforms.Resize((224, 224), Image.BICUBIC),
+            self._transform = transforms.Compose([transforms.Resize((36, 60), Image.BICUBIC),
                                                   transforms.ToTensor(),
                                                   transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 

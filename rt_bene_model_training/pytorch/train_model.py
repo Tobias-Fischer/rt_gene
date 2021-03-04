@@ -28,11 +28,11 @@ class TrainRTBENE(pl.LightningModule):
             "bce": 1,
         }
         _models = {
-            "resnet18": partial(BlinkEstimationModelResnet18, num_out=_param_num.get(hparams.loss_fn)),
-            "resnet50": partial(BlinkEstimationModelResnet50, num_out=_param_num.get(hparams.loss_fn)),
-            "vgg16": partial(BlinkEstimationModelVGG16, num_out=_param_num.get(hparams.loss_fn)),
-            "vgg19": partial(BlinkEstimationModelVGG19, num_out=_param_num.get(hparams.loss_fn)),
-            "densenet121": partial(BlinkEstimationModelDenseNet121, num_out=_param_num.get(hparams.loss_fn))
+            "resnet18": BlinkEstimationModelResnet18,
+            "resnet50": BlinkEstimationModelResnet50,
+            "vgg16": BlinkEstimationModelVGG16,
+            "vgg19": BlinkEstimationModelVGG19,
+            "densenet121": BlinkEstimationModelDenseNet121
         }
         self._model = _models.get(hparams.model_base)()
         self._criterion = _loss_fn.get(hparams.loss_fn)()
