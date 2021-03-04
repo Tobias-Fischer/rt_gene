@@ -20,7 +20,6 @@ class GazeEstimator(GazeEstimatorBase):
         download_gaze_pytorch_models()
         # check md5 hashes
         _model_hashes = [md5(model) for model in model_files]
-        print(_model_hashes)
         _correct = [1 for hash in _model_hashes if hash not in known_hashes]
         if sum(_correct) > 0:
             raise ImportError(
