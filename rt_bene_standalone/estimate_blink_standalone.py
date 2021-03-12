@@ -74,7 +74,7 @@ if __name__ == '__main__':
                         help='Path to a right eye image or a directory containing images right eye images',
                         default=os.path.join(script_path, './samples_blink/right/'))
     parser.add_argument('--model', nargs='+', type=str,
-                        default=[os.path.abspath(os.path.join(script_path, '../rt_gene/model_nets/blink_model_resnet18_allsubjects1.model'))],
+                        default=[os.path.abspath(os.path.join(script_path, '../rt_gene/model_nets/blink_model_pytorch_vgg16_allsubjects1.model'))],
                         help='List of blink estimators')
     parser.add_argument('--threshold', type=float, default=0.5,
                         help='Threshold to determine weither the prediction is positive or negative')
