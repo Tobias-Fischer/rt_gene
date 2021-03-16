@@ -23,7 +23,8 @@ class GazeEstimator(GazeEstimatorBase):
         _correct = [1 for hash in _model_hashes if hash not in known_hashes]
         if sum(_correct) > 0:
             raise ImportError(
-                "MD5 Hashes of supplied model_files do not match the known_hashes argument. If you are training your "
+                "MD5 Hashes of supplied model_files do not match the known_hashes argument. You have probably not set"
+                "the --models argument and therefore you are trying to use TensorFlow models. If you are training your "
                 "own models, then please supply the md5sum hashes in the known_hashes argument. If you're not, "
                 "then you're using old models. The newer models should have downloaded already so please update the "
                 "estimate_gaze.launch file that you've modified.")
