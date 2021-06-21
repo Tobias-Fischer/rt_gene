@@ -1,6 +1,5 @@
 # RT-GENE & RT-BENE: Real-Time Eye Gaze and Blink Estimation in Natural Environments
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg?style=flat-square)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-[![HitCount](http://hits.dwyl.io/Tobias-Fischer/rt_gene.svg)](./README.md)
 [![stars](https://img.shields.io/github/stars/Tobias-Fischer/rt_gene.svg?style=flat-square)](https://github.com/Tobias-Fischer/rt_gene/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/Tobias-Fischer/rt_gene.svg?style=flat-square)](https://github.com/Tobias-Fischer/rt_gene/issues)
 [![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)](./README.md)
@@ -13,7 +12,7 @@
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-bene-a-dataset-and-baselines-for-real-time/blink-estimation-on-researcher-s-night&style=flat-square)](https://paperswithcode.com/sota/blink-estimation-on-researcher-s-night?p=rt-bene-a-dataset-and-baselines-for-real-time)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-bene-a-dataset-and-baselines-for-real-time/blink-estimation-on-rt-bene&style=flat-square)](https://paperswithcode.com/sota/blink-estimation-on-rt-bene?p=rt-bene-a-dataset-and-baselines-for-real-time)
 
-This repository contains code and dataset references for two papers: RT-GENE (Gaze Estimation; ECCV2018) and RT-BENE (Blink Estimation; ICCV2019 Workshops).
+This repository contains code and dataset references for two papers: [RT-GENE (Gaze Estimation; ECCV2018)](http://openaccess.thecvf.com/content_ECCV_2018/html/Tobias_Fischer_RT-GENE_Real-Time_Eye_ECCV_2018_paper.html) and [RT-BENE (Blink Estimation; ICCV2019 Workshops)](http://openaccess.thecvf.com/content_ICCVW_2019/html/GAZE/Cortacero_RT-BENE_A_Dataset_and_Baselines_for_Real-Time_Blink_Estimation_in_ICCVW_2019_paper.html).
 
 ## RT-GENE (Gaze Estimation)
 
