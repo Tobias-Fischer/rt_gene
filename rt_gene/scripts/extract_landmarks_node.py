@@ -50,6 +50,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.tf2_listener = TransformListener(self.tf2_buffer)
         self.tf_prefix = rospy.get_param("~tf_prefix", default="gaze")
         self.visualise_headpose = rospy.get_param("~visualise_headpose", default=True)
+        self._pnp_iterate_after = rospy.get_param("~pnp_iterate_after", default=True)
 
         self.pose_stabilizers = {}  # Introduce scalar stabilizers for pose.
 
@@ -161,6 +162,17 @@ class LandmarkMethodROS(LandmarkMethodBase):
                                                                                     cameraMatrix=camera_matrix,
                                                                                     distCoeffs=dist_coeffs, flags=cv2.SOLVEPNP_DLS)
 
+            if self._pnp_iterate_after:
+                success, rodrigues_rotation, translation_vector = cv2.solvePnP(self.model_points,
+                                                                               landmarks.reshape(len(self.model_points), 1, 2),
+                                                                               rvec=rodrigues_rotation,
+                                                                               tvec=translation_vector,
+                                                                               useExtrinsicGuess=True,
+                                                                               cameraMatrix=camera_matrix,
+                                                                               distCoeffs=dist_coeffs,
+                                                                               flags=cv2.SOLVEPNP_ITERATIVE)
+
+
         except cv2.error as e:
             tqdm.write('\033[2K\033[1;31mCould not estimate head pose: {}\033[0m'.format(e), end="\r")
             return False, None, None
@@ -202,11 +214,11 @@ class LandmarkMethodROS(LandmarkMethodBase):
 
         landmark_msg_list = MSG_LandmarksList()
         landmark_msg_list.header.stamp = timestamp
-        landmark_msg_list.header.frame_id = '0'
+        landmark_msg_list.header.frame_id = self.camera_frame
 
         headpose_msg_list = MSG_HeadposeList()
         headpose_msg_list.header.stamp = timestamp
-        headpose_msg_list.header.frame_id = '0'
+        headpose_msg_list.header.frame_id = self.camera_frame
 
         for subject_id, s in subjects.items():
             try:
