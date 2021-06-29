@@ -50,7 +50,7 @@ class LandmarkMethodROS(LandmarkMethodBase):
         self.tf2_listener = TransformListener(self.tf2_buffer)
         self.tf_prefix = rospy.get_param("~tf_prefix", default="gaze")
         self.visualise_headpose = rospy.get_param("~visualise_headpose", default=True)
-        self._pnp_iterate_after = rospy.get_param("~pnp_iterate_after", default=True)
+        self._pnp_iterate_after = rospy.get_param("~pnp_iterate_after", default=False)
 
         self.pose_stabilizers = {}  # Introduce scalar stabilizers for pose.
 
