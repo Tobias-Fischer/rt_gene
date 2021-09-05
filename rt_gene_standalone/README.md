@@ -31,7 +31,7 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
     1. `export PYTHONPATH=$HOME/rt_gene/rt_gene/src`
 
 ## Basic usage
-- Run `$HOME/rt_gene/rt_gene_standalone/estimate_gaze_standalone.py`. For supported arguments, run `$HOME/rt_gene/rt_gene_standalone/estimate_gaze_standalone.py --help`
+- Run `$HOME/rt_gene/rt_gene_standalone/estimate_gaze_standalone.py`. For supported arguments, run `$HOME/rt_gene/rt_gene_standalone/estimate_gaze_standalone.py --help`. Note that the first time the script is run, various model files are downloaded automatically. An alternative mirror for the model files is [here](https://drive.google.com/drive/folders/1cdOlCoXBIv-KxBGPP88oijd85uc5XVGF?usp=sharing); these files need to be moved into `$HOME/rt_gene/rt_gene/model_nets`.
 
 ### Optional ensemble model files
 - To use an ensemble scheme using 4 models trained on the MPII, UTMV and RT-GENE datasets, simply use the `--models` argument, e.g `cd $HOME/rt_gene/ && ./rt_gene_standalone/estimate_gaze_standalone.py --models './rt_gene/model_nets/all_subjects_mpii_prl_utmv_0_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_1_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_2_02.h5' './rt_gene/model_nets/all_subjects_mpii_prl_utmv_3_02.h5'`
