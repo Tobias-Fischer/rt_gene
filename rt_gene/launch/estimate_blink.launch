@@ -13,6 +13,6 @@
         <param name="viz_topic"  value="$(arg viz_topic)" />
         <param name="viz"  value="$(arg viz)" />
         <param name="device_id_blinkestimation"  value="$(arg device_id_blinkestimation)" />
-        <param name="model_type", value="$(arg model_type)">
+        <param name="model_type" value="$(arg model_type)" />
     </node>
 </launch>

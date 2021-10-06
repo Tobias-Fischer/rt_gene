@@ -21,7 +21,7 @@ MODELS = {
 class BlinkEstimatorPytorch(BlinkEstimatorBase):
 
     def __init__(self, device_id_blink, model_files, model_type, threshold, known_hashes=(
-    "cde99055e3b6dcf9fae6b78191c0fd9b", "67339ceefcfec4b3b8b3d7ccb03fadfa", "e5de548b2a97162c5e655259463e4d23")):
+    "cde99055e3b6dcf9fae6b78191c0fd9b", "67339ceefcfec4b3b8b3d7ccb03fadfa", "e5de548b2a97162c5e655259463e4d23", "7c228fe7b95ce5960c4c5cae8f2d3a09", "0a0d2d066737b333737018d738de386f")):
         super(BlinkEstimatorPytorch, self).__init__(device_id=device_id_blink, threshold=threshold)
         download_blink_pytorch_models()
 
