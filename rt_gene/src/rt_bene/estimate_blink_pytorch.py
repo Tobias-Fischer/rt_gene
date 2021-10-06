@@ -3,7 +3,7 @@
 from tqdm import tqdm
 from rt_gene.download_tools import download_blink_pytorch_models, md5
 from rt_bene.estimate_blink_base import BlinkEstimatorBase
-from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18, BlinkEstimationModelVGG16
+from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18, BlinkEstimationModelVGG16, BlinkEstimationModelVGG19, BlinkEstimationModelResnet50, BlinkEstimationModelDenseNet121
 import os
 import cv2
 import torch
@@ -11,7 +11,10 @@ from torchvision import transforms
 
 MODELS = {
     "resnet18": BlinkEstimationModelResnet18,
-    "vgg16": BlinkEstimationModelVGG16
+    "resnet50": BlinkEstimationModelResnet50,
+    "vgg16": BlinkEstimationModelVGG16,
+    "vgg19": BlinkEstimationModelVGG19,
+    "desnet121": BlinkEstimationModelDenseNet121
 }
 
 
