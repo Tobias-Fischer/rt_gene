@@ -107,7 +107,7 @@ def download_blink_pytorch_models():
                          "https://imperialcollegelondon.box.com/shared/static/p8jmekxhw4k8xtbz6vph3924g6ywnbre.model",
                          "7c228fe7b95ce5960c4c5cae8f2d3a09")
     request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                      '../../model_nets/blink_model_pytorch_resnet18_allsubjects1.model'),
+                                      '../../model_nets/blink_model_pytorch_resnet18_allsubjects2.model'),
                          "https://imperialcollegelondon.box.com/shared/static/yu53g8n1007d80s71o3dyrxqtv59o15u.model",
                          "0a0d2d066737b333737018d738de386f")
 
