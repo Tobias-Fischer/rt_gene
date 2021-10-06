@@ -102,6 +102,17 @@ def download_blink_pytorch_models():
                          "https://imperialcollegelondon.box.com/shared/static/puebet9v05pxt06g42rtz805u5ww0u7e.model",
                          "e5de548b2a97162c5e655259463e4d23")
 
+    request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                      '../../model_nets/blink_model_pytorch_resnet18_allsubjects1.model'),
+                         "https://imperialcollegelondon.box.com/shared/static/p8jmekxhw4k8xtbz6vph3924g6ywnbre.model",
+                         "7c228fe7b95ce5960c4c5cae8f2d3a09")
+    request_if_not_exist(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                      '../../model_nets/blink_model_pytorch_resnet18_allsubjects1.model'),
+                         "https://imperialcollegelondon.box.com/shared/static/yu53g8n1007d80s71o3dyrxqtv59o15u.model",
+                         "0a0d2d066737b333737018d738de386f")
+
+
+
 
 def download_external_landmark_models():
     request_if_not_exist(
@@ -125,3 +136,9 @@ def download_external_landmark_models():
         os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/SFD/s3fd_facedetector.pth'),
         "https://imperialcollegelondon.box.com/shared/static/wgfkq3pyzzuewiiwq0pzj0xiebolvlju.pth",
         "3b5a9888bf0beb93c177db5a18375a6c")
+
+    # https://imperialcollegelondon.box.com/shared/static/mmo544mmrwei3tqc8jfe5fim104g57z9.dat
+    request_if_not_exist(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/dlib_face_recognition_resnet_model_v1.dat'),
+        "https://imperialcollegelondon.box.com/shared/static/mmo544mmrwei3tqc8jfe5fim104g57z9.dat",
+        "2316b25ae80acf4ad9b620b00071c423")
