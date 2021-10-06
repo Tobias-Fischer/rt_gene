@@ -10,11 +10,13 @@ from rt_bene.estimate_blink_base import BlinkEstimatorBase
 
 class BlinkEstimatorTensorflow(BlinkEstimatorBase):
 
-    def __init__(self, device_id_blink, model_files, threshold):
+    def __init__(self, device_id_blink, model_files, model_type, threshold):
         super(BlinkEstimatorTensorflow, self).__init__(device_id=device_id_blink, threshold=threshold)
         download_blink_tensorflow_models()
         self.device_id_blink = device_id_blink
         self._input_size = (96, 96)
+
+        assert model_type == "densnet121", "Tensorflow backend only supports DenseNet-121"
 
         tf.compat.v1.disable_eager_execution()
 

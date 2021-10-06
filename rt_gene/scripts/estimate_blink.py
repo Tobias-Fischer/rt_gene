@@ -32,14 +32,15 @@ class BlinkEstimatorROS(object):
         self.bridge = SubjectListBridge()
         self.viz = rospy.get_param("~viz", True)
 
-        self.blink_backend = rospy.get_param("~blink_backend", default="tensorflow")
+        blink_backend = rospy.get_param("~blink_backend", default="tensorflow")
+        model_type = rospy.get_param("~blink_model_type", default="resnet18")
 
-        if self.blink_backend == "tensorflow":
+        if blink_backend == "tensorflow":
             from rt_bene.estimate_blink_tensorflow import BlinkEstimatorTensorflow
-            self._blink_estimator = BlinkEstimatorTensorflow(device_id_blink, model_files, threshold)
-        elif self.blink_backend == "pytorch":
+            self._blink_estimator = BlinkEstimatorTensorflow(device_id_blink, model_files, model_type, threshold)
+        elif blink_backend == "pytorch":
             from rt_bene.estimate_blink_pytorch import BlinkEstimatorPytorch
-            self._blink_estimator = BlinkEstimatorPytorch(device_id_blink, model_files, threshold)
+            self._blink_estimator = BlinkEstimatorPytorch(device_id_blink, model_files, model_type, threshold)
         else:
             raise ValueError("Incorrect gaze_base backend, choices are: tensorflow or pytorch")
 

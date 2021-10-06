@@ -9,17 +9,25 @@ import cv2
 import torch
 from torchvision import transforms
 
+MODELS = {
+    "resnet18": BlinkEstimationModelResnet18,
+    "vgg16": BlinkEstimationModelVGG16
+}
+
 
 class BlinkEstimatorPytorch(BlinkEstimatorBase):
 
-    def __init__(self, device_id_blink, model_files, threshold, known_hashes=(
+    def __init__(self, device_id_blink, model_files, model_type, threshold, known_hashes=(
     "cde99055e3b6dcf9fae6b78191c0fd9b", "67339ceefcfec4b3b8b3d7ccb03fadfa", "e5de548b2a97162c5e655259463e4d23")):
         super(BlinkEstimatorPytorch, self).__init__(device_id=device_id_blink, threshold=threshold)
         download_blink_pytorch_models()
+
+        assert model_type in MODELS.keys(), f"PyTorch backend only supports the following backends: [{','.join(MODELS.keys())}]"
+
         # check md5 hashes
-        _model_hashes = [md5(model) for model in model_files]
-        _correct = [1 for hash in _model_hashes if hash not in known_hashes]
-        if sum(_correct) > 0:
+        model_hashes = [md5(model) for model in model_files]
+        correct = [1 for hash in model_hashes if hash not in known_hashes]
+        if sum(correct) > 0:
             raise ImportError(
                 "MD5 Hashes of supplied model_files do not match the known_hashes argument. You have probably not set "
                 "the --models argument and therefore you are trying to use TensorFlow models. If you are training your "
@@ -38,7 +46,7 @@ class BlinkEstimatorPytorch(BlinkEstimatorBase):
 
         self._models = []
         for ckpt in model_files:
-            _model = BlinkEstimationModelVGG16()
+            _model = MODELS[model_type]()
             _model.load_state_dict(torch.load(ckpt))
             _model.to(self.device_id)
             _model.eval()
