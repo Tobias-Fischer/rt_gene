@@ -62,10 +62,11 @@ class BlinkEstimatorPytorch(BlinkEstimatorBase):
         transformed_left = torch.stack(left_eyes).to(self.device_id)
         transformed_right = torch.stack(right_eyes).to(self.device_id)
 
-        result = [torch.sigmoid(model(transformed_left, transformed_right)).detach().cpu() for model in self._models]
-        result = torch.stack(result, dim=1)
-        result = torch.mean(result, dim=1).numpy()
-        return result
+        with torch.no_grad():
+            result = [torch.sigmoid(model(transformed_left, transformed_right)).detach().cpu() for model in self._models]
+            result = torch.stack(result, dim=1)
+            result = torch.mean(result, dim=1).numpy()
+            return result
 
     def inputs_from_images(self, left, right):
         return self._transform(left).to(self.device_id), self._transform(right).to(self.device_id)
