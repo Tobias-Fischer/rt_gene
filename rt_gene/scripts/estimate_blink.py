@@ -33,7 +33,7 @@ class BlinkEstimatorROS(object):
         self.viz = rospy.get_param("~viz", True)
 
         blink_backend = rospy.get_param("~blink_backend", default="tensorflow")
-        model_type = rospy.get_param("~blink_model_type", default="resnet18")
+        model_type = rospy.get_param("~model_type", default="resnet18")
 
         if blink_backend == "tensorflow":
             from rt_bene.estimate_blink_tensorflow import BlinkEstimatorTensorflow
