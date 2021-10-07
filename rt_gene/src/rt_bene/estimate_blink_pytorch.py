@@ -14,7 +14,7 @@ MODELS = {
     "resnet50": BlinkEstimationModelResnet50,
     "vgg16": BlinkEstimationModelVGG16,
     "vgg19": BlinkEstimationModelVGG19,
-    "desnet121": BlinkEstimationModelDenseNet121
+    "densenet121": BlinkEstimationModelDenseNet121
 }
 
 
