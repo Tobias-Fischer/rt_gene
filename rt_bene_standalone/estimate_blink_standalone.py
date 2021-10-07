@@ -76,6 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', nargs='+', type=str,
                         default=[os.path.abspath(os.path.join(script_path, '../rt_gene/model_nets/blink_model_pytorch_vgg16_allsubjects1.model'))],
                         help='List of blink estimators')
+    parser.add_argument('--model_type', type=str, default="vgg16")
     parser.add_argument('--threshold', type=float, default=0.5,
                         help='Threshold to determine weither the prediction is positive or negative')
     parser.add_argument('--device_id', type=str, default="cuda")
@@ -89,10 +90,10 @@ if __name__ == '__main__':
 
     if args.blink_backend == "tensorflow":
         from rt_bene.estimate_blink_tensorflow import BlinkEstimatorTensorflow
-        blink_estimator = BlinkEstimatorTensorflow(device_id_blink=args.device_id, threshold=0.425, model_files=args.model)
+        blink_estimator = BlinkEstimatorTensorflow(device_id_blink=args.device_id, threshold=0.425, model_files=args.model, model_type=args.model_type)
     elif args.blink_backend == "pytorch":
         from rt_bene.estimate_blink_pytorch import BlinkEstimatorPytorch
-        blink_estimator = BlinkEstimatorPytorch(device_id_blink=args.device_id, threshold=0.425, model_files=args.model)
+        blink_estimator = BlinkEstimatorPytorch(device_id_blink=args.device_id, threshold=0.425, model_files=args.model, model_type=args.model_type)
     else:
         raise Exception("Unknown backend")
 
