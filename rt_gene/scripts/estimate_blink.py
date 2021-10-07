@@ -32,7 +32,7 @@ class BlinkEstimatorROS(object):
         self.bridge = SubjectListBridge()
         self.viz = rospy.get_param("~viz", True)
 
-        blink_backend = rospy.get_param("~blink_backend", default="tensorflow")
+        blink_backend = rospy.get_param("~blink_backend", default="pytorch")
         model_type = rospy.get_param("~model_type", default="resnet18")
 
         if blink_backend == "tensorflow":
