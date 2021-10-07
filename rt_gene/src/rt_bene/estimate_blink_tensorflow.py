@@ -16,7 +16,7 @@ class BlinkEstimatorTensorflow(BlinkEstimatorBase):
         self.device_id_blink = device_id_blink
         self._input_size = (96, 96)
 
-        assert model_type == "densnet121", "Tensorflow backend only supports DenseNet-121"
+        assert model_type == "densenet121", "Tensorflow backend only supports DenseNet-121"
 
         tf.compat.v1.disable_eager_execution()
 
