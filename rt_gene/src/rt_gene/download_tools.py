@@ -137,7 +137,6 @@ def download_external_landmark_models():
         "https://imperialcollegelondon.box.com/shared/static/wgfkq3pyzzuewiiwq0pzj0xiebolvlju.pth",
         "3b5a9888bf0beb93c177db5a18375a6c")
 
-    # https://imperialcollegelondon.box.com/shared/static/mmo544mmrwei3tqc8jfe5fim104g57z9.dat
     request_if_not_exist(
         os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../model_nets/dlib_face_recognition_resnet_model_v1.dat'),
         "https://imperialcollegelondon.box.com/shared/static/mmo544mmrwei3tqc8jfe5fim104g57z9.dat",
