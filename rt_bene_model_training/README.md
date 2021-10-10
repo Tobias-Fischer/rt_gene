@@ -35,6 +35,8 @@ This code was used to train the blink estimator for RT-BENE. The labels for the 
 ### Pytorch (experimental)
 This code attempts to duplicate the Tensorflow version using Pytorch and Pytorch-Lightning. It uses the same dataset. An HDF5 file is required, to generate this run [GenerateRTBENEH5Dataset.py](pytorch/util/GenerateRTBENEH5Dataset.py) with the argument to locate the RT-BENE dataset.
 [train_model](pytorch/train_model.py) contains the code required to train the model in pytorch.
+### Eyepatch generation
+See [https://github.com/Tobias-Fischer/rt_gene/blob/master/rt_gene_model_training/pytorch/utils/GenerateEyePatchesRTGENEDataset.py](this script) to generate eye patches for model training (only needed on custom datasets)
 
 
 ## Model testing code
