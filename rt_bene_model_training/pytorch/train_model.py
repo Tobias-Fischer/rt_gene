@@ -101,7 +101,6 @@ class TrainRTBENE(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    print(os.environ["PYTHONPATH"])
     from pytorch_lightning import Trainer
     from pytorch_lightning.plugins import DDPPlugin
     import psutil
