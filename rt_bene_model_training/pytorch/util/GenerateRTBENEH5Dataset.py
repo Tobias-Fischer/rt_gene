@@ -1,12 +1,9 @@
-from __future__ import print_function, division, absolute_import
-
 import argparse
 import os
 
 import h5py
 import numpy as np
-from PIL import Image, ImageFilter, ImageOps
-from torchvision import transforms
+from PIL import Image
 from tqdm import tqdm
 
 script_path = os.path.dirname(os.path.realpath(__file__))
