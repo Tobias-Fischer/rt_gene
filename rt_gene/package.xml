@@ -42,7 +42,9 @@
   <depend>uvc_camera</depend>
   <depend>dynamic_reconfigure</depend>
 
-  <depend>python-opencv</depend>
+  <!-- Python dependencies, no longer installable this way -->
+  
+  <!-- <depend>python-opencv</depend>
   <depend>python-dlib</depend>
   <depend>python-scipy</depend>
   <depend>python-numpy</depend>
@@ -50,7 +52,7 @@
   <depend>python-tqdm</depend>
   <depend>python-imaging</depend>
   <depend>python-pytorch-pip</depend>
-  <depend>python-matplotlib</depend>
+  <depend>python-matplotlib</depend> -->
 
   <exec_depend>rviz</exec_depend>
   <exec_depend>message_runtime</exec_depend>
