@@ -90,7 +90,7 @@ class GeneratorsTwoEyes(object):
 
 
 def get_normalized_image(raw_image, norm_type):
-    reshaped_image = raw_image.copy().reshape(36, 60, 3, order='F').astype(np.float)
+    reshaped_image = raw_image.copy().reshape(36, 60, 3, order='F').astype(float)
 
     if norm_type == 'subtract_vgg':
         reshaped_image[:, :, 0] = reshaped_image[:, :, 0] - 103.939

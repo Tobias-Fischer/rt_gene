@@ -55,7 +55,7 @@ class FaceEncodingTracker(GenericTracker):
 
         for untracked_encoding_id in list_to_check:
             previous_encoding = self.__encoding_list[untracked_encoding_id]
-            previous_encoding = np.fromstring(previous_encoding[1:-1], dtype=np.float, sep=",")
+            previous_encoding = np.fromstring(previous_encoding[1:-1], dtype=float, sep=",")
             distance = np.linalg.norm(previous_encoding - encoding, axis=0)
 
             # the new element and the previous encoding are the same person

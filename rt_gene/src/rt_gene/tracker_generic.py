@@ -58,13 +58,13 @@ class TrackedSubject(object):
             # Now compute the bounding boxes
             # The left / right x-coordinates are computed as the landmark position plus/minus the margin
             # The bottom / top y-coordinates are computed according to the desired ratio, as the width of the image is known
-            left_bb = np.zeros(4, dtype=np.int)
+            left_bb = np.zeros(4, dtype=int)
             left_bb[0] = transformed_eye_landmarks[2][0] - lefteye_margin / 2.0
             left_bb[1] = lefteye_center_y - (lefteye_width + lefteye_margin) * desired_ratio
             left_bb[2] = transformed_eye_landmarks[3][0] + lefteye_margin / 2.0
             left_bb[3] = lefteye_center_y + (lefteye_width + lefteye_margin) * desired_ratio
 
-            right_bb = np.zeros(4, dtype=np.int)
+            right_bb = np.zeros(4, dtype=int)
             right_bb[0] = transformed_eye_landmarks[0][0] - righteye_margin / 2.0
             right_bb[1] = righteye_center_y - (righteye_width + righteye_margin) * desired_ratio
             right_bb[2] = transformed_eye_landmarks[1][0] + righteye_margin / 2.0

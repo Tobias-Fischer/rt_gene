@@ -42,8 +42,8 @@ class RTGENEH5Dataset(data.Dataset):
         _left_img = self._h5_file[_sample[0] + "/left"][_sample[1]][()]
         _right_img = self._h5_file[_sample[0] + "/right"][_sample[1]][()]
         label_data = self._h5_file[_sample[0]+"/label"][()]
-        _groud_truth_headpose = label_data[0][()].astype(np.float32)
-        _ground_truth_gaze = label_data[1][()].astype(np.float32)
+        _groud_truth_headpose = label_data[0][()].astype(float)
+        _ground_truth_gaze = label_data[1][()].astype(float)
 
         # Load data and get label
         _transformed_left = self._transform(Image.fromarray(_left_img, 'RGB'))
@@ -99,4 +99,4 @@ class RTGENEFileDataset(data.Dataset):
         _transformed_left = self._transform(Image.fromarray(_left_img, 'RGB'))
         _transformed_right = self._transform(Image.fromarray(_right_img, 'RGB'))
 
-        return _transformed_left, _transformed_right, np.array(_groud_truth_headpose, dtype=np.float32), np.array(_ground_truth_gaze, dtype=np.float32)
+        return _transformed_left, _transformed_right, np.array(_groud_truth_headpose, dtype=float), np.array(_ground_truth_gaze, dtype=float)

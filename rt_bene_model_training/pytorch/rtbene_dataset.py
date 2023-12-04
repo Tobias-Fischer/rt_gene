@@ -65,7 +65,7 @@ class RTBENEH5Dataset(data.Dataset):
         with h5py.File(self._h5_file, mode="r") as h5_file:
             left_img = h5_file[sample[0] + "/left"][sample[1]][()][0]
             right_img = h5_file[sample[0] + "/right"][sample[1]][()][0]
-            label = h5_file[sample[0] + "/label"][()].astype(np.float32)
+            label = h5_file[sample[0] + "/label"][()].astype(float)
 
             # Load data and get label
             transformed_left_img = self._transform(Image.fromarray(left_img, 'RGB'))
