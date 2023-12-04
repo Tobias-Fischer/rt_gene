@@ -116,10 +116,10 @@ class GlassesCompletion(object):
                 continue
 
             data_face = imread_PRL(filename_face, is_grayscale=False)
-            image_face = np.array(data_face).astype(np.float32)   
+            image_face = np.array(data_face).astype(float)   
 
             data_mask = imread_PRL(filename_mask, is_grayscale=True)
-            image_mask = np.array(data_mask).astype(np.float32)                            
+            image_mask = np.array(data_mask).astype(float)                            
 
             # Sample index
             sample_num = 1

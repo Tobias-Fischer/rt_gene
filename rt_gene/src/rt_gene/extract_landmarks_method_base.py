@@ -65,7 +65,7 @@ class LandmarkMethodBase(object):
         with open(model_points_file) as f:
             for line in f:
                 raw_value.append(line)
-        model_points = np.array(raw_value, dtype=np.float32)
+        model_points = np.array(raw_value, dtype=float)
         model_points = np.reshape(model_points, (3, -1)).T
 
         # index the expansion of the model based.
@@ -115,7 +115,7 @@ class LandmarkMethodBase(object):
         _input = torch.cat([facial_landmark_transform(img).unsqueeze(0) for img in img_step], 0)
         with torch.no_grad():
             _input = _input.to(self.device)
-            param = self.facial_landmark_nn(_input).cpu().numpy().astype(np.float32)
+            param = self.facial_landmark_nn(_input).cpu().numpy().astype(float)
 
         return [predict_68pts(p.flatten(), roi_box) for p, roi_box in zip(param, roi_box_list)]
 

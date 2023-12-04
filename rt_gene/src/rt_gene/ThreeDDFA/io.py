@@ -88,19 +88,19 @@ def load_bfm(model_path):
         model = model[0, 0]
 
         model_new = {}
-        w_shp = model['w'].astype(np.float32)
+        w_shp = model['w'].astype(float)
         model_new['w_shp_sim'] = w_shp[:, :40]
-        w_exp = model['w_exp'].astype(np.float32)
+        w_exp = model['w_exp'].astype(float)
         model_new['w_exp_sim'] = w_exp[:, :10]
 
         u_shp = model['mu_shape']
         u_exp = model['mu_exp']
-        u = (u_shp + u_exp).astype(np.float32)
+        u = (u_shp + u_exp).astype(float)
         model_new['mu'] = u
-        model_new['tri'] = model['tri'].astype(np.int32) - 1
+        model_new['tri'] = model['tri'].astype(int) - 1
 
         # flatten it, pay attention to index value
-        keypoints = model['keypoints'].astype(np.int32) - 1
+        keypoints = model['keypoints'].astype(int) - 1
         keypoints = np.concatenate((3 * keypoints, 3 * keypoints + 1, 3 * keypoints + 2), axis=0)
 
         model_new['keypoints'] = keypoints.T.flatten()

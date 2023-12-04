@@ -70,7 +70,7 @@ class GazeEstimator(GazeEstimatorBase):
         """This method converts an eye_img_msg provided by the landmark estimator, and converts it to a format
         suitable for the gaze network."""
         currimg = cv_image.reshape(36, 60, 3, order='F')
-        currimg = currimg.astype(np.float32)
+        currimg = currimg.astype(float)
         testimg = np.zeros((36, 60, 3))
         testimg[:, :, 0] = currimg[:, :, 0] - 103.939
         testimg[:, :, 1] = currimg[:, :, 1] - 116.779

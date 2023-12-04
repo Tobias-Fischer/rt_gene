@@ -11,16 +11,16 @@ import matplotlib.pyplot as plt
 
 def imread_PRL(path, is_grayscale=False):
     if is_grayscale:
-        return scipy.misc.imread(path, flatten=True).astype(np.float) / 127.5 - 1.
+        return scipy.misc.imread(path, flatten=True).astype(float) / 127.5 - 1.
     else:
-        return scipy.misc.imread(path).astype(np.float) / 127.5 - 1.
+        return scipy.misc.imread(path).astype(float) / 127.5 - 1.
 
 
 def PRL_data_image_load(data, sample_idx=0):
     data_files = map(lambda i: data[i], sample_idx)
 
     data = [imread_PRL(data_file, is_grayscale=False) for data_file in data_files]
-    data_images = np.array(data).astype(np.float32)
+    data_images = np.array(data).astype(float)
 
     return data_images
 
