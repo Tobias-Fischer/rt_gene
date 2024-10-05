@@ -27,7 +27,7 @@ More information can be found on the Personal Robotic Lab's website: <https://ww
 ### Tensorflow
 For pip users: `pip install tensorflow-gpu numpy tqdm opencv-python scikit-learn` or for conda users: `conda install tensorflow-gpu numpy tqdm opencv scikit-learn`
 ### Pytorch
-For conda users: conda install -c conda-forge numpy scipy tqdm pillow rospkg opencv scikit-learn h5py matplotlib pytorch-lightning && conda install -c pytorch pytorch torchvision
+For conda users: conda install -c conda-forge numpy scipy tqdm pillow rospkg opencv scikit-learn h5py matplotlib pytorch-lightning pytorch torchvision
 
 ## Model training code
 ### Tensorflow (as per paper)
