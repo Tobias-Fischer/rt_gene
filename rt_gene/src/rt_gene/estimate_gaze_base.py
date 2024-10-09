@@ -37,9 +37,9 @@ class GazeEstimatorBase(object):
         pass
 
     @staticmethod
-    def visualize_eye_result(eye_image, est_gaze):
+    def visualize_eye_result(eye_image, est_gaze, inplace=False):
         """Here, we take the original eye eye_image and overlay the estimated gaze."""
-        output_image = np.copy(eye_image)
+        output_image = eye_image if inplace else np.copy(eye_image)
 
         center_x = output_image.shape[1] / 2
         center_y = output_image.shape[0] / 2
