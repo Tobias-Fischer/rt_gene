@@ -24,8 +24,9 @@ class GazeEstimator(GazeEstimatorBase):
                 config.gpu_options.allow_growth = True
                 config.gpu_options.per_process_gpu_memory_fraction = 0.3
             config.log_device_placement = False
-            self.sess = tf.compat.v1.Session(config=config)
-            tf.compat.v1.keras.backend.set_session(self.sess)
+            self.sess = None
+            # self.sess = tf.compat.v1.Session(config=config)
+            # tf.compat.v1.keras.backend.set_session(self.sess)
 
         models = []
         img_input_l = tf.keras.Input(shape=(36, 60, 3), name='img_input_L')
@@ -47,7 +48,7 @@ class GazeEstimator(GazeEstimatorBase):
         else:
             raise ValueError("No models were loaded")
         # noinspection PyProtectedMember
-        self.ensemble_model._make_predict_function()
+        self.ensemble_model.make_predict_function()
 
         tqdm.write('Loaded ' + str(len(models)) + ' model(s)')
 
@@ -59,7 +60,7 @@ class GazeEstimator(GazeEstimatorBase):
 
     def estimate_gaze_twoeyes(self, inference_input_left_list, inference_input_right_list, inference_headpose_list):
         with self.graph.as_default():
-            tf.compat.v1.keras.backend.set_session(self.sess)
+            # tf.compat.v1.keras.backend.set_session(self.sess)
             mean_prediction = self.ensemble_model.predict({'img_input_L': np.array(inference_input_left_list),
                                                            'img_input_R': np.array(inference_input_right_list),
                                                            'headpose_input': np.array(inference_headpose_list)})

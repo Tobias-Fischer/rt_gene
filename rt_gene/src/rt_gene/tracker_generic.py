@@ -14,12 +14,15 @@ from rt_gene.gaze_tools import get_normalised_eye_landmarks
 
 class TrackedSubject(object):
     def __init__(self, box, face, landmarks):
-        self.box = box
+        self.box = box  # facebox
         self.face_color = face
         self.landmarks = landmarks
 
+        # will be set later
         self.left_eye_color = None
         self.right_eye_color = None
+        self.left_eye_bb = None
+        self.right_eye_bb = None
 
     def compute_distance(self, other_element):
         return np.sqrt(np.sum((self.box - other_element.box) ** 2))
