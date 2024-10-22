@@ -6,14 +6,13 @@ from __future__ import print_function, division, absolute_import
 
 import argparse
 import os
-import sys
 
 import cv2
 import numpy as np
 from tqdm import tqdm
 
 from rt_gene.extract_landmarks_method_base import LandmarkMethodBase
-from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw, crop_face_from_image
+from rt_gene.gaze_tools import get_phi_theta_from_euler, limit_yaw
 from rt_gene.gaze_tools_standalone import euler_from_matrix
 
 script_path = os.path.dirname(os.path.realpath(__file__))
@@ -30,6 +29,13 @@ def load_camera_calibration(calibration_file):
     return dist_coefficients, camera_matrix
 
 
+def extract_eye_image_patches(subjects):
+    for subject in subjects:
+        le_c, re_c, _, _ = subject.get_eye_image_from_landmarks(subject, landmark_estimator.eye_image_size)
+        subject.left_eye_color = le_c
+        subject.right_eye_color = re_c
+
+
 def estimate_gaze(color_img, dist_coefficients, camera_matrix):
     faceboxes = landmark_estimator.get_face_bb(color_img)
     if len(faceboxes) == 0:
@@ -37,6 +43,7 @@ def estimate_gaze(color_img, dist_coefficients, camera_matrix):
         return
 
     subjects = landmark_estimator.get_subjects_from_faceboxes(color_img, faceboxes)
+    extract_eye_image_patches(subjects)
 
     input_r_list = []
     input_l_list = []
@@ -44,12 +51,6 @@ def estimate_gaze(color_img, dist_coefficients, camera_matrix):
     valid_subject_list = []
 
     for idx, subject in enumerate(subjects):
-        le_c, re_c, le_bb, re_bb = subject.get_eye_image_from_landmarks(subject, landmark_estimator.eye_image_size)
-        subject.left_eye_color = le_c
-        subject.right_eye_color = re_c
-        subject.left_eye_bb = le_bb
-        subject.right_eye_bb = re_bb
-
         if subject.left_eye_color is None or subject.right_eye_color is None:
             tqdm.write('Failed to extract eye image patches')
             continue
@@ -78,6 +79,12 @@ def estimate_gaze(color_img, dist_coefficients, camera_matrix):
 
         phi_head, theta_head = get_phi_theta_from_euler(roll_pitch_yaw)
 
+        face_image_resized = cv2.resize(subject.face_color, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+        head_pose_image = landmark_estimator.visualize_headpose_result(face_image_resized, (phi_head, theta_head))
+
+        if args.vis_headpose:
+            cv2.imshow("Head pose", head_pose_image)
+
         input_r_list.append(gaze_estimator.input_from_image(subject.right_eye_color))
         input_l_list.append(gaze_estimator.input_from_image(subject.left_eye_color))
         input_head_list.append([theta_head, phi_head])
@@ -90,38 +97,38 @@ def estimate_gaze(color_img, dist_coefficients, camera_matrix):
                                                     inference_input_right_list=input_r_list,
                                                     inference_headpose_list=input_head_list)
 
-    for subject_id, gaze, headpose in zip(valid_subject_list, gaze_est, input_head_list):
+    for subject_id, gaze, headpose in zip(valid_subject_list, gaze_est.tolist(), input_head_list):
         subject = subjects[subject_id]
+        # Build visualizations
+        r_gaze_img = gaze_estimator.visualize_eye_result(subject.right_eye_color, gaze)
+        l_gaze_img = gaze_estimator.visualize_eye_result(subject.left_eye_color, gaze)
+        s_gaze_img = np.concatenate((r_gaze_img, l_gaze_img), axis=1)
+        s_gaze_img = cv2.resize(s_gaze_img, (0, 0), fx=2.0, fy=2.0)
 
-        # Eye bounding boxes are relative to the facebox.
-        # Shift by the facebox position
-        x0, y0 = subject.box[:2]
-        shift_face_vec = np.array([x0, y0, x0, y0])
-        left_bb = subject.left_eye_bb + shift_face_vec
-        right_bb = subject.right_eye_bb + shift_face_vec
-
-        # Extract patch by reference and plot the eye gaze inplace
-        l_gaze_img = crop_face_from_image(color_img, left_bb)
-        r_gaze_img = crop_face_from_image(color_img, right_bb)
-        gaze_estimator.visualize_eye_result(l_gaze_img, gaze, inplace=True)
-        gaze_estimator.visualize_eye_result(r_gaze_img, gaze, inplace=True)
+        cv2.imshow("Eye gaze", s_gaze_img)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Estimate gaze from webcam')
-    parser.add_argument('--calib-file', type=str, dest='calib_file', default=None, help='Camera calibration file')
-    parser.add_argument('--gaze_backend', choices=['tensorflow', 'pytorch'], default='pytorch')
-    parser.add_argument('--models', nargs='+', type=str, default=[os.path.abspath(
-        os.path.join(script_path, '../rt_gene/model_nets/gaze_model_pytorch_vgg16_prl_mpii_allsubjects1.model'))],
-                        help='List of gaze estimators')
-    parser.add_argument('--device-id-facedetection', dest="device_id_facedetection", type=str, default='cuda:0',
-                        help='Pytorch device id. Set to "cpu:0" to disable cuda')
+    parser = argparse.ArgumentParser(description='Estimate gaze from images')
     parser.add_argument('--webcam', dest="webcam", type=int, default=0,
                         help='Webcam device number. Default is 0')
+    parser.add_argument('--calib-file', type=str, dest='calib_file', default=None, help='Camera calibration file')
+    parser.add_argument('--vis-headpose', dest='vis_headpose', action='store_true', help='Display the head pose images')
+    parser.add_argument('--no-vis-headpose', dest='vis_headpose', action='store_false', help='Do not display the head pose images')
+    parser.add_argument('--gaze_backend', choices=['tensorflow', 'pytorch'], default='tensorflow')
+    parser.add_argument('--models', nargs='+', type=str, default=[os.path.abspath(os.path.join(script_path, '../rt_gene/model_nets/Model_allsubjects1.h5'))],
+                        help='List of gaze estimators')
+    parser.add_argument('--device-id-pytorch', dest="device_id_pytorch", type=str, default='cpu:0', help='Pytorch device id. Set to "cpu:0" to disable cuda')
+    parser.add_argument('--device-id-tensorflow', dest="device_id_tensorflow", type=str, default='/cpu:0', help='Tensorflow device id. Set to "/cpu:0" to disable cuda')
+
+    parser.set_defaults(vis_gaze=True)
+    parser.set_defaults(save_gaze=False)
+    parser.set_defaults(vis_headpose=False)
+
     args = parser.parse_args()
 
     tqdm.write('Loading networks')
-    landmark_estimator = LandmarkMethodBase(device_id_facedetection=args.device_id_facedetection,
+    landmark_estimator = LandmarkMethodBase(device_id_facedetection=args.device_id_pytorch,
                                             checkpoint_path_face=os.path.abspath(os.path.join(script_path, "../rt_gene/model_nets/SFD/s3fd_facedetector.pth")),
                                             checkpoint_path_landmark=os.path.abspath(
                                                 os.path.join(script_path, "../rt_gene/model_nets/phase1_wpdc_vdc.pth.tar")),
@@ -130,11 +137,11 @@ if __name__ == '__main__':
     if args.gaze_backend == "tensorflow":
         from rt_gene.estimate_gaze_tensorflow import GazeEstimator
 
-        gaze_estimator = GazeEstimator("/gpu:0", args.models)
+        gaze_estimator = GazeEstimator(args.device_id_tensorflow, args.models)
     elif args.gaze_backend == "pytorch":
         from rt_gene.estimate_gaze_pytorch import GazeEstimator
 
-        gaze_estimator = GazeEstimator("cuda:0", args.models)
+        gaze_estimator = GazeEstimator(args.device_id_pytorch, args.models)
     else:
         raise ValueError("Incorrect gaze_base backend, choices are: tensorflow or pytorch")
 
@@ -155,7 +162,7 @@ if __name__ == '__main__':
 
         estimate_gaze(image, _dist_coefficients, _camera_matrix)
 
-        cv2.imshow("Output", image)
+        cv2.imshow("Frame", image)
         k = cv2.waitKey(1) & 0xFF
         if k == ord('q'):
             break
