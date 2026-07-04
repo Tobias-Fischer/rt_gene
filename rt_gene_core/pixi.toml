@@ -6,7 +6,6 @@ version = "*"
 [package.build.config]
 distro = "jazzy"
 extra-input-globs = [
-  "src/**/*.py",
   "resource/*",
   "model_nets/face_model_68.txt",
   "model_nets/SFD/README.md",

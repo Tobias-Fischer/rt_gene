@@ -5,8 +5,3 @@ version = "*"
 
 [package.build.config]
 distro = "jazzy"
-extra-input-globs = [
-  "CMakeLists.txt",
-  "src/**/*.cpp",
-  "config/*.yaml",
-]

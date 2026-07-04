@@ -5,6 +5,3 @@ version = "*"
 
 [package.build.config]
 distro = "jazzy"
-extra-input-globs = [
-  "msg/*.msg",
-]

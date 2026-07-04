@@ -34,8 +34,13 @@ ros-jazzy-tf2-ros-py = "*"
 ros-jazzy-rt-gene-ros = { path = "rt_gene_ros" }
 ros-jazzy-opencv-camera = { path = "opencv_camera" }
 
+[pypi-dependencies]
+rt-gene-core = { path = "rt_gene_core", editable = true }
+rt-gene-ros = { path = "rt_gene_ros", editable = true }
+
 [tasks]
 test-core = { cmd = "python -m pytest rt_gene_core/test", env = { PYTHONPATH = "rt_gene_core/src:rt_gene_ros" } }
+test-installed = "python tools/test_installed_core.py"
 test-camera = "python tools/test_camera_smoke.py"
 test-launch = "python tools/test_launch_smoke.py"
 show-gaze-interface = "ros2 interface show rt_gene_interfaces/msg/GazeArray"
