@@ -1,5 +1,6 @@
 import hashlib
 import os
+from pathlib import Path
 
 import requests
 from tqdm import tqdm
@@ -16,20 +17,41 @@ def md5(file_name):
 
 
 def request_if_not_exist(file_name, url, md5sum=None, chunksize=1024):
-    if not os.path.isfile(file_name):
-        print("Download model: {}".format(os.path.basename(file_name)))
-        request = requests.get(url, timeout=10, stream=True)
-        with open(file_name, 'wb') as fh:
-            # Walk through the request response in chunks of 1MiB
-            for chunk in tqdm(request.iter_content(chunksize), desc=os.path.basename(file_name),
-                              total=int(int(request.headers['Content-length']) / chunksize),
-                              unit="KiB"):
-                fh.write(chunk)
+    file_name = Path(file_name)
+    if file_name.is_file():
+        return
+
+    file_name.parent.mkdir(parents=True, exist_ok=True)
+    part_file = file_name.with_name(file_name.name + ".part")
+    if part_file.exists():
+        part_file.unlink()
+
+    print("Download model: {}".format(file_name.name))
+    request = requests.get(url, timeout=10, stream=True)
+    try:
+        request.raise_for_status()
+        content_length = request.headers.get("content-length")
+        total = None if content_length is None else max(1, int(content_length) // chunksize)
+        with part_file.open("wb") as fh:
+            for chunk in tqdm(request.iter_content(chunksize), desc=file_name.name, total=total, unit="KiB"):
+                if chunk:
+                    fh.write(chunk)
         if md5sum is not None:
-            print("Checking md5 for {}".format(os.path.basename(file_name)))
-            assert md5sum == md5(
-                file_name), "MD5Sums do not match for {}. Please) delete the same file name to re-download".format(
-                file_name)
+            print("Checking md5 for {}".format(file_name.name))
+            actual = md5(part_file)
+            if md5sum != actual:
+                raise RuntimeError(
+                    "MD5 checksum mismatch for {}: expected {}, got {}. Delete the file and retry.".format(
+                        file_name, md5sum, actual
+                    )
+                )
+        part_file.replace(file_name)
+    except Exception:
+        if part_file.exists():
+            part_file.unlink()
+        raise
+    finally:
+        request.close()
 
 
 def download_gaze_pytorch_models():
