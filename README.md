@@ -9,7 +9,7 @@ The archived ROS 1 code, TensorFlow-era code, old standalone scripts, training f
 - `rt_gene_core`: pure Python runtime code for landmarks, gaze, blink, model downloads, and PyTorch device selection. It has no ROS imports.
 - `rt_gene_interfaces`: ROS 2 messages for subject images, landmarks, head pose, gaze, and blink results.
 - `rt_gene_ros`: `rclpy` nodes and launch files.
-- `opencv_camera`: independent OpenCV webcam/video publisher for `sensor_msgs/Image` and `sensor_msgs/CameraInfo`.
+- `opencv_camera`: independent OpenCV webcam/video publisher for `sensor_msgs/Image`, `sensor_msgs/CompressedImage`, and `sensor_msgs/CameraInfo`.
 
 ## Install
 
@@ -29,6 +29,8 @@ Run the camera alone:
 pixi run ros2 run opencv_camera camera_node
 ```
 
+The camera publishes raw images on `image_raw`, JPEG-compressed images on `image_raw/compressed`, and calibration on `camera_info`. Raw image QoS defaults to reliable so RViz can subscribe without a reliability warning.
+
 Run the full webcam gaze demo:
 
 ```bash
@@ -47,6 +49,10 @@ Useful launch arguments:
 pixi run ros2 launch rt_gene_ros webcam_demo.launch.py \
   camera_index:=0 \
   calibration_file:=/path/to/calibration.yaml \
+  width:=640 \
+  height:=480 \
+  fps:=30 \
+  jpeg_quality:=80 \
   device:=auto \
   visualise:=true
 ```
@@ -56,6 +62,12 @@ The default topics are relative and remappable:
 - input: `image_raw`, `camera_info`
 - outputs: `subjects/images`, `subjects/landmarks`, `subjects/head_pose`, `subjects/gaze`, `subjects/blink`
 - visualisation images: `subjects/head_pose_images`, `subjects/gaze_images`, `subjects/blink_images`
+
+On macOS, grant camera permission to the terminal or app that runs Pixi/Codex before using a real webcam. For a viewer with compression:
+
+```bash
+pixi run ros2 run image_view image_view --ros-args -r image:=/image_raw -p image_transport:=compressed
+```
 
 ## Model Files
 
@@ -94,9 +106,11 @@ pixi run ros2 interface show rt_gene_interfaces/msg/GazeArray
 
 ```bash
 pixi run test-core
+pixi run test-camera
+pixi run test-launch
 ```
 
-The current tests cover PyTorch device resolution, OpenCV calibration YAML loading, and a guard that active packages do not reintroduce TensorFlow imports.
+`test-core` is hardware-free and network-free. `test-camera` uses a synthetic video to verify `image_raw`, `image_raw/compressed`, `camera_info`, and reliable image QoS. `test-launch` uses a synthetic video and fails on startup tracebacks, process death, or QoS incompatibility warnings.
 
 ## Citation
 
