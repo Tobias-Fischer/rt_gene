@@ -1,0 +1,18 @@
+[package.build.backend]
+channels = ["https://prefix.dev/conda-forge"]
+name = "pixi-build-ros"
+version = "*"
+
+[package.build.config]
+distro = "jazzy"
+extra-input-globs = [
+  "src/**/*.py",
+  "resource/*",
+  "model_nets/face_model_68.txt",
+  "model_nets/SFD/README.md",
+  "model_nets/ThreeDDFA/keypoints_sim.npy",
+  "model_nets/ThreeDDFA/param_whitening.pkl",
+  "model_nets/ThreeDDFA/param_whitening_py2.pkl",
+  "model_nets/ThreeDDFA/u_exp.npy",
+  "model_nets/ThreeDDFA/u_shp.npy",
+]

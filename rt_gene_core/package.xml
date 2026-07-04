@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rt_gene_core</name>
+  <version>5.0.0</version>
+  <description>PyTorch/OpenCV runtime core for RT-GENE and RT-BENE without ROS imports.</description>
+  <maintainer email="t.fischer@imperial.ac.uk">Tobias Fischer</maintainer>
+  <license>CC-BY-NC-SA-4.0</license>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

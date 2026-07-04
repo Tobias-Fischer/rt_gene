@@ -1,0 +1,12 @@
+[package.build.backend]
+channels = ["https://prefix.dev/conda-forge"]
+name = "pixi-build-ros"
+version = "*"
+
+[package.build.config]
+distro = "jazzy"
+extra-input-globs = [
+  "opencv_camera/**/*.py",
+  "config/*.yaml",
+  "resource/*",
+]

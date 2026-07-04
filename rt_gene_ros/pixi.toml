@@ -1,0 +1,13 @@
+[package.build.backend]
+channels = ["https://prefix.dev/conda-forge"]
+name = "pixi-build-ros"
+version = "*"
+
+[package.build.config]
+distro = "jazzy"
+extra-input-globs = [
+  "rt_gene_ros/**/*.py",
+  "launch/*.launch.py",
+  "config/*.yaml",
+  "resource/*",
+]

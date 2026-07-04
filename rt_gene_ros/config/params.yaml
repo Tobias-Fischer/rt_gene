@@ -1,0 +1,32 @@
+extract_landmarks:
+  ros__parameters:
+    device: auto
+    use_face_encoding_tracker: true
+    face_encoding_threshold: 0.8
+    tf_prefix: gaze
+    visualise_headpose: true
+    pnp_iterate_after: false
+    interpupillary_distance: 0.058
+    model_size: 16.0
+    head_pitch: 0.0
+
+estimate_gaze:
+  ros__parameters:
+    device: auto
+    tf_prefix: gaze
+    visualise_eyepose: true
+    model_files:
+      - gaze_model_pytorch_vgg16_prl_mpii_allsubjects1.model
+      - gaze_model_pytorch_vgg16_prl_mpii_allsubjects2.model
+      - gaze_model_pytorch_vgg16_prl_mpii_allsubjects3.model
+      - gaze_model_pytorch_vgg16_prl_mpii_allsubjects4.model
+
+estimate_blink:
+  ros__parameters:
+    device: auto
+    model_files:
+      - blink_model_pytorch_vgg16_allsubjects1.model
+      - blink_model_pytorch_vgg16_allsubjects2.model
+    model_type: vgg16
+    threshold: 0.425
+    visualise: true
