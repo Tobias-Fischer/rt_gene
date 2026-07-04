@@ -32,5 +32,5 @@ ros-jazzy-rt-gene-ros = { path = "rt_gene_ros" }
 ros-jazzy-opencv-camera = { path = "opencv_camera" }
 
 [tasks]
-test-core = "python -m pytest rt_gene_core/test opencv_camera/test"
+test-core = { cmd = "python -m pytest rt_gene_core/test opencv_camera/test", env = { PYTHONPATH = "rt_gene_core/src:rt_gene_ros:opencv_camera" } }
 show-gaze-interface = "ros2 interface show rt_gene_interfaces/msg/GazeArray"
