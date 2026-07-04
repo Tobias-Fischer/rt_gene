@@ -29,10 +29,10 @@ class LandmarkMethodBase(object):
         self.interpupillary_distance = 0.058
         self.eye_image_size = (60, 36)
 
-        tqdm.write("Using device {} for face detection.".format(device_id_facedetection))
-
         self.device = resolve_torch_device(device_id_facedetection)
-        self.face_net = SFDDetector(device=device_id_facedetection, path_to_detector=checkpoint_path_face)
+        tqdm.write("Using device {} for face detection.".format(self.device))
+
+        self.face_net = SFDDetector(device=self.device, path_to_detector=checkpoint_path_face)
         self.facial_landmark_nn = self.load_face_landmark_model(checkpoint_path_landmark)
 
         self.model_points = self.get_full_model_points(model_points_file)
