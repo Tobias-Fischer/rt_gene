@@ -24,12 +24,14 @@ SOFTWARE.
 
 
 import numpy as np
+import os
 from math import sqrt
 from .ddfa import reconstruct_vertex
 
 
 def get_suffix(filename):
     """a.jpg -> jpg"""
+    filename = os.fspath(filename)
     pos = filename.rfind('.')
     if pos == -1:
         return ''

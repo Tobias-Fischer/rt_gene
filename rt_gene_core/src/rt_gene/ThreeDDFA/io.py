@@ -38,6 +38,7 @@ def mkdir(d):
 
 def _get_suffix(filename):
     """a.jpg -> jpg"""
+    filename = os.fspath(filename)
     pos = filename.rfind('.')
     if pos == -1:
         return ''
