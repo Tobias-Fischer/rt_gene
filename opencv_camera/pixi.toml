@@ -6,7 +6,7 @@ version = "*"
 [package.build.config]
 distro = "jazzy"
 extra-input-globs = [
-  "opencv_camera/**/*.py",
+  "CMakeLists.txt",
+  "src/**/*.cpp",
   "config/*.yaml",
-  "resource/*",
 ]
