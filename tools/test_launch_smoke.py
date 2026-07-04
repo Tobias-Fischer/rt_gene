@@ -3,6 +3,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import cv2
@@ -10,7 +11,6 @@ import numpy as np
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_PATHS = [REPO_ROOT / "rt_gene_core" / "src", REPO_ROOT / "rt_gene_ros"]
 
 
 BAD_LOG_PATTERNS = (
@@ -41,9 +41,6 @@ def make_video(path):
 
 
 def prepare_models():
-    for path in reversed(SOURCE_PATHS):
-        sys.path.insert(0, str(path))
-
     from rt_gene.download_tools import download_external_landmark_models, download_gaze_pytorch_models
 
     download_external_landmark_models()
@@ -55,11 +52,7 @@ def ros_env(tmp):
     log_dir = Path(tmp) / "ros_logs"
     log_dir.mkdir()
     env["ROS_LOG_DIR"] = str(log_dir)
-    env["ROS_DOMAIN_ID"] = str(30 + os.getpid() % 50)
-    pythonpath = os.pathsep.join(str(path) for path in SOURCE_PATHS)
-    if env.get("PYTHONPATH"):
-        pythonpath = os.pathsep.join([pythonpath, env["PYTHONPATH"]])
-    env["PYTHONPATH"] = pythonpath
+    env["ROS_DOMAIN_ID"] = str(100 + (os.getpid() + time.monotonic_ns()) % 120)
     return env
 
 
@@ -114,12 +107,14 @@ def main():
         )
         try:
             output, _ = proc.communicate(timeout=45)
+            scan_output = output
             if proc.returncode != 0:
                 raise RuntimeError(output)
         except subprocess.TimeoutExpired as exc:
-            output = as_text(exc.output) + as_text(stop_process(proc))
+            scan_output = as_text(exc.output)
+            output = scan_output + as_text(stop_process(proc))
 
-    found = [pattern for pattern in BAD_LOG_PATTERNS if pattern in output]
+    found = [pattern for pattern in BAD_LOG_PATTERNS if pattern in scan_output]
     if found:
         raise RuntimeError("Bad launch log patterns {}:\n{}".format(", ".join(found), output))
 

@@ -28,7 +28,7 @@ def ros_env(tmp):
     log_dir = Path(tmp) / "ros_logs"
     log_dir.mkdir()
     env["ROS_LOG_DIR"] = str(log_dir)
-    env["ROS_DOMAIN_ID"] = str(30 + os.getpid() % 50)
+    env["ROS_DOMAIN_ID"] = str(100 + (os.getpid() + time.monotonic_ns()) % 120)
     return env
 
 
@@ -69,6 +69,31 @@ def stop_process(proc):
         except (AttributeError, ProcessLookupError):
             proc.kill()
         return proc.communicate(timeout=5)[0]
+
+
+def publisher_qos_blocks(topic_info):
+    blocks = []
+    current = []
+    for line in topic_info.splitlines():
+        if line.startswith("Node name: "):
+            if current:
+                blocks.append("\n".join(current))
+            current = [line]
+        elif current:
+            current.append(line)
+    if current:
+        blocks.append("\n".join(current))
+    return [block for block in blocks if "Endpoint type: PUBLISHER" in block]
+
+
+def assert_reliable_publishers(topic_info):
+    publishers = publisher_qos_blocks(topic_info)
+    if not publishers:
+        raise RuntimeError(f"/image_raw has no publishers:\n{topic_info}")
+    best_effort = [block for block in publishers if "Reliability: BEST_EFFORT" in block]
+    unreliable = [block for block in publishers if "Reliability: RELIABLE" not in block]
+    if best_effort or unreliable:
+        raise RuntimeError(f"/image_raw publishers are not reliable by default:\n{topic_info}")
 
 
 def main():
@@ -137,8 +162,7 @@ def main():
                 env,
             )
             info = wait_for(["ros2", "topic", "info", "--no-daemon", "--spin-time", "5", "-v", "/image_raw"], proc, env)
-            if "RELIABLE" not in info or "BEST_EFFORT" in info:
-                raise RuntimeError(f"/image_raw is not reliable by default:\n{info}")
+            assert_reliable_publishers(info)
         except Exception as exc:
             error = exc
         finally:
