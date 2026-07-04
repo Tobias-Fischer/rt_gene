@@ -18,7 +18,7 @@ def md5(file_name):
 
 def request_if_not_exist(file_name, url, md5sum=None, chunksize=1024):
     file_name = Path(file_name)
-    if file_name.is_file():
+    if file_name.is_file() and (md5sum is None or md5(file_name) == md5sum):
         return
 
     file_name.parent.mkdir(parents=True, exist_ok=True)

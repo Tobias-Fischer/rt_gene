@@ -45,3 +45,28 @@ def test_download_removes_partial_on_checksum_error(monkeypatch, tmp_path):
 
     assert not target.exists()
     assert not target.with_name("model.bin.part").exists()
+
+
+def test_download_removes_partial_on_http_error(monkeypatch, tmp_path):
+    target = tmp_path / "model.bin"
+    target.with_name("model.bin.part").write_bytes(b"partial")
+    monkeypatch.setattr("requests.get", lambda *args, **kwargs: FakeResponse(b"", status_error=RuntimeError("404")))
+
+    with pytest.raises(RuntimeError, match="404"):
+        request_if_not_exist(target, "https://example.invalid/model")
+
+    assert not target.exists()
+    assert not target.with_name("model.bin.part").exists()
+
+
+def test_existing_bad_checksum_is_replaced_after_verified_download(monkeypatch, tmp_path):
+    body = b"new-model"
+    response = FakeResponse(body)
+    monkeypatch.setattr("requests.get", lambda *args, **kwargs: response)
+
+    target = tmp_path / "model.bin"
+    target.write_bytes(b"old-model")
+    request_if_not_exist(target, "https://example.invalid/model", hashlib.md5(body).hexdigest())
+
+    assert target.read_bytes() == body
+    assert not target.with_name("model.bin.part").exists()

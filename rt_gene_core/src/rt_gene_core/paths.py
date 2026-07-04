@@ -29,9 +29,11 @@ def model_path(*parts, writable=False):
 
     candidates = []
     source = _source_dir() / "model_nets" / rel
+    cache = _cache_dir() / rel
     share = _share_dir()
     if share is not None:
         candidates.append(share / "model_nets" / rel)
+    candidates.append(cache)
     candidates.append(source)
 
     for candidate in candidates:
