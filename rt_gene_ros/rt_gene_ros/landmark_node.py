@@ -254,12 +254,17 @@ class LandmarkNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = LandmarkNode()
+    node = None
     try:
+        node = LandmarkNode()
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
     finally:
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+        try:
+            if node is not None:
+                node.destroy_node()
+            if rclpy.ok():
+                rclpy.shutdown()
+        except KeyboardInterrupt:
+            pass
