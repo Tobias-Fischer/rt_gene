@@ -19,6 +19,8 @@ Pixi builds the ROS packages as conda packages with `pixi-build-ros`.
 pixi install
 ```
 
+`rt_gene_core` and `rt_gene_ros` are layered in as editable Python packages, so Python source edits are picked up by `pixi run` without a rebuild. Re-run `pixi install` after changing Pixi manifests, messages, or C++ packages.
+
 Supported workspace platforms are `osx-arm64`, `linux-64`, and `win-64`. macOS and Linux are the intended targets; Windows is best-effort and currently untested.
 
 ## Webcam Demo
@@ -106,11 +108,12 @@ pixi run ros2 interface show rt_gene_interfaces/msg/GazeArray
 
 ```bash
 pixi run test-core
+pixi run test-installed
 pixi run test-camera
 pixi run test-launch
 ```
 
-`test-core` is hardware-free and network-free. `test-camera` uses a synthetic video to verify `image_raw`, `image_raw/compressed`, `camera_info`, and reliable image QoS. `test-launch` uses a synthetic video and fails on startup tracebacks, process death, or QoS incompatibility warnings.
+`test-core` is hardware-free and network-free. `test-installed` verifies that Pixi imports the editable workspace sources instead of stale installed copies. `test-camera` uses a synthetic video to verify `image_raw`, `image_raw/compressed`, `camera_info`, and reliable image QoS. `test-launch` uses a synthetic video and fails on startup tracebacks, process death, or QoS incompatibility warnings.
 
 ## Citation
 
