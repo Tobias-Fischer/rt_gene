@@ -46,3 +46,16 @@ def model_path(*parts, writable=False):
         return target
 
     return candidates[0]
+
+
+def demo_image_path(name="gaze_center.jpg"):
+    share = _share_dir()
+    candidates = []
+    if share is not None:
+        candidates.append(share / "demo_images" / name)
+    candidates.append(_source_dir() / "demo_images" / name)
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]

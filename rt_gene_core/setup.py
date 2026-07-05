@@ -14,10 +14,15 @@ BUNDLED_MODEL_FILES = [
 ]
 
 
+DEMO_IMAGE_FILES = [
+    Path("demo_images/gaze_center.jpg"),
+]
+
+
 def model_data_files():
     return [
         (str(Path("share/rt_gene_core") / path.parent), [str(path)])
-        for path in BUNDLED_MODEL_FILES
+        for path in [*BUNDLED_MODEL_FILES, *DEMO_IMAGE_FILES]
     ]
 
 

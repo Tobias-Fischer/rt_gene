@@ -12,7 +12,7 @@ import rt_gene.gaze_tools as gaze_tools
 from rt_gene.gaze_tools_standalone import euler_from_matrix
 from rt_gene.tracker_generic import TrackedSubject
 from rt_gene_core import transforms as frame_transforms
-from rt_gene_core.paths import model_path
+from rt_gene_core.paths import demo_image_path, model_path
 
 
 DEFAULT_GAZE_MODEL = "gaze_model_pytorch_vgg16_prl_mpii_allsubjects1.model"
@@ -100,7 +100,7 @@ def run(image_path, device="auto", focal_length_px=None, model_files=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Run RT-GENE on one image and print head pose/gaze JSON.")
-    parser.add_argument("image")
+    parser.add_argument("image", nargs="?", default=str(demo_image_path()))
     parser.add_argument("--device", default="auto")
     parser.add_argument("--focal-length-px", type=float)
     parser.add_argument("--model", action="append", dest="models", help="Gaze model file/name. Repeat to ensemble.")
