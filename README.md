@@ -135,7 +135,7 @@ pixi run test-camera
 pixi run test-launch
 ```
 
-`test-core` is hardware-free and network-free. `test-ros-python` covers ROS message conversion helpers such as timestamp propagation. `test-installed` verifies that Pixi imports the editable workspace sources instead of stale installed copies. `test-camera` uses a synthetic video to verify `image_raw`, `image_raw/compressed`, `camera_info`, and reliable image QoS. `test-launch` uses a synthetic video and fails on startup tracebacks, process death, or QoS incompatibility warnings.
+`test-core` is hardware-free and network-free. `test-ros-python` covers ROS message conversion helpers such as timestamp propagation. `test-installed` verifies that Pixi imports the editable workspace sources instead of stale installed copies. `test-camera` uses a synthetic image to verify `image_raw`, `image_raw/compressed`, `camera_info`, and reliable image QoS. `test-launch` uses the bundled demo image and fails on startup tracebacks, process death, or QoS incompatibility warnings.
 
 ## Citation
 
