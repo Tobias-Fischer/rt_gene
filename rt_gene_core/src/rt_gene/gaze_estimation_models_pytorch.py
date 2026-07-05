@@ -66,8 +66,8 @@ class GazeEstimationModelResnet18(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):
         super(GazeEstimationModelResnet18, self).__init__()
-        _left_model = models.resnet18(pretrained=True)
-        _right_model = models.resnet18(pretrained=True)
+        _left_model = models.resnet18(weights=None)
+        _right_model = models.resnet18(weights=None)
 
         # remove the last ConvBRelu layer
         self.left_features = nn.Sequential(
@@ -223,8 +223,8 @@ class GazeEstimationModelVGG(GazeEstimationAbstractModel):
 
     def __init__(self, num_out=2):
         super(GazeEstimationModelVGG, self).__init__()
-        _left_model = models.vgg16(pretrained=True)
-        _right_model = models.vgg16(pretrained=True)
+        _left_model = models.vgg16(weights=None)
+        _right_model = models.vgg16(weights=None)
 
         # remove the last ConvBRelu layer
         _left_modules = [module for module in _left_model.features]

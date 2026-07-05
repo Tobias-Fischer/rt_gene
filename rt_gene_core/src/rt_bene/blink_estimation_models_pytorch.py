@@ -43,8 +43,8 @@ class BlinkEstimationModelResnet18(BlinkEstimationAbstractModel):
 
     def __init__(self, num_out=1):
         super(BlinkEstimationModelResnet18, self).__init__()
-        _left_model = models.resnet18(pretrained=True)
-        _right_model = models.resnet18(pretrained=True)
+        _left_model = models.resnet18(weights=None)
+        _right_model = models.resnet18(weights=None)
 
         # remove the last ConvBRelu layer
         self.left_features = nn.Sequential(
@@ -85,8 +85,8 @@ class BlinkEstimationModelResnet50(BlinkEstimationAbstractModel):
 
     def __init__(self, num_out=1):
         super(BlinkEstimationModelResnet50, self).__init__()
-        _left_model = models.resnet50(pretrained=True)
-        _right_model = models.resnet50(pretrained=True)
+        _left_model = models.resnet50(weights=None)
+        _right_model = models.resnet50(weights=None)
 
         # remove the last ConvBRelu layer
         self.left_features = nn.Sequential(
@@ -127,8 +127,8 @@ class BlinkEstimationModelVGG16(BlinkEstimationAbstractModel):
 
     def __init__(self, num_out=1):
         super(BlinkEstimationModelVGG16, self).__init__()
-        _left_model = models.vgg16(pretrained=True)
-        _right_model = models.vgg16(pretrained=True)
+        _left_model = models.vgg16(weights=None)
+        _right_model = models.vgg16(weights=None)
 
         # remove the last ConvBRelu layer
         _left_modules = [module for module in _left_model.features]
@@ -154,8 +154,8 @@ class BlinkEstimationModelVGG19(BlinkEstimationAbstractModel):
 
     def __init__(self, num_out=1):
         super(BlinkEstimationModelVGG19, self).__init__()
-        _left_model = models.vgg19(pretrained=True)
-        _right_model = models.vgg19(pretrained=True)
+        _left_model = models.vgg19(weights=None)
+        _right_model = models.vgg19(weights=None)
 
         # remove the last ConvBRelu layer
         _left_modules = [module for module in _left_model.features]
@@ -181,8 +181,8 @@ class BlinkEstimationModelDenseNet121(BlinkEstimationAbstractModel):
 
     def __init__(self, num_out=1):
         super(BlinkEstimationModelDenseNet121, self).__init__()
-        _left_model = models.densenet121(pretrained=True)
-        _right_model = models.densenet121(pretrained=True)
+        _left_model = models.densenet121(weights=None)
+        _right_model = models.densenet121(weights=None)
 
         _left_modules = [module for module in _left_model.features]
         _left_modules.append(nn.ReLU(inplace=True))
