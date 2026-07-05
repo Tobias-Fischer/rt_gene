@@ -34,6 +34,8 @@ Using Kalman Filter as a point stabilizer to stabilize a 2D point.
 class Stabilizer(object):
     """Using Kalman filter as a point stabilizer."""
 
+    dtype = np.float32
+
     def __init__(self,
                  state_num=4,
                  measure_num=2,
@@ -51,44 +53,44 @@ class Stabilizer(object):
         self.filter = cv2.KalmanFilter(state_num, measure_num, 0)
 
         # Store the state.
-        self.state = np.zeros((state_num, 1), dtype=float)
+        self.state = np.zeros((state_num, 1), dtype=self.dtype)
 
         # Store the measurement result.
-        self.measurement = np.array((measure_num, 1), float)
+        self.measurement = np.zeros((measure_num, 1), dtype=self.dtype)
 
         # Store the prediction.
-        self.prediction = np.zeros((state_num, 1), float)
+        self.prediction = np.zeros((state_num, 1), dtype=self.dtype)
 
         # Kalman parameters setup for scalar.
         if self.measure_num == 1:
             self.filter.transitionMatrix = np.array([[1, 1],
-                                                     [0, 1]], float)
+                                                     [0, 1]], dtype=self.dtype)
 
-            self.filter.measurementMatrix = np.array([[1, 1]], float)
+            self.filter.measurementMatrix = np.array([[1, 1]], dtype=self.dtype)
 
             self.filter.processNoiseCov = np.array([[1, 0],
-                                                    [0, 1]], float) * cov_process
+                                                    [0, 1]], dtype=self.dtype) * cov_process
 
             self.filter.measurementNoiseCov = np.array(
-                [[1]], float) * cov_measure
+                [[1]], dtype=self.dtype) * cov_measure
 
         # Kalman parameters setup for point.
         if self.measure_num == 2:
             self.filter.transitionMatrix = np.array([[1, 0, 1, 0],
                                                      [0, 1, 0, 1],
                                                      [0, 0, 1, 0],
-                                                     [0, 0, 0, 1]], float)
+                                                     [0, 0, 0, 1]], dtype=self.dtype)
 
             self.filter.measurementMatrix = np.array([[1, 0, 0, 0],
-                                                      [0, 1, 0, 0]], float)
+                                                      [0, 1, 0, 0]], dtype=self.dtype)
 
             self.filter.processNoiseCov = np.array([[1, 0, 0, 0],
                                                     [0, 1, 0, 0],
                                                     [0, 0, 1, 0],
-                                                    [0, 0, 0, 1]], float) * cov_process
+                                                    [0, 0, 0, 1]], dtype=self.dtype) * cov_process
 
             self.filter.measurementNoiseCov = np.array([[1, 0],
-                                                        [0, 1]], float) * cov_measure
+                                                        [0, 1]], dtype=self.dtype) * cov_measure
 
     def update(self, measurement):
         """Update the filter"""
@@ -97,10 +99,10 @@ class Stabilizer(object):
 
         # Get new measurement
         if self.measure_num == 1:
-            self.measurement = np.array([[float(measurement[0])]])
+            self.measurement = np.array([[float(measurement[0])]], dtype=self.dtype)
         else:
             self.measurement = np.array([[float(measurement[0])],
-                                         [float(measurement[1])]])
+                                         [float(measurement[1])]], dtype=self.dtype)
 
         # Correct according to mesurement
         self.filter.correct(self.measurement)
@@ -112,13 +114,13 @@ class Stabilizer(object):
         """Set new value for processNoiseCov and measurementNoiseCov."""
         if self.measure_num == 1:
             self.filter.processNoiseCov = np.array([[1, 0],
-                                                    [0, 1]], float) * cov_process
+                                                    [0, 1]], dtype=self.dtype) * cov_process
             self.filter.measurementNoiseCov = np.array(
-                [[1]], float) * cov_measure
+                [[1]], dtype=self.dtype) * cov_measure
         else:
             self.filter.processNoiseCov = np.array([[1, 0, 0, 0],
                                                     [0, 1, 0, 0],
                                                     [0, 0, 1, 0],
-                                                    [0, 0, 0, 1]], float) * cov_process
+                                                    [0, 0, 0, 1]], dtype=self.dtype) * cov_process
             self.filter.measurementNoiseCov = np.array([[1, 0],
-                                                        [0, 1]], float) * cov_measure
+                                                        [0, 1]], dtype=self.dtype) * cov_measure
