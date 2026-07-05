@@ -86,6 +86,7 @@ public:
   {
     const auto camera_index = declare_parameter<int>("camera_index", 0);
     const auto video_file = declare_parameter<std::string>("video_file", "");
+    const auto image_file = declare_parameter<std::string>("image_file", "");
     const auto calibration_file = declare_parameter<std::string>("calibration_file", "");
     const auto camera_name = declare_parameter<std::string>("camera_name", "camera");
     frame_id_ = strip_leading_slashes(declare_parameter<std::string>("frame_id", "camera_optical_frame"));
@@ -98,29 +99,36 @@ public:
     jpeg_quality_ = static_cast<int>(std::clamp<int64_t>(declare_parameter<int>("jpeg_quality", 80), 1, 100));
     const auto qos = image_qos(declare_parameter<std::string>("qos_reliability", "reliable"));
 
-    if (video_file.empty()) {
+    if (!image_file.empty()) {
+      static_frame_ = cv::imread(image_file, cv::IMREAD_COLOR);
+      source_name_ = image_file;
+    } else if (video_file.empty()) {
       capture_.open(camera_index);
       source_name_ = std::to_string(camera_index);
     } else {
       capture_.open(video_file);
       source_name_ = video_file;
     }
-    if (!capture_.isOpened()) {
+    if (static_frame_.empty() && !capture_.isOpened()) {
       throw std::runtime_error("Could not open camera source: " + source_name_);
     }
 
-    if (width > 0) {
+    if (static_frame_.empty() && width > 0) {
       capture_.set(cv::CAP_PROP_FRAME_WIDTH, width);
     }
-    if (height > 0) {
+    if (static_frame_.empty() && height > 0) {
       capture_.set(cv::CAP_PROP_FRAME_HEIGHT, height);
     }
-    if (fps > 0.0) {
+    if (static_frame_.empty() && fps > 0.0) {
       capture_.set(cv::CAP_PROP_FPS, fps);
     }
 
-    const auto actual_width = static_cast<int>(capture_.get(cv::CAP_PROP_FRAME_WIDTH));
-    const auto actual_height = static_cast<int>(capture_.get(cv::CAP_PROP_FRAME_HEIGHT));
+    const auto actual_width = static_frame_.empty() ?
+      static_cast<int>(capture_.get(cv::CAP_PROP_FRAME_WIDTH)) :
+      static_frame_.cols;
+    const auto actual_height = static_frame_.empty() ?
+      static_cast<int>(capture_.get(cv::CAP_PROP_FRAME_HEIGHT)) :
+      static_frame_.rows;
     const auto info_width = target_width_ > 0 ? target_width_ : actual_width;
     const auto info_height = target_height_ > 0 ? target_height_ : actual_height;
     camera_info_manager_ = std::make_unique<camera_info_manager::CameraInfoManager>(this, camera_name);
@@ -155,7 +163,9 @@ private:
   void publish_frame()
   {
     cv::Mat frame;
-    if (!capture_.read(frame) && loop_) {
+    if (!static_frame_.empty()) {
+      frame = static_frame_.clone();
+    } else if (!capture_.read(frame) && loop_) {
       capture_.set(cv::CAP_PROP_POS_FRAMES, 0);
       capture_.read(frame);
     }
@@ -197,6 +207,7 @@ private:
   }
 
   cv::VideoCapture capture_;
+  cv::Mat static_frame_;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
   rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub_;
   rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr info_pub_;

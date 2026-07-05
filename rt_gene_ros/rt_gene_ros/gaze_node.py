@@ -1,8 +1,9 @@
 import collections
 import numpy as np
 import rclpy
+from rclpy.duration import Duration
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, qos_profile_sensor_data
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from sensor_msgs.msg import Image
 import tf_transformations as transformations
@@ -20,9 +21,6 @@ from cv_bridge import CvBridge
 
 DEFAULT_GAZE_MODELS = [
     "gaze_model_pytorch_vgg16_prl_mpii_allsubjects1.model",
-    "gaze_model_pytorch_vgg16_prl_mpii_allsubjects2.model",
-    "gaze_model_pytorch_vgg16_prl_mpii_allsubjects3.model",
-    "gaze_model_pytorch_vgg16_prl_mpii_allsubjects4.model",
 ]
 
 
@@ -46,7 +44,9 @@ class GazeNode(Node):
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
-        self.create_subscription(SubjectImagesArray, "subjects/images", self.image_callback, qos_profile_sensor_data)
+        self.tf_timeout = Duration(seconds=0.05)
+        latest_qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT)
+        self.create_subscription(SubjectImagesArray, "subjects/images", self.image_callback, latest_qos)
         self.gaze_pub = self.create_publisher(GazeArray, "subjects/gaze", QoSProfile(depth=10))
         self.image_pub = self.create_publisher(Image, "subjects/gaze_images", QoSProfile(depth=5))
         self.last_time = self.get_clock().now()
@@ -64,6 +64,7 @@ class GazeNode(Node):
                     msg.header.frame_id,
                     f"{self.tf_prefix}/head_pose/{subject_id}",
                     stamp,
+                    timeout=self.tf_timeout,
                 )
             except (
                 tf2_ros.LookupException,
@@ -130,7 +131,7 @@ class GazeNode(Node):
         theta, phi = gaze
         q = transformations.quaternion_from_euler(*gaze_tools.get_euler_from_phi_theta(phi, theta))
         msg = TransformStamped()
-        msg.header = header
+        msg.header.stamp = header.stamp
         msg.header.frame_id = f"{self.tf_prefix}/head_pose/{subject_id}"
         msg.child_frame_id = f"{self.tf_prefix}/gaze/{subject_id}"
         msg.transform.translation.z = 0.05

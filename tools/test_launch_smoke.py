@@ -7,7 +7,8 @@ import time
 from pathlib import Path
 
 import cv2
-import numpy as np
+
+from rt_gene_core.paths import demo_image_path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -33,14 +34,18 @@ BAD_LOG_PATTERNS = (
 )
 
 
-def make_video(path):
-    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (320, 240))
-    if not writer.isOpened():
-        raise RuntimeError(f"Could not create test video: {path}")
-    for index in range(20):
-        frame = np.full((240, 320, 3), index * 10 % 255, dtype=np.uint8)
-        writer.write(frame)
-    writer.release()
+def make_demo_image(path, width=640, height=480):
+    image = cv2.imread(str(demo_image_path()), cv2.IMREAD_COLOR)
+    if image is None:
+        raise RuntimeError(f"Could not read demo image: {demo_image_path()}")
+    center_x, center_y = int(image.shape[1] * 0.49), int(image.shape[0] * 0.38)
+    left = max(0, min(center_x - width // 2, image.shape[1] - width))
+    top = max(0, min(center_y - height // 2, image.shape[0] - height))
+    frame = image[top:top + height, left:left + width]
+    if frame.shape[:2] != (height, width):
+        frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
+    if not cv2.imwrite(str(path), frame):
+        raise RuntimeError(f"Could not create demo image: {path}")
 
 
 def prepare_models():
@@ -55,7 +60,7 @@ def ros_env(tmp):
     log_dir = Path(tmp) / "ros_logs"
     log_dir.mkdir()
     env["ROS_LOG_DIR"] = str(log_dir)
-    env["ROS_DOMAIN_ID"] = str(100 + (os.getpid() + time.monotonic_ns()) % 120)
+    env["ROS_DOMAIN_ID"] = str(1 + (os.getpid() + time.monotonic_ns()) % 100)
     return env
 
 
@@ -74,30 +79,54 @@ def stop_process(proc):
         return proc.communicate(timeout=5)[0]
 
 
-def as_text(value):
-    if value is None:
-        return ""
-    if isinstance(value, bytes):
-        return value.decode(errors="replace")
-    return value
+def wait_for_topic(topic, proc, env, timeout=45):
+    deadline = time.monotonic() + timeout
+    last = ""
+    while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            raise RuntimeError(f"launch exited early with {proc.returncode}")
+        result = subprocess.run(
+            [
+                "ros2",
+                "topic",
+                "echo",
+                "--no-daemon",
+                "--spin-time",
+                "5",
+                "--once",
+                "--timeout",
+                "5",
+                topic,
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=15,
+            env=env,
+        )
+        last = result.stdout
+        if result.returncode == 0 and last.strip():
+            return last
+        time.sleep(1.0)
+    raise RuntimeError(f"No message received on {topic}:\n{last}")
 
 
 def main():
     prepare_models()
     with tempfile.TemporaryDirectory() as tmp:
         env = ros_env(tmp)
-        video = Path(tmp) / "launch_smoke.avi"
-        make_video(video)
+        image = Path(tmp) / "launch_smoke.jpg"
+        make_demo_image(image)
         command = [
             "ros2",
             "launch",
             "rt_gene_ros",
             "webcam_demo.launch.py",
-            f"video_file:={video}",
+            f"image_file:={image}",
             f"params_file:={REPO_ROOT / 'rt_gene_ros' / 'config' / 'params.yaml'}",
-            "loop:=true",
-            "width:=0",
-            "height:=0",
+            "width:=640",
+            "height:=480",
+            "fps:=5.0",
             "visualise:=false",
         ]
         proc = subprocess.Popen(
@@ -108,14 +137,17 @@ def main():
             start_new_session=True,
             env=env,
         )
+        topic_output = ""
+        error = None
         try:
-            output, _ = proc.communicate(timeout=45)
-            scan_output = output
-            if proc.returncode != 0:
-                raise RuntimeError(output)
-        except subprocess.TimeoutExpired as exc:
-            scan_output = as_text(exc.output)
-            output = scan_output + as_text(stop_process(proc))
+            topic_output = wait_for_topic("/subjects/gaze", proc, env)
+        except Exception as exc:
+            error = exc
+        finally:
+            output = stop_process(proc)
+            scan_output = output + topic_output
+        if error is not None:
+            raise RuntimeError(f"{error}\nlaunch output:\n{output}")
 
     found = [pattern for pattern in BAD_LOG_PATTERNS if pattern in scan_output]
     if found:

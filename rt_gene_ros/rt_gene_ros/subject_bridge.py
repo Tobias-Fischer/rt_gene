@@ -21,12 +21,15 @@ class SubjectBridge:
         subject.left = self._cv_bridge.imgmsg_to_cv2(msg.left_eye_image, "bgr8")
         return subject
 
-    def images_to_msg(self, subject_id, subject):
+    def images_to_msg(self, subject_id, subject, header):
         msg = SubjectImages()
         msg.subject_id = str(subject_id)
         msg.face_image = self._cv_bridge.cv2_to_imgmsg(subject.face_color, "bgr8")
         msg.right_eye_image = self._cv_bridge.cv2_to_imgmsg(subject.right_eye_color, "bgr8")
         msg.left_eye_image = self._cv_bridge.cv2_to_imgmsg(subject.left_eye_color, "bgr8")
+        msg.face_image.header = header
+        msg.right_eye_image.header = header
+        msg.left_eye_image.header = header
         return msg
 
 
@@ -42,5 +45,5 @@ class SubjectArrayBridge:
         msg.header = header
         for subject_id, subject in subjects.items():
             if subject.left_eye_color is not None and subject.right_eye_color is not None:
-                msg.subjects.append(self._subject_bridge.images_to_msg(subject_id, subject))
+                msg.subjects.append(self._subject_bridge.images_to_msg(subject_id, subject, header))
         return msg

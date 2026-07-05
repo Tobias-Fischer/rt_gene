@@ -5,9 +5,9 @@ import numpy as np
 import rclpy
 from rcl_interfaces.msg import SetParametersResult
 from rclpy.node import Node
-from rclpy.qos import QoSProfile
-from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import CameraInfo, Image
+from rclpy.qos import QoSProfile, ReliabilityPolicy
+from sensor_msgs.msg import CameraInfo, CompressedImage, Image
+from std_msgs.msg import Header
 import tf_transformations as transformations
 from tf2_ros import TransformBroadcaster
 
@@ -42,25 +42,37 @@ class LandmarkNode(Node):
         self.subject_bridge = SubjectArrayBridge()
         self.tf_broadcaster = TransformBroadcaster(self)
         self.tf_prefix = self.get_parameter("tf_prefix").value.strip("/") or "gaze"
+        self.image_transport = self.get_parameter("image_transport").value
         self.visualise_headpose = self.get_parameter("visualise_headpose").value
         self.pnp_iterate_after = self.get_parameter("pnp_iterate_after").value
         self.pose_stabilizers = {}
         self.camera_matrix = None
         self.dist_coeffs = None
         self.camera_frame = "camera_optical_frame"
+        self._logged_camera_info = False
+        self._logged_first_image = False
+        self._logged_first_detection = False
+        image_qos = QoSProfile(depth=1)
+        subject_qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT)
 
-        self.subject_pub = self.create_publisher(SubjectImagesArray, "subjects/images", qos_profile_sensor_data)
+        self.subject_pub = self.create_publisher(SubjectImagesArray, "subjects/images", subject_qos)
         self.headpose_pub = self.create_publisher(HeadPoseArray, "subjects/head_pose", QoSProfile(depth=10))
         self.landmark_pub = self.create_publisher(LandmarksArray, "subjects/landmarks", QoSProfile(depth=10))
         self.face_pub = self.create_publisher(Image, "subjects/head_pose_images", QoSProfile(depth=5))
 
-        self.create_subscription(CameraInfo, "camera_info", self.camera_info_callback, qos_profile_sensor_data)
-        self.create_subscription(Image, "image_raw", self.image_callback, qos_profile_sensor_data)
+        self.create_subscription(CameraInfo, "camera_info", self.camera_info_callback, QoSProfile(depth=1))
+        if self.image_transport == "raw":
+            self.create_subscription(Image, "image_raw", self.image_callback, image_qos)
+        elif self.image_transport == "compressed":
+            self.create_subscription(CompressedImage, "image_raw/compressed", self.image_callback, image_qos)
+        else:
+            raise ValueError("image_transport must be 'raw' or 'compressed'")
         self.add_on_set_parameters_callback(self.parameter_callback)
 
     def _declare_parameters(self):
         self.declare_parameter("device", "auto")
-        self.declare_parameter("use_face_encoding_tracker", True)
+        self.declare_parameter("image_transport", "compressed")
+        self.declare_parameter("use_face_encoding_tracker", False)
         self.declare_parameter("face_encoding_threshold", 0.8)
         self.declare_parameter("tf_prefix", "gaze")
         self.declare_parameter("visualise_headpose", True)
@@ -109,13 +121,20 @@ class LandmarkNode(Node):
         if not np.any(self.camera_matrix):
             self.get_logger().error("Camera matrix is zero; publish calibrated camera_info before image_raw")
             self.camera_matrix = None
+        elif not self._logged_camera_info:
+            self._logged_camera_info = True
+            self.get_logger().info(f"Using camera_info from frame '{self.camera_frame}'")
 
     def image_callback(self, msg):
         if self.camera_matrix is None:
             self.get_logger().warn("Waiting for camera_info", throttle_duration_sec=5.0)
             return
 
-        color_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        header = self.measurement_header(msg.header)
+        color_img = self.image_to_cv2(msg)
+        if not self._logged_first_image:
+            self._logged_first_image = True
+            self.get_logger().info(f"Received first {self.image_transport} image in frame '{header.frame_id}'")
         self.update_subject_tracker(color_img)
         if not self.subject_tracker.get_tracked_elements():
             return
@@ -137,7 +156,7 @@ class LandmarkNode(Node):
 
             subject.head_rotation = head_rpy
             subject.head_translation = translation
-            self.publish_pose(msg.header, translation, head_rpy, subject_id)
+            self.publish_pose(header, translation, head_rpy, subject_id)
 
             if self.visualise_headpose:
                 roll_pitch_yaw = list(
@@ -153,11 +172,29 @@ class LandmarkNode(Node):
                 )
 
         subjects = self.subject_tracker.get_tracked_elements()
-        self.publish_subjects(msg.header, subjects)
+        self.publish_subjects(header, subjects)
         if head_pose_images:
             image_msg = self.bridge.cv2_to_imgmsg(np.hstack(head_pose_images), "bgr8")
-            image_msg.header = msg.header
+            image_msg.header = header
             self.face_pub.publish(image_msg)
+
+    def image_to_cv2(self, msg):
+        if isinstance(msg, CompressedImage):
+            return self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        return self.bridge.imgmsg_to_cv2(msg, "bgr8")
+
+    def measurement_header(self, source_header):
+        image_frame = source_header.frame_id.lstrip("/") or self.camera_frame
+        if image_frame != self.camera_frame:
+            self.get_logger().warn(
+                f"image frame '{image_frame}' differs from camera_info frame '{self.camera_frame}'",
+                throttle_duration_sec=5.0,
+            )
+        header = Header()
+        header.stamp.sec = source_header.stamp.sec
+        header.stamp.nanosec = source_header.stamp.nanosec
+        header.frame_id = image_frame
+        return header
 
     def get_head_pose(self, landmarks, subject_id):
         try:
@@ -205,7 +242,6 @@ class LandmarkNode(Node):
 
     def publish_subjects(self, header, subjects):
         subject_msg = self.subject_bridge.images_to_msg(subjects, header)
-        subject_msg.header.frame_id = self.camera_frame
         self.subject_pub.publish(subject_msg)
 
         landmarks_msg = LandmarksArray()
@@ -231,7 +267,7 @@ class LandmarkNode(Node):
 
     def publish_pose(self, header, translation, head_rpy, subject_id):
         msg = TransformStamped()
-        msg.header = header
+        msg.header.stamp = header.stamp
         msg.header.frame_id = self.camera_frame
         msg.child_frame_id = f"{self.tf_prefix}/head_pose/{subject_id}"
         msg.transform.translation.x = float(translation[0])
@@ -246,6 +282,9 @@ class LandmarkNode(Node):
 
     def update_subject_tracker(self, color_img):
         faceboxes = self.landmark_method.get_face_bb(color_img)
+        if not self._logged_first_detection:
+            self._logged_first_detection = True
+            self.get_logger().info(f"Detected {len(faceboxes)} face(s) in first processed image")
         if not faceboxes:
             self.subject_tracker.clear_elements()
             return

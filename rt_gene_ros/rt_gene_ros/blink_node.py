@@ -4,7 +4,7 @@ from cv_bridge import CvBridge
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, qos_profile_sensor_data
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from sensor_msgs.msg import Image
 
@@ -39,7 +39,8 @@ class BlinkNode(Node):
             threshold=self.get_parameter("threshold").value,
         )
 
-        self.create_subscription(SubjectImagesArray, "subjects/images", self.callback, qos_profile_sensor_data)
+        latest_qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT)
+        self.create_subscription(SubjectImagesArray, "subjects/images", self.callback, latest_qos)
         self.blink_pub = self.create_publisher(BlinkArray, "subjects/blink", QoSProfile(depth=10))
         self.image_pub = self.create_publisher(Image, "subjects/blink_images", QoSProfile(depth=5))
         self.last_time = self.get_clock().now()

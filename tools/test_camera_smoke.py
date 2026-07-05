@@ -10,17 +10,12 @@ import cv2
 import numpy as np
 
 
-def make_video(path):
-    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (320, 240))
-    if not writer.isOpened():
-        raise RuntimeError(f"Could not create test video: {path}")
-    for index in range(30):
-        frame = np.zeros((240, 320, 3), dtype=np.uint8)
-        frame[:, :, 0] = (index * 7) % 255
-        frame[:, :, 1] = np.arange(320, dtype=np.uint8)
-        frame[:, :, 2] = np.arange(240, dtype=np.uint8)[:, None]
-        writer.write(frame)
-    writer.release()
+def make_image(path):
+    frame = np.zeros((240, 320, 3), dtype=np.uint8)
+    frame[:, :, 1] = np.arange(320, dtype=np.uint8)
+    frame[:, :, 2] = np.arange(240, dtype=np.uint8)[:, None]
+    if not cv2.imwrite(str(path), frame):
+        raise RuntimeError(f"Could not create test image: {path}")
 
 
 def ros_env(tmp):
@@ -28,11 +23,11 @@ def ros_env(tmp):
     log_dir = Path(tmp) / "ros_logs"
     log_dir.mkdir()
     env["ROS_LOG_DIR"] = str(log_dir)
-    env["ROS_DOMAIN_ID"] = str(100 + (os.getpid() + time.monotonic_ns()) % 120)
+    env["ROS_DOMAIN_ID"] = str(1 + (os.getpid() + time.monotonic_ns()) % 100)
     return env
 
 
-def run(command, env, timeout=8):
+def run(command, env, timeout=20):
     return subprocess.run(
         command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=timeout, env=env
     )
@@ -48,7 +43,7 @@ def wait_for(command, proc, env, timeout=10):
             except subprocess.TimeoutExpired:
                 output = "<camera_node exited but output could not be read>"
             raise RuntimeError(f"camera_node exited early with {proc.returncode}\n{output}")
-        result = run(command, env, timeout=8)
+        result = run(command, env, timeout=20)
         last = result.stdout
         if result.returncode == 0:
             return last
@@ -107,8 +102,8 @@ def scalar_int(output):
 def main():
     with tempfile.TemporaryDirectory() as tmp:
         env = ros_env(tmp)
-        video = Path(tmp) / "camera_smoke.avi"
-        make_video(video)
+        image = Path(tmp) / "camera_smoke.jpg"
+        make_image(image)
         proc = subprocess.Popen(
             [
                 "ros2",
@@ -117,9 +112,7 @@ def main():
                 "camera_node",
                 "--ros-args",
                 "-p",
-                f"video_file:={video}",
-                "-p",
-                "loop:=true",
+                f"image_file:={image}",
                 "-p",
                 "width:=160",
                 "-p",

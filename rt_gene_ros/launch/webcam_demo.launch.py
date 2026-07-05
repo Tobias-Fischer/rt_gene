@@ -22,8 +22,10 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("params_file", default_value=params),
         DeclareLaunchArgument("device", default_value="auto"),
+        DeclareLaunchArgument("landmark_device", default_value="cpu"),
         DeclareLaunchArgument("camera_index", default_value="0"),
         DeclareLaunchArgument("video_file", default_value=""),
+        DeclareLaunchArgument("image_file", default_value=""),
         DeclareLaunchArgument("calibration_file", default_value=calibration),
         DeclareLaunchArgument("frame_id", default_value="camera_optical_frame"),
         DeclareLaunchArgument("width", default_value="640"),
@@ -31,6 +33,7 @@ def generate_launch_description():
         DeclareLaunchArgument("fps", default_value="30.0"),
         DeclareLaunchArgument("loop", default_value="false"),
         DeclareLaunchArgument("jpeg_quality", default_value="80"),
+        DeclareLaunchArgument("image_transport", default_value="compressed"),
         DeclareLaunchArgument("tf_prefix", default_value="gaze"),
         DeclareLaunchArgument("blink", default_value="false"),
         DeclareLaunchArgument("visualise", default_value="true"),
@@ -42,6 +45,7 @@ def generate_launch_description():
             parameters=[{
                 "camera_index": ParameterValue(LaunchConfiguration("camera_index"), value_type=int),
                 "video_file": LaunchConfiguration("video_file"),
+                "image_file": LaunchConfiguration("image_file"),
                 "calibration_file": LaunchConfiguration("calibration_file"),
                 "frame_id": LaunchConfiguration("frame_id"),
                 "width": ParameterValue(LaunchConfiguration("width"), value_type=int),
@@ -57,7 +61,8 @@ def generate_launch_description():
             name="extract_landmarks",
             output="screen",
             parameters=[LaunchConfiguration("params_file"), {
-                "device": LaunchConfiguration("device"),
+                "device": LaunchConfiguration("landmark_device"),
+                "image_transport": LaunchConfiguration("image_transport"),
                 "tf_prefix": LaunchConfiguration("tf_prefix"),
                 "visualise_headpose": ParameterValue(LaunchConfiguration("visualise"), value_type=bool),
             }],

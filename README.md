@@ -36,28 +36,23 @@ The camera publishes raw images on `image_raw`, JPEG-compressed images on `image
 Run the full webcam gaze demo:
 
 ```bash
-pixi run ros2 launch rt_gene_ros webcam_demo.launch.py
+pixi run webcam-demo
 ```
 
 Enable blink estimation too:
 
 ```bash
-pixi run ros2 launch rt_gene_ros webcam_demo.launch.py blink:=true
+pixi run webcam-demo 0 "" "" 640 480 30.0 false 80 compressed auto cpu false true
 ```
 
-Useful launch arguments:
+Useful task arguments are positional. The full default-equivalent command is:
 
 ```bash
-pixi run ros2 launch rt_gene_ros webcam_demo.launch.py \
-  camera_index:=0 \
-  calibration_file:=/path/to/calibration.yaml \
-  width:=640 \
-  height:=480 \
-  fps:=30 \
-  jpeg_quality:=80 \
-  device:=auto \
-  visualise:=true
+pixi run webcam-demo 0 "" "" 640 480 30.0 false 80 compressed auto cpu false false
 ```
+
+Argument order is `camera_index`, `video_file`, `image_file`, `width`, `height`, `fps`, `loop`, `jpeg_quality`, `image_transport`, `device`, `landmark_device`, `visualise`, `blink`.
+The demo defaults to `image_transport=compressed`, so the inference node subscribes to `image_raw/compressed`. Use `raw` in that position to subscribe directly to `image_raw`. The webcam launch defaults landmark/SFD work to CPU and leaves gaze on `device=auto`.
 
 The default topics are relative and remappable:
 
@@ -68,7 +63,21 @@ The default topics are relative and remappable:
 On macOS, grant camera permission to the terminal or app that runs Pixi/Codex before using a real webcam. For a viewer with compression:
 
 ```bash
-pixi run ros2 run image_view image_view --ros-args -r image:=/image_raw -p image_transport:=compressed
+pixi run camera-view
+```
+
+Measure topic rates with:
+
+```bash
+pixi run topic-hz /subjects/gaze
+pixi run demo-hz
+pixi run demo-hz auto 30 compressed
+```
+
+`demo-hz` repeats the bundled demo image through `opencv_camera`, launches the ROS 2 pipeline, and measures `image_raw` and `subjects/gaze` with an in-process ROS subscriber. Add extra reliable topics with Pixi's passthrough separator, for example:
+
+```bash
+pixi run demo-hz -- --topic /image_raw/compressed
 ```
 
 ## Single Image Demo
@@ -76,10 +85,11 @@ pixi run ros2 run image_view image_view --ros-args -r image:=/image_raw -p image
 Run the core pipeline on one image without starting ROS:
 
 ```bash
-pixi run python -m rt_gene.single_image_demo /path/to/face.jpg --device auto
+pixi run demo-image
+pixi run demo-image /path/to/face.jpg
 ```
 
-It prints JSON with detected face boxes, head pose, translation, and gaze angles. The demo uses an approximate pinhole
+The first command uses a restored ROS 1 demo image bundled with `rt_gene_core`. It prints JSON with detected face boxes, head pose, translation, and gaze angles. The demo uses an approximate pinhole
 camera model by default; pass `--focal-length-px` if you know the focal length for the image.
 
 ## Model Files
@@ -119,12 +129,13 @@ pixi run ros2 interface show rt_gene_interfaces/msg/GazeArray
 
 ```bash
 pixi run test-core
+pixi run test-ros-python
 pixi run test-installed
 pixi run test-camera
 pixi run test-launch
 ```
 
-`test-core` is hardware-free and network-free. `test-installed` verifies that Pixi imports the editable workspace sources instead of stale installed copies. `test-camera` uses a synthetic video to verify `image_raw`, `image_raw/compressed`, `camera_info`, and reliable image QoS. `test-launch` uses a synthetic video and fails on startup tracebacks, process death, or QoS incompatibility warnings.
+`test-core` is hardware-free and network-free. `test-ros-python` covers ROS message conversion helpers such as timestamp propagation. `test-installed` verifies that Pixi imports the editable workspace sources instead of stale installed copies. `test-camera` uses a synthetic video to verify `image_raw`, `image_raw/compressed`, `camera_info`, and reliable image QoS. `test-launch` uses a synthetic video and fails on startup tracebacks, process death, or QoS incompatibility warnings.
 
 ## Citation
 
