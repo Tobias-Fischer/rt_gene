@@ -48,7 +48,7 @@ class GazeNode(Node):
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
         self.create_subscription(SubjectImagesArray, "subjects/images", self.image_callback, qos_profile_sensor_data)
         self.gaze_pub = self.create_publisher(GazeArray, "subjects/gaze", QoSProfile(depth=10))
-        self.image_pub = self.create_publisher(Image, "subjects/gaze_images", qos_profile_sensor_data)
+        self.image_pub = self.create_publisher(Image, "subjects/gaze_images", QoSProfile(depth=5))
         self.last_time = self.get_clock().now()
         self.freq = collections.deque(maxlen=30)
         self.latency = collections.deque(maxlen=30)

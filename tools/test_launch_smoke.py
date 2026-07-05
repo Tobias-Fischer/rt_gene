@@ -27,6 +27,9 @@ BAD_LOG_PATTERNS = (
     "Content-length",
     "PosixPath",
     "has no attribute 'rfind'",
+    "pretrained' is deprecated",
+    "Arguments other than a weight enum",
+    "requesting incompatible QoS",
 )
 
 

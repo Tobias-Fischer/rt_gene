@@ -41,7 +41,7 @@ class BlinkNode(Node):
 
         self.create_subscription(SubjectImagesArray, "subjects/images", self.callback, qos_profile_sensor_data)
         self.blink_pub = self.create_publisher(BlinkArray, "subjects/blink", QoSProfile(depth=10))
-        self.image_pub = self.create_publisher(Image, "subjects/blink_images", qos_profile_sensor_data)
+        self.image_pub = self.create_publisher(Image, "subjects/blink_images", QoSProfile(depth=5))
         self.last_time = self.get_clock().now()
         self.freq = collections.deque(maxlen=30)
         self.latency = collections.deque(maxlen=30)

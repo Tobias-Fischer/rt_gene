@@ -52,7 +52,7 @@ class LandmarkNode(Node):
         self.subject_pub = self.create_publisher(SubjectImagesArray, "subjects/images", qos_profile_sensor_data)
         self.headpose_pub = self.create_publisher(HeadPoseArray, "subjects/head_pose", QoSProfile(depth=10))
         self.landmark_pub = self.create_publisher(LandmarksArray, "subjects/landmarks", QoSProfile(depth=10))
-        self.face_pub = self.create_publisher(Image, "subjects/head_pose_images", qos_profile_sensor_data)
+        self.face_pub = self.create_publisher(Image, "subjects/head_pose_images", QoSProfile(depth=5))
 
         self.create_subscription(CameraInfo, "camera_info", self.camera_info_callback, qos_profile_sensor_data)
         self.create_subscription(Image, "image_raw", self.image_callback, qos_profile_sensor_data)
