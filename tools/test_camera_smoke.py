@@ -96,6 +96,14 @@ def assert_reliable_publishers(topic_info):
         raise RuntimeError(f"/image_raw publishers are not reliable by default:\n{topic_info}")
 
 
+def scalar_int(output):
+    for line in output.splitlines():
+        line = line.strip()
+        if line:
+            return int(line)
+    raise RuntimeError(f"Expected integer output, got:\n{output}")
+
+
 def main():
     with tempfile.TemporaryDirectory() as tmp:
         env = ros_env(tmp)
@@ -113,9 +121,9 @@ def main():
                 "-p",
                 "loop:=true",
                 "-p",
-                "width:=0",
+                "width:=160",
                 "-p",
-                "height:=0",
+                "height:=120",
             ],
             text=True,
             stdout=subprocess.PIPE,
@@ -125,7 +133,7 @@ def main():
         )
         error = None
         try:
-            wait_for(
+            camera_info_width = wait_for(
                 [
                     "ros2",
                     "topic",
@@ -143,6 +151,28 @@ def main():
                 proc,
                 env,
             )
+            if scalar_int(camera_info_width) != 160:
+                raise RuntimeError(f"/camera_info width does not match requested output size:\n{camera_info_width}")
+            image_width = wait_for(
+                [
+                    "ros2",
+                    "topic",
+                    "echo",
+                    "--no-daemon",
+                    "--spin-time",
+                    "5",
+                    "--once",
+                    "--timeout",
+                    "5",
+                    "--field",
+                    "width",
+                    "/image_raw",
+                ],
+                proc,
+                env,
+            )
+            if scalar_int(image_width) != 160:
+                raise RuntimeError(f"/image_raw width does not match requested output size:\n{image_width}")
             wait_for(
                 [
                     "ros2",

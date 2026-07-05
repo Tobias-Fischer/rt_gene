@@ -9,6 +9,7 @@
 #include <camera_info_manager/camera_info_manager.hpp>
 #include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/image_encodings.hpp>
@@ -92,6 +93,8 @@ public:
     const auto height = declare_parameter<int>("height", 480);
     const auto fps = declare_parameter<double>("fps", 30.0);
     loop_ = declare_parameter<bool>("loop", false);
+    target_width_ = width;
+    target_height_ = height;
     jpeg_quality_ = static_cast<int>(std::clamp<int64_t>(declare_parameter<int>("jpeg_quality", 80), 1, 100));
     const auto qos = image_qos(declare_parameter<std::string>("qos_reliability", "reliable"));
 
@@ -118,19 +121,21 @@ public:
 
     const auto actual_width = static_cast<int>(capture_.get(cv::CAP_PROP_FRAME_WIDTH));
     const auto actual_height = static_cast<int>(capture_.get(cv::CAP_PROP_FRAME_HEIGHT));
+    const auto info_width = target_width_ > 0 ? target_width_ : actual_width;
+    const auto info_height = target_height_ > 0 ? target_height_ : actual_height;
     camera_info_manager_ = std::make_unique<camera_info_manager::CameraInfoManager>(this, camera_name);
     if (!calibration_file.empty() && !camera_info_manager_->loadCameraInfo(file_url(calibration_file))) {
       RCLCPP_WARN(get_logger(), "Could not load calibration file '%s'", calibration_file.c_str());
     }
     camera_info_ = camera_info_manager_->isCalibrated() ?
       camera_info_manager_->getCameraInfo() :
-      default_camera_info(actual_width, actual_height, camera_name, frame_id_);
+      default_camera_info(info_width, info_height, camera_name, frame_id_);
     camera_info_.header.frame_id = frame_id_;
     if (camera_info_.width == 0) {
-      camera_info_.width = static_cast<uint32_t>(std::max(actual_width, 0));
+      camera_info_.width = static_cast<uint32_t>(std::max(info_width, 0));
     }
     if (camera_info_.height == 0) {
-      camera_info_.height = static_cast<uint32_t>(std::max(actual_height, 0));
+      camera_info_.height = static_cast<uint32_t>(std::max(info_height, 0));
     }
 
     image_pub_ = create_publisher<sensor_msgs::msg::Image>("image_raw", qos);
@@ -157,6 +162,18 @@ private:
     if (frame.empty()) {
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "No frame available from %s", source_name_.c_str());
       return;
+    }
+    const auto captured_size = frame.size();
+    if (target_width_ > 0 && target_height_ > 0 &&
+      (frame.cols != target_width_ || frame.rows != target_height_))
+    {
+      cv::resize(frame, frame, cv::Size(target_width_, target_height_), 0.0, 0.0, cv::INTER_AREA);
+    }
+    if (!logged_frame_format_) {
+      logged_frame_format_ = true;
+      RCLCPP_INFO(
+        get_logger(), "Captured %dx%d, publishing %dx%d",
+        captured_size.width, captured_size.height, frame.cols, frame.rows);
     }
 
     auto header = std_msgs::msg::Header();
@@ -188,8 +205,11 @@ private:
   sensor_msgs::msg::CameraInfo camera_info_;
   std::string frame_id_;
   std::string source_name_;
+  int target_width_ = 640;
+  int target_height_ = 480;
   int jpeg_quality_ = 80;
   bool loop_ = false;
+  bool logged_frame_format_ = false;
 };
 
 int main(int argc, char ** argv)
