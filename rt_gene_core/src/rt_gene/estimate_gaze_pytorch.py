@@ -1,6 +1,7 @@
 # Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 
 import os
+from pathlib import Path
 
 import cv2
 import torch
@@ -17,7 +18,7 @@ class GazeEstimator(GazeEstimatorBase):
             "ae435739673411940eed18c98c29bfb1", "4afd7ccf5619552ed4a9f14606b7f4dd", "743902e643322c40bd78ca36aacc5b4d",
             "06a10f43088651053a65f9b0cd5ac4aa")):
         super(GazeEstimator, self).__init__(device_id_gaze, model_files)
-        download_gaze_pytorch_models()
+        download_gaze_pytorch_models([Path(model).name for model in self.model_files])
         # check md5 hashes
         _model_hashes = [md5(model) for model in model_files]
         _correct = [1 for hash in _model_hashes if hash not in known_hashes]

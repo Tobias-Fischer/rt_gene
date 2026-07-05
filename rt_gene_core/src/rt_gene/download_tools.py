@@ -8,6 +8,26 @@ from tqdm import tqdm
 from rt_gene_core.paths import model_path
 
 
+GAZE_PYTORCH_MODELS = {
+    "gaze_model_pytorch_vgg16_prl_mpii_allsubjects1.model": (
+        "https://imperialcollegelondon.box.com/shared/static/6rvctw7wmkpl7a9bw9hm1b9b7dwntfut.model",
+        "ae435739673411940eed18c98c29bfb1",
+    ),
+    "gaze_model_pytorch_vgg16_prl_mpii_allsubjects2.model": (
+        "https://imperialcollegelondon.box.com/shared/static/xuhs5qg7eju4kw3e4to7db945qk2c123.model",
+        "4afd7ccf5619552ed4a9f14606b7f4dd",
+    ),
+    "gaze_model_pytorch_vgg16_prl_mpii_allsubjects3.model": (
+        "https://imperialcollegelondon.box.com/shared/static/h75tro719fcyvgdkzr8tarpco32ve21u.model",
+        "743902e643322c40bd78ca36aacc5b4d",
+    ),
+    "gaze_model_pytorch_vgg16_prl_mpii_allsubjects4.model": (
+        "https://imperialcollegelondon.box.com/shared/static/1xywt1so20vw09iij4t3tp9lu6f6yb0g.model",
+        "06a10f43088651053a65f9b0cd5ac4aa",
+    ),
+}
+
+
 def md5(file_name):
     hash_md5 = hashlib.md5()
     with open(file_name, "rb") as f:
@@ -54,23 +74,14 @@ def request_if_not_exist(file_name, url, md5sum=None, chunksize=1024):
         request.close()
 
 
-def download_gaze_pytorch_models():
-    request_if_not_exist(
-        model_path('gaze_model_pytorch_vgg16_prl_mpii_allsubjects1.model', writable=True),
-        "https://imperialcollegelondon.box.com/shared/static/6rvctw7wmkpl7a9bw9hm1b9b7dwntfut.model",
-        "ae435739673411940eed18c98c29bfb1")
-    request_if_not_exist(
-        model_path('gaze_model_pytorch_vgg16_prl_mpii_allsubjects2.model', writable=True),
-        "https://imperialcollegelondon.box.com/shared/static/xuhs5qg7eju4kw3e4to7db945qk2c123.model",
-        "4afd7ccf5619552ed4a9f14606b7f4dd")
-    request_if_not_exist(
-        model_path('gaze_model_pytorch_vgg16_prl_mpii_allsubjects3.model', writable=True),
-        "https://imperialcollegelondon.box.com/shared/static/h75tro719fcyvgdkzr8tarpco32ve21u.model",
-        "743902e643322c40bd78ca36aacc5b4d")
-    request_if_not_exist(
-        model_path('gaze_model_pytorch_vgg16_prl_mpii_allsubjects4.model', writable=True),
-        "https://imperialcollegelondon.box.com/shared/static/1xywt1so20vw09iij4t3tp9lu6f6yb0g.model",
-        "06a10f43088651053a65f9b0cd5ac4aa")
+def download_gaze_pytorch_models(model_names=None):
+    names = GAZE_PYTORCH_MODELS if model_names is None else [Path(name).name for name in model_names]
+    for name in names:
+        try:
+            url, checksum = GAZE_PYTORCH_MODELS[name]
+        except KeyError as exc:
+            raise ValueError(f"Unknown gaze model: {name}") from exc
+        request_if_not_exist(model_path(name, writable=True), url, checksum)
 
 
 def download_blink_pytorch_models():

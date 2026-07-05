@@ -71,6 +71,17 @@ On macOS, grant camera permission to the terminal or app that runs Pixi/Codex be
 pixi run ros2 run image_view image_view --ros-args -r image:=/image_raw -p image_transport:=compressed
 ```
 
+## Single Image Demo
+
+Run the core pipeline on one image without starting ROS:
+
+```bash
+pixi run python -m rt_gene.single_image_demo /path/to/face.jpg --device auto
+```
+
+It prints JSON with detected face boxes, head pose, translation, and gaze angles. The demo uses an approximate pinhole
+camera model by default; pass `--focal-length-px` if you know the focal length for the image.
+
 ## Model Files
 
 Small bundled landmark assets are installed with `rt_gene_core`. Larger PyTorch gaze and blink models are downloaded on demand into:
