@@ -22,9 +22,11 @@ dlib = "*"
 pytest = "*"
 setuptools = "*"
 ros-jazzy-rviz2 = "*"
+ros-jazzy-rviz-common = { path = "../rviz/rviz_common/package.xml" }
 ros-jazzy-camera-info-manager = "*"
 ros-jazzy-image-transport-plugins = "*"
-ros-jazzy-image-view = "*"
+# ros-jazzy-image-view = "*"
+ros-jazzy-image-view = { path = "../image_pipeline/image_view/package.xml" }
 ros-jazzy-ros2run = "*"
 ros-jazzy-ros2launch = "*"
 ros-jazzy-ros2interface = "*"
