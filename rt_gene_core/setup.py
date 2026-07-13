@@ -38,4 +38,10 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=False,
+    entry_points={
+        "console_scripts": [
+            "rt-gene-demo-image = rt_gene.single_image_demo:main",
+            "rt-bene-demo-blink = rt_bene.single_image_demo:main",
+        ],
+    },
 )

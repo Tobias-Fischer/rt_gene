@@ -27,6 +27,29 @@ GAZE_PYTORCH_MODELS = {
     ),
 }
 
+BLINK_PYTORCH_MODELS = {
+    "blink_model_pytorch_vgg16_allsubjects1.model": (
+        "https://imperialcollegelondon.box.com/shared/static/wwky1um443vgz9oy90zllv0s7474a5dj.model",
+        "cde99055e3b6dcf9fae6b78191c0fd9b",
+    ),
+    "blink_model_pytorch_vgg16_allsubjects2.model": (
+        "https://imperialcollegelondon.box.com/shared/static/psha8bclz9bv5d87qetajgovioc03vb3.model",
+        "67339ceefcfec4b3b8b3d7ccb03fadfa",
+    ),
+    "blink_model_pytorch_vgg16_allsubjects3.model": (
+        "https://imperialcollegelondon.box.com/shared/static/puebet9v05pxt06g42rtz805u5ww0u7e.model",
+        "e5de548b2a97162c5e655259463e4d23",
+    ),
+    "blink_model_pytorch_resnet18_allsubjects1.model": (
+        "https://imperialcollegelondon.box.com/shared/static/p8jmekxhw4k8xtbz6vph3924g6ywnbre.model",
+        "7c228fe7b95ce5960c4c5cae8f2d3a09",
+    ),
+    "blink_model_pytorch_resnet18_allsubjects2.model": (
+        "https://imperialcollegelondon.box.com/shared/static/yu53g8n1007d80s71o3dyrxqtv59o15u.model",
+        "0a0d2d066737b333737018d738de386f",
+    ),
+}
+
 
 def md5(file_name):
     hash_md5 = hashlib.md5()
@@ -84,23 +107,14 @@ def download_gaze_pytorch_models(model_names=None):
         request_if_not_exist(model_path(name, writable=True), url, checksum)
 
 
-def download_blink_pytorch_models():
-    request_if_not_exist(model_path('blink_model_pytorch_vgg16_allsubjects1.model', writable=True),
-                         "https://imperialcollegelondon.box.com/shared/static/wwky1um443vgz9oy90zllv0s7474a5dj.model",
-                         "cde99055e3b6dcf9fae6b78191c0fd9b")
-    request_if_not_exist(model_path('blink_model_pytorch_vgg16_allsubjects2.model', writable=True),
-                         "https://imperialcollegelondon.box.com/shared/static/psha8bclz9bv5d87qetajgovioc03vb3.model",
-                         "67339ceefcfec4b3b8b3d7ccb03fadfa")
-    request_if_not_exist(model_path('blink_model_pytorch_vgg16_allsubjects3.model', writable=True),
-                         "https://imperialcollegelondon.box.com/shared/static/puebet9v05pxt06g42rtz805u5ww0u7e.model",
-                         "e5de548b2a97162c5e655259463e4d23")
-
-    request_if_not_exist(model_path('blink_model_pytorch_resnet18_allsubjects1.model', writable=True),
-                         "https://imperialcollegelondon.box.com/shared/static/p8jmekxhw4k8xtbz6vph3924g6ywnbre.model",
-                         "7c228fe7b95ce5960c4c5cae8f2d3a09")
-    request_if_not_exist(model_path('blink_model_pytorch_resnet18_allsubjects2.model', writable=True),
-                         "https://imperialcollegelondon.box.com/shared/static/yu53g8n1007d80s71o3dyrxqtv59o15u.model",
-                         "0a0d2d066737b333737018d738de386f")
+def download_blink_pytorch_models(model_names=None):
+    names = BLINK_PYTORCH_MODELS if model_names is None else [Path(name).name for name in model_names]
+    for name in names:
+        try:
+            url, checksum = BLINK_PYTORCH_MODELS[name]
+        except KeyError as exc:
+            raise ValueError(f"Unknown blink model: {name}") from exc
+        request_if_not_exist(model_path(name, writable=True), url, checksum)
 
 
 

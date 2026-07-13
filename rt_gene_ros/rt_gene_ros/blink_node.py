@@ -57,7 +57,7 @@ class BlinkNode(Node):
         if not left_eyes:
             return
 
-        probs = self.estimator.predict(left_eyes, right_eyes)
+        probs = np.asarray(self.estimator.predict(left_eyes, right_eyes)).reshape(-1)
         self.publish_msg(msg.header, list(subjects.keys()), probs)
 
         if self.visualise:

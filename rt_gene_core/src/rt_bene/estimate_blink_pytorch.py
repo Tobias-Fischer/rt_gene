@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
+from pathlib import Path
+
 from tqdm import tqdm
-from rt_gene.download_tools import download_blink_pytorch_models, md5
+from rt_gene.download_tools import BLINK_PYTORCH_MODELS, download_blink_pytorch_models, md5
 from rt_bene.estimate_blink_base import BlinkEstimatorBase
 from rt_bene.blink_estimation_models_pytorch import BlinkEstimationModelResnet18, BlinkEstimationModelVGG16, BlinkEstimationModelVGG19, BlinkEstimationModelResnet50, BlinkEstimationModelDenseNet121
 import os
@@ -23,7 +25,8 @@ class BlinkEstimatorPytorch(BlinkEstimatorBase):
     def __init__(self, device_id_blink, model_files, model_type, threshold, known_hashes=(
     "cde99055e3b6dcf9fae6b78191c0fd9b", "67339ceefcfec4b3b8b3d7ccb03fadfa", "e5de548b2a97162c5e655259463e4d23", "7c228fe7b95ce5960c4c5cae8f2d3a09", "0a0d2d066737b333737018d738de386f")):
         super(BlinkEstimatorPytorch, self).__init__(device_id=device_id_blink, threshold=threshold)
-        download_blink_pytorch_models()
+        default_models = [model for model in model_files if Path(model).name in BLINK_PYTORCH_MODELS]
+        download_blink_pytorch_models(default_models)
 
         assert model_type in MODELS.keys(), f"PyTorch backend only supports the following backends: [{','.join(MODELS.keys())}]"
 
