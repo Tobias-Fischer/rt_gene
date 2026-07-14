@@ -1,0 +1,55 @@
+[workspace]
+channels = [
+  "https://prefix.dev/robostack-jazzy",
+  "https://prefix.dev/conda-forge",
+]
+platforms = ["osx-arm64", "linux-64", "win-64"]
+preview = ["pixi-build"]
+
+[dependencies]
+python = ">=3.11,<3.13"
+numpy = "*"
+scipy = "*"
+opencv = "*"
+libjxl = ">=0.11,<0.12"
+pillow = "*"
+requests = "*"
+tqdm = "*"
+pyyaml = "*"
+pytorch = "*"
+torchvision = "*"
+dlib = "*"
+pytest = "*"
+setuptools = "*"
+ros-jazzy-rviz2 = "*"
+ros-jazzy-rviz-common = { path = "../rviz/rviz_common/package.xml" }
+ros-jazzy-camera-info-manager = "*"
+ros-jazzy-image-transport-plugins = "*"
+# ros-jazzy-image-view = "*"
+ros-jazzy-image-view = { path = "../image_pipeline/image_view/package.xml" }
+ros-jazzy-ros2run = "*"
+ros-jazzy-ros2launch = "*"
+ros-jazzy-ros2interface = "*"
+ros-jazzy-ros2topic = "*"
+ros-jazzy-tf2-ros = "*"
+ros-jazzy-tf2-ros-py = "*"
+ros-jazzy-rt-gene-ros = { path = "rt_gene_ros" }
+ros-jazzy-opencv-camera = { path = "opencv_camera" }
+
+[pypi-dependencies]
+rt-gene-core = { path = "rt_gene_core", editable = true }
+rt-gene-ros = { path = "rt_gene_ros", editable = true }
+
+[tasks]
+demo-image = { cmd = "python -m rt_gene.single_image_demo{% if image %} {{ image }}{% endif %} --device {{ device }}{% if focal_length_px %} --focal-length-px {{ focal_length_px }}{% endif %}", args = [{ arg = "image", default = "" }, { arg = "device", default = "auto" }, { arg = "focal_length_px", default = "" }], description = "Run RT-GENE on one image; defaults to the bundled ROS1 gaze sample." }
+demo-blink = { cmd = "python -m rt_bene.single_image_demo{% if image %} {{ image }}{% endif %} --device {{ device }} --landmark-device {{ landmark_device }}{% if left_eye %} --left-eye {{ left_eye }}{% endif %}{% if right_eye %} --right-eye {{ right_eye }}{% endif %}", args = [{ arg = "image", default = "" }, { arg = "device", default = "auto" }, { arg = "landmark_device", default = "cpu" }, { arg = "left_eye", default = "" }, { arg = "right_eye", default = "" }], description = "Run RT-BENE blink estimation without starting ROS; defaults to the bundled face image." }
+webcam-demo = { cmd = "ros2 launch rt_gene_ros webcam_demo.launch.py camera_index:={{ camera_index }}{% if video_file %} video_file:={{ video_file }}{% endif %}{% if image_file %} image_file:={{ image_file }}{% endif %} width:={{ width }} height:={{ height }} fps:={{ fps }} loop:={{ loop }} jpeg_quality:={{ jpeg_quality }} image_transport:={{ image_transport }} device:={{ device }} landmark_device:={{ landmark_device }} visualise:={{ visualise }} blink:={{ blink }}", args = [{ arg = "camera_index", default = "0" }, { arg = "video_file", default = "" }, { arg = "image_file", default = "" }, { arg = "width", default = "640" }, { arg = "height", default = "480" }, { arg = "fps", default = "30.0" }, { arg = "loop", default = "false" }, { arg = "jpeg_quality", default = "80" }, { arg = "image_transport", default = "compressed" }, { arg = "device", default = "auto" }, { arg = "landmark_device", default = "cpu" }, { arg = "visualise", default = "false" }, { arg = "blink", default = "false" }], description = "Launch the ROS 2 webcam/video RT-GENE demo." }
+camera-view = { cmd = "ros2 run image_view image_view --ros-args -r image:={{ topic }} -p image_transport:={{ transport }}", args = [{ arg = "topic", default = "/image_raw" }, { arg = "transport", default = "compressed" }], description = "View an image topic, compressed by default." }
+topic-hz = { cmd = "ros2 topic hz {{ topic }}", args = [{ arg = "topic", default = "/subjects/gaze" }], description = "Measure a ROS 2 topic rate." }
+demo-hz = { cmd = "python tools/measure_demo_hz.py --device {{ device }} --timeout {{ timeout }} --image-transport {{ image_transport }}", args = [{ arg = "device", default = "auto" }, { arg = "timeout", default = "30" }, { arg = "image_transport", default = "compressed" }], description = "Launch the bundled-image ROS demo and measure topic rates." }
+test-core = { cmd = "python -m pytest rt_gene_core/test", env = { PYTHONPATH = "rt_gene_core/src:rt_gene_ros" } }
+test-ros-python = "python -m pytest rt_gene_ros/test"
+test-installed = "python tools/test_installed_core.py"
+test-camera = "python tools/test_camera_smoke.py"
+test-launch = "python tools/test_launch_smoke.py"
+show-gaze-interface = "ros2 interface show rt_gene_interfaces/msg/GazeArray"

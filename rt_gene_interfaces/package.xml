@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rt_gene_interfaces</name>
+  <version>5.0.0</version>
+  <description>ROS 2 interfaces for RT-GENE gaze and blink estimation.</description>
+  <maintainer email="t.fischer@imperial.ac.uk">Tobias Fischer</maintainer>
+  <license>CC-BY-NC-SA-4.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>rosidl_default_generators</build_depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

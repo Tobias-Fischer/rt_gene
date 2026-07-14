@@ -1,99 +1,198 @@
-# RT-GENE & RT-BENE: Real-Time Eye Gaze and Blink Estimation in Natural Environments
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg?style=flat-square)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-[![stars](https://img.shields.io/github/stars/Tobias-Fischer/rt_gene.svg?style=flat-square)](https://github.com/Tobias-Fischer/rt_gene/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/Tobias-Fischer/rt_gene.svg?style=flat-square)](https://github.com/Tobias-Fischer/rt_gene/issues)
-[![GitHub repo size](https://img.shields.io/github/repo-size/Tobias-Fischer/rt_gene.svg?style=flat-square)](./README.md)
+# RT-GENE & RT-BENE: Real-Time Eye Gaze And Blink Estimation In Natural Environments
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-mpii-gaze&style=flat-square)](https://paperswithcode.com/sota/gaze-estimation-on-mpii-gaze?p=rt-gene-real-time-eye-gaze-estimation-in?style=square)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-rt-gene&style=flat-square)](https://paperswithcode.com/sota/gaze-estimation-on-rt-gene?p=rt-gene-real-time-eye-gaze-estimation-in)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-gene-real-time-eye-gaze-estimation-in/gaze-estimation-on-ut-multi-view&style=flat-square)](https://paperswithcode.com/sota/gaze-estimation-on-ut-multi-view?p=rt-gene-real-time-eye-gaze-estimation-in)
+This repository contains code and dataset references for [RT-GENE (gaze estimation, ECCV 2018)](http://openaccess.thecvf.com/content_ECCV_2018/html/Tobias_Fischer_RT-GENE_Real-Time_Eye_ECCV_2018_paper.html) and [RT-BENE (blink estimation, ICCV 2019 Workshops)](http://openaccess.thecvf.com/content_ICCVW_2019/html/GAZE/Cortacero_RT-BENE_A_Dataset_and_Baselines_for_Real-Time_Blink_Estimation_in_ICCVW_2019_paper.html).
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-bene-a-dataset-and-baselines-for-real-time/blink-estimation-on-eyeblink8&style=flat-square)](https://paperswithcode.com/sota/blink-estimation-on-eyeblink8?p=rt-bene-a-dataset-and-baselines-for-real-time)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-bene-a-dataset-and-baselines-for-real-time/blink-estimation-on-researcher-s-night&style=flat-square)](https://paperswithcode.com/sota/blink-estimation-on-researcher-s-night?p=rt-bene-a-dataset-and-baselines-for-real-time)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/rt-bene-a-dataset-and-baselines-for-real-time/blink-estimation-on-rt-bene&style=flat-square)](https://paperswithcode.com/sota/blink-estimation-on-rt-bene?p=rt-bene-a-dataset-and-baselines-for-real-time)
+## RT-GENE Paper, Dataset, And Citation
 
-This repository contains code and dataset references for two papers: [RT-GENE (Gaze Estimation; ECCV2018)](http://openaccess.thecvf.com/content_ECCV_2018/html/Tobias_Fischer_RT-GENE_Real-Time_Eye_ECCV_2018_paper.html) and [RT-BENE (Blink Estimation; ICCV2019 Workshops)](http://openaccess.thecvf.com/content_ICCVW_2019/html/GAZE/Cortacero_RT-BENE_A_Dataset_and_Baselines_for_Real-Time_Blink_Estimation_in_ICCVW_2019_paper.html).
+RT-GENE estimates gaze direction from face and eye images in natural environments. The RT-GENE code is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/); commercial usage is not permitted.
 
-## RT-GENE (Gaze Estimation)
+The accompanying RT-GENE dataset is available on [Zenodo](https://zenodo.org/record/2529036) with an [alternative link](https://goo.gl/tfUaDm). For more datasets and open-source software, see the Personal Robotics Lab software page: <https://www.imperial.ac.uk/personal-robotics/software/>.
 
-### License + Attribution
-The RT-GENE code is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Commercial usage is not permitted. If you use this dataset or the code in a scientific publication, please cite the following [paper](http://openaccess.thecvf.com/content_ECCV_2018/html/Tobias_Fischer_RT-GENE_Real-Time_Eye_ECCV_2018_paper.html):
+Acknowledgements: RT-GENE was supported in part by the Samsung Global Research Outreach program, and in part by the EU Horizon 2020 Project PAL (643783-RIA).
 
-![Paper abstract](./assets/paper_abstract.jpg)
+If you use RT-GENE, please cite:
 
-```
+```bibtex
 @inproceedings{FischerECCV2018,
-author = {Tobias Fischer and Hyung Jin Chang and Yiannis Demiris},
-title = {{RT-GENE: Real-Time Eye Gaze Estimation in Natural Environments}},
-booktitle = {European Conference on Computer Vision},
-year = {2018},
-month = {September},
-pages = {339--357}
+  author = {Tobias Fischer and Hyung Jin Chang and Yiannis Demiris},
+  title = {{RT-GENE: Real-Time Eye Gaze Estimation in Natural Environments}},
+  booktitle = {European Conference on Computer Vision},
+  year = {2018},
+  month = {September},
+  pages = {339--357}
 }
 ```
 
-This work was supported in part by the Samsung Global Research Outreach program, and in part by the EU Horizon 2020 Project PAL (643783-RIA).
+## RT-BENE Paper, Dataset, And Citation
 
-### Overview + Accompanying Dataset
-The code is split into four parts, each having its own README contained. There is also an accompanying [dataset](https://zenodo.org/record/2529036) [(alternative link)](https://goo.gl/tfUaDm) to the code. For more information, other datasets and more open-source software please visit the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>.
+RT-BENE estimates blinks from eye image patches. The RT-BENE code is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/); commercial usage is not permitted.
 
-#### RT-GENE ROS package
-The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze and blink estimation. This contains all the code required at inference time.
+The [RT-BENE dataset on Zenodo](https://zenodo.org/record/3685316) contains eye image patches and associated blink annotations. It was manually annotated from the "noglasses" part of the RT-GENE dataset.
 
-<p align="center">
-  <img src="./assets/dataset_video.gif" alt="RT-GENE inference example"/>
-</p>
+Acknowledgements: RT-BENE was supported by the EU Horizon 2020 Project PAL (643783-RIA) and a Royal Academy of Engineering Chair in Emerging Technologies to Yiannis Demiris.
 
-#### RT-GENE Standalone Version
-The [rt_gene_standalone](./rt_gene_standalone) directory contains instructions for eye gaze estimation given a set of images. It shares code with the `rt_gene` package (above), in particular the code in [rt_gene/src/rt_gene](./rt_gene/src/rt_gene).
+If you use RT-BENE, please cite:
 
-#### RT-GENE Inpainting
-The [rt_gene_inpainting](./rt_gene_inpainting) directory contains code to inpaint the region covered by the eyetracking glasses.
-
-![Inpaining example](./assets/inpaint_example.jpg)
-
-#### RT-GENE Model Training
-The [rt_gene_model_training](./rt_gene_model_training) directory allows using the inpainted images to train a deep neural network for eye gaze estimation.
-
-<p align="center">
-  <img src="./assets/accuracy_prl.jpg" alt="Accuracy on RT-GENE dataset"/>
-</p>
-
-## RT-BENE (Blink Estimation)
-
-### License + Attribution
-The RT-BENE code is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Commercial usage is not permitted. If you use our blink estimation code or dataset, please cite the relevant [paper](http://openaccess.thecvf.com/content_ICCVW_2019/html/GAZE/Cortacero_RT-BENE_A_Dataset_and_Baselines_for_Real-Time_Blink_Estimation_in_ICCVW_2019_paper.html):
-
-```
+```bibtex
 @inproceedings{CortaceroICCV2019W,
-author={Kevin Cortacero and Tobias Fischer and Yiannis Demiris},
-booktitle = {Proceedings of the IEEE International Conference on Computer Vision Workshops},
-title = {RT-BENE: A Dataset and Baselines for Real-Time Blink Estimation in Natural Environments},
-year = {2019},
+  author = {Kevin Cortacero and Tobias Fischer and Yiannis Demiris},
+  booktitle = {Proceedings of the IEEE International Conference on Computer Vision Workshops},
+  title = {RT-BENE: A Dataset and Baselines for Real-Time Blink Estimation in Natural Environments},
+  year = {2019}
 }
 ```
 
-RT-BENE was supported by the EU Horizon 2020 Project PAL (643783-RIA) and a Royal Academy of Engineering Chair in Emerging Technologies to Yiannis Demiris.
+## Modern ROS 2 Branch
 
-### Overview + Accompanying Dataset
-The code is split into several parts, each having its own README. There is also an associated [RT-BENE dataset](https://zenodo.org/record/3685316). For more information, other datasets and more open-source software please visit the Personal Robotic Lab's website: <https://www.imperial.ac.uk/personal-robotics/software/>. Please note that a lot of the code is shared with RT-GENE (see above), hence there are many references to RT-GENE below.
+This branch is the modern ROS 2 runtime port. It uses Pixi with RoboStack, keeps the runtime in PyTorch, and is intentionally not API-compatible with the old ROS 1 package.
 
-![Paper overview](./assets/rt_bene_overview.png)
+The archived ROS 1 code, TensorFlow-era code, old standalone subprojects, training folders, and historical assets live on the [`ros1`](https://github.com/Tobias-Fischer/rt_gene/tree/ros1) branch.
 
-#### RT-BENE ROS package
-The [rt_gene](./rt_gene) directory contains a ROS package for real-time eye gaze and blink estimation. This contains all the code required at inference time. For blink estimation, please refer to the [estimate_blink.py](./rt_gene/scripts/estimate_blink.py) file.
+## Packages
 
-<p align="center">
-  <img src="./assets/rt_bene_inference.gif" alt="RT-BENE inference example"/>
-</p>
+- `rt_gene_core`: pure Python runtime code for landmarks, gaze, blink, model downloads, and PyTorch device selection. It has no ROS imports.
+- `rt_gene_interfaces`: ROS 2 messages for subject images, landmarks, head pose, gaze, and blink results.
+- `rt_gene_ros`: `rclpy` nodes and launch files.
+- `opencv_camera`: independent OpenCV webcam/video publisher for `sensor_msgs/Image`, `sensor_msgs/CompressedImage`, and `sensor_msgs/CameraInfo`.
 
-#### RT-BENE Standalone Version
-The [rt_bene_standalone](./rt_bene_standalone) directory contains instructions for blink estimation given a set of images. It makes use of the code in [rt_gene/src/rt_bene](./rt_gene/src/rt_bene).
+## Install
 
-#### RT-BENE Model Training
-The [rt_bene_model_training](./rt_bene_model_training) directory contains the code required to train models with the labels contained in the RT-BENE dataset (see below). We will soon at evaluation code in this directory, too.
+Pixi builds the ROS packages as conda packages with `pixi-build-ros`.
 
-#### RT-BENE Dataset
-![RT-BENE labels](./assets/rt_bene_labels.png)
+```bash
+pixi install
+```
 
-We manually annotated images contained in the "noglasses" part of the RT-GENE dataset. The [RT-BENE dataset on Zenodo](https://zenodo.org/record/3685316) contains the eye image patches and associated annotations to train the blink models.
+`rt_gene_core` and `rt_gene_ros` are layered in as editable Python packages, so Python source edits are picked up by `pixi run` without a rebuild. Re-run `pixi install` after changing Pixi manifests, messages, or C++ packages.
+
+Supported workspace platforms are `osx-arm64`, `linux-64`, and `win-64`. macOS and Linux are the intended targets; Windows is best-effort and currently untested.
+
+## Standalone Demos
+
+These demos run the core PyTorch/OpenCV code without starting ROS 2:
+
+```bash
+pixi run demo-image
+pixi run demo-image /path/to/face.jpg
+pixi run demo-blink
+pixi run demo-blink /path/to/face.jpg
+```
+
+`demo-image` runs RT-GENE gaze and head-pose estimation on one face image. `demo-blink` runs RT-BENE blink estimation on one face image by detecting the face, cropping eye patches, and estimating blink probability. Both default to the bundled restored ROS 1 gaze sample image.
+
+For the old RT-BENE eye-patch workflow, provide explicit eye crops:
+
+```bash
+pixi run python -m rt_bene.single_image_demo --left-eye /path/to/left.png --right-eye /path/to/right.png
+```
+
+The editable package also installs ROS-free console scripts:
+
+```bash
+pixi run rt-gene-demo-image
+pixi run rt-bene-demo-blink
+```
+
+## Webcam Demo
+
+Run the camera alone:
+
+```bash
+pixi run ros2 run opencv_camera camera_node
+```
+
+The camera publishes raw images on `image_raw`, JPEG-compressed images on `image_raw/compressed`, and calibration on `camera_info`. Raw image QoS defaults to reliable so RViz can subscribe without a reliability warning.
+
+Run the full webcam gaze demo:
+
+```bash
+pixi run webcam-demo
+```
+
+Enable blink estimation too:
+
+```bash
+pixi run webcam-demo 0 "" "" 640 480 30.0 false 80 compressed auto cpu false true
+```
+
+Blink estimation is wrapped as the `rt_gene_ros` `estimate_blink` executable. It subscribes to `subjects/images` from `extract_landmarks` and publishes `subjects/blink`; with visualisation enabled it also publishes `subjects/blink_images`.
+
+Useful task arguments are positional. The full default-equivalent command is:
+
+```bash
+pixi run webcam-demo 0 "" "" 640 480 30.0 false 80 compressed auto cpu false false
+```
+
+Argument order is `camera_index`, `video_file`, `image_file`, `width`, `height`, `fps`, `loop`, `jpeg_quality`, `image_transport`, `device`, `landmark_device`, `visualise`, `blink`.
+The demo defaults to `image_transport=compressed`, so the inference node subscribes to `image_raw/compressed`. Use `raw` in that position to subscribe directly to `image_raw`. The webcam launch defaults landmark/SFD work to CPU and leaves gaze on `device=auto`.
+
+The default topics are relative and remappable:
+
+- input: `image_raw`, `camera_info`
+- outputs: `subjects/images`, `subjects/landmarks`, `subjects/head_pose`, `subjects/gaze`, `subjects/blink`
+- visualisation images: `subjects/head_pose_images`, `subjects/gaze_images`, `subjects/blink_images`
+
+On macOS, grant camera permission to the terminal or app that runs Pixi/Codex before using a real webcam. For a viewer with compression:
+
+```bash
+pixi run camera-view
+```
+
+Measure topic rates with:
+
+```bash
+pixi run topic-hz /subjects/gaze
+pixi run demo-hz
+pixi run demo-hz auto 30 compressed
+```
+
+`demo-hz` repeats the bundled demo image through `opencv_camera`, launches the ROS 2 pipeline, and measures `image_raw` and `subjects/gaze` with an in-process ROS subscriber. Add extra reliable topics with Pixi's passthrough separator, for example:
+
+```bash
+pixi run demo-hz -- --topic /image_raw/compressed
+```
+
+## Model Files
+
+Small bundled landmark assets are installed with `rt_gene_core`. Larger PyTorch gaze and blink models are downloaded on demand into:
+
+```text
+~/.cache/rt_gene/model_nets
+```
+
+Set `RT_GENE_MODEL_DIR` to use another model directory.
+
+## Device Selection
+
+All runtime nodes accept a `device` parameter:
+
+- `auto`: choose `mps` when available, otherwise `cuda`, otherwise `cpu`
+- `mps`: Apple Metal backend
+- `cuda` or `cuda:0`: CUDA backend
+- `cpu`: CPU backend
+
+Example:
+
+```bash
+pixi run ros2 launch rt_gene_ros webcam_demo.launch.py device:=mps
+```
+
+## Interfaces
+
+Inspect the modern ROS 2 messages:
+
+```bash
+pixi run ros2 interface show rt_gene_interfaces/msg/GazeArray
+```
+
+## Tests
+
+```bash
+pixi run test-core
+pixi run test-ros-python
+pixi run test-installed
+pixi run test-camera
+pixi run test-launch
+```
+
+`test-core` is hardware-free and network-free. `test-ros-python` covers ROS message conversion helpers such as timestamp propagation. `test-installed` verifies that Pixi imports the editable workspace sources instead of stale installed copies. `test-camera` uses a synthetic image to verify `image_raw`, `image_raw/compressed`, `camera_info`, and reliable image QoS. `test-launch` uses the bundled demo image and fails on startup tracebacks, process death, or QoS incompatibility warnings.
