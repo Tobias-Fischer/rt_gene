@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import cv2
+import numpy as np
 import torch
 from torchvision import transforms
 from tqdm import tqdm
@@ -11,6 +12,17 @@ from tqdm import tqdm
 from rt_gene.estimate_gaze_base import GazeEstimatorBase
 from rt_gene.gaze_estimation_models_pytorch import GazeEstimationModelVGG, GazeEstimationModelResnet18
 from rt_gene.download_tools import download_gaze_pytorch_models, md5
+
+
+def open_cv_bgr_to_rgb(cv_image):
+    """Convert an OpenCV color image to the RGB order used during PyTorch training."""
+    if cv_image is None:
+        raise ValueError("Expected an OpenCV BGR image, got None")
+    if not isinstance(cv_image, np.ndarray):
+        raise TypeError(f"Expected an OpenCV image as a numpy array, got {type(cv_image)!r}")
+    if cv_image.ndim != 3 or cv_image.shape[2] != 3:
+        raise ValueError(f"Expected a 3-channel OpenCV BGR image, got shape {cv_image.shape}")
+    return cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 
 
 class GazeEstimator(GazeEstimatorBase):
@@ -65,4 +77,4 @@ class GazeEstimator(GazeEstimatorBase):
         return result
 
     def input_from_image(self, cv_image):
-        return self._transform(cv_image)
+        return self._transform(open_cv_bgr_to_rgb(cv_image))
