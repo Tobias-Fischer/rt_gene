@@ -25,6 +25,13 @@ def open_cv_bgr_to_rgb(cv_image):
     return cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 
 
+def make_gaze_image_transform():
+    return transforms.Compose([lambda x: cv2.resize(x, dsize=(60, 36), interpolation=cv2.INTER_CUBIC),
+                               transforms.ToTensor(),
+                               transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                    std=[0.229, 0.224, 0.225])])
+
+
 class GazeEstimator(GazeEstimatorBase):
     def __init__(self, device_id_gaze, model_files, known_hashes=(
             "ae435739673411940eed18c98c29bfb1", "4afd7ccf5619552ed4a9f14606b7f4dd", "743902e643322c40bd78ca36aacc5b4d",
@@ -46,10 +53,7 @@ class GazeEstimator(GazeEstimatorBase):
             os.environ["OMP_NUM_THREADS"] = "8"
         tqdm.write("PyTorch using {} threads.".format(os.environ["OMP_NUM_THREADS"]))
 
-        self._transform = transforms.Compose([lambda x: cv2.resize(x, dsize=(60, 36), interpolation=cv2.INTER_CUBIC),
-                                              transforms.ToTensor(),
-                                              transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                                   std=[0.229, 0.224, 0.225])])
+        self._transform = make_gaze_image_transform()
 
         self._models = []
         for ckpt in self.model_files:
